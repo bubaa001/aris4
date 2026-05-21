@@ -1,0 +1,37 @@
+{% extends 'accounts/base.html' %}
+
+{% block content %}
+<div class="text-center mt-20">
+    <h1 class="text-5xl font-bold text-blue-600 mb-4">Welcome to OLNportal</h1>
+    <p class="text-xl text-gray-600 mb-8">The competitive learning platform for secondary school students</p>
+    
+    {% if user.is_authenticated %}
+        {% if user.role == 'student' %}
+            <a href="{% url 'select_level' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Go to Dashboard</a>
+        {% elif user.role == 'instructor' %}
+            <a href="{% url 'pending_approval' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Go to Dashboard</a>
+        {% endif %}
+    {% else %}
+        <div class="space-x-4">
+            <a href="{% url 'register' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Get Started</a>
+            <a href="{% url 'login' %}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded text-lg hover:bg-gray-300">Login</a>
+        </div>
+    {% endif %}
+    
+    <!-- Features Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto">
+        <div class="bg-white p-6 rounded shadow">
+            <h3 class="font-bold text-xl mb-2">📚 Study</h3>
+            <p class="text-gray-600">Access notes, books, and summaries posted by your instructors.</p>
+        </div>
+        <div class="bg-white p-6 rounded shadow">
+            <h3 class="font-bold text-xl mb-2">🏆 Compete</h3>
+            <p class="text-gray-600">Challenge classmates in quizzes and climb the leaderboard.</p>
+        </div>
+        <div class="bg-white p-6 rounded shadow">
+            <h3 class="font-bold text-xl mb-2">⭐ Earn XP</h3>
+            <p class="text-gray-600">Win EX points, unlock titles, and prove you're the best.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
