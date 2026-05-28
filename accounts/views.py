@@ -5,9 +5,13 @@ from .forms import RegisterForm, LoginForm
 from .models import User
 
 
-def home_view(request):
-    return render(request, 'accounts/home.html')
 
+
+def home_view(request):
+    return render(request, 'home.html')
+
+def tail(request):
+    return render(request, 'test.html')
 
 def register_view(request):
     if request.method == 'POST':
@@ -21,7 +25,7 @@ def register_view(request):
                 return redirect('pending_approval')
     else:
         form = RegisterForm()
-    return render(request, 'accounts/register.html', {'form': form})
+    return render(request, 'register.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -35,10 +39,10 @@ def login_view(request):
                 return redirect('pending_approval')
     else:
         form = LoginForm()
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'login.html', {'form': form})
 
 def select_level_view(request):
-    return render(request, 'accounts/select_level.html')
+    return render(request, 'select_level.html')
 
 def pending_approval_view(request):
-    return render(request, 'accounts/pending_approval.html')
+    return render(request, 'pending_approval.html')
