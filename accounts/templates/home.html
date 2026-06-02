@@ -1,37 +1,489 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="text-center mt-20">
-    <h1 class="text-5xl font-bold text-blue-600 mb-4">Welcome to OLNportal</h1>
-    <p class="text-xl text-gray-600 mb-8">The competitive learning platform for secondary school students</p>
-    
-    {% if user.is_authenticated %}
-        {% if user.role == 'student' %}
-            <a href="{% url 'select_level' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Go to Dashboard</a>
-        {% elif user.role == 'instructor' %}
-            <a href="{% url 'pending_approval' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Go to Dashboard</a>
-        {% endif %}
-    {% else %}
-        <div class="space-x-4">
-            <a href="{% url 'register' %}" class="bg-blue-600 text-white px-8 py-3 rounded text-lg hover:bg-blue-700">Get Started</a>
-            <a href="{% url 'login' %}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded text-lg hover:bg-gray-300">Login</a>
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-16">
+  
+  <!-- Hero Section -->
+  <section class="min-h-[90vh] flex flex-col justify-center py-8 md:py-12 lg:py-16">
+    <div class="grid grid-cols-12 gap-4 md:gap-6 lg:gap-8 items-start md:items-center">
+      
+      <!-- Left Content - Takes full width on tablet, adjusts columns -->
+      <div class="col-span-12 md:col-span-12 lg:col-span-6 xl:col-span-6">
+        <div class="animate-fadeInUp">
+          <span class="font-['Space_Mono'] text-[10px] sm:text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase block mb-3 md:mb-4 lg:mb-6 border-l-4 border-[#5308e7] pl-3">
+            SYSTEM ENGINE // VERSION 4.0
+          </span>
+          
+          <h1 class="font-['Playfair_Display'] text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[84px] font-black text-[#1c1b1b] leading-[1.1] tracking-[-0.02em] mb-4 md:mb-6 lg:mb-8">
+            IGNITE YOUR
+            <span class="block md:inline">INTELLECT.</span>
+            <span class="text-[#5308e7] italic block mt-2">DOMINATE.</span>
+          </h1>
+          
+          <p class="font-['Inter'] text-sm sm:text-base md:text-lg text-[#484456] leading-relaxed md:leading-[32px] max-w-lg mb-6 md:mb-8 lg:mb-12">
+            The premiere arena for the modern scholar. Gamified. Curated. 
+            <span class="font-semibold bg-gradient-to-r from-[#5308e7] to-[#8b5cf6] bg-clip-text text-transparent">Avant-Garde.</span>
+          </p>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 md:gap-4 lg:gap-6">
+            {% if user.is_authenticated %}
+                {% if user.role == 'student' %}
+                    <a href="{% url 'select_level' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
+                        ENTER THE ARENA 
+                        <span class="group-hover:translate-x-1 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
+                {% elif user.role == 'instructor' %}
+                    <a href="{% url 'dashboard' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
+                        FACULTY TERMINAL 
+                        <span class="group-hover:translate-x-1 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'register' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
+                    JOIN THE VANGUARD
+                    <span class="group-hover:translate-x-1 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </span>
+                </a>
+                <a href="{% url 'login' %}" class="inline-flex items-center justify-center border-2 border-[#1c1b1b] bg-transparent text-[#1c1b1b] px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase hover:bg-[#f5f3f0] transition-all duration-150">
+                    RETURNING USER?
+                </a>
+            {% endif %}
+          </div>
+
+          <!-- Stats - Visible on Desktop only, hidden on Tablet -->
+          <div class="hidden lg:grid grid-cols-3 gap-4 mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-gray-200">
+            <div>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">500+</p>
+              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Active Scholars</p>
+            </div>
+            <div>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">50+</p>
+              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Expert Faculty</p>
+            </div>
+            <div>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">10k+</p>
+              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Quests Completed</p>
+            </div>
+          </div>
         </div>
-    {% endif %}
-    
-    <!-- Features Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto">
-        <div class="bg-white p-6 rounded shadow">
-            <h3 class="font-bold text-xl mb-2">📚 Study</h3>
-            <p class="text-gray-600">Access notes, books, and summaries posted by your instructors.</p>
+      </div>
+
+      <!-- Right Content - Live Arena Status (Desktop only, hidden on tablet) -->
+      <div class="hidden xl:block xl:col-span-6">
+        <div class="relative animate-fadeInRight">
+          <div class="absolute inset-0 bg-gradient-to-br from-[#5308e7]/10 to-transparent rounded-3xl"></div>
+          <div class="relative bg-white border-2 border-[#1c1b1b] p-6 [box-shadow:8px_8px_0px_0px_#5308e7] transform rotate-1">
+            <div class="text-center mb-6">
+              <div class="inline-block bg-[#5308e7] text-white px-4 py-2 font-['Space_Mono'] text-xs font-bold tracking-wider">
+                // LIVE ARENA STATUS //
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    Top Scholar
+                </span>
+                <span class="font-['Playfair_Display'] text-lg font-bold text-[#5308e7]">RADHIA D.</span>
+                <span class="font-['Space_Mono'] text-xs bg-amber-100 px-2 py-1">2,450 XP</span>
+              </div>
+              <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Current Quest
+                </span>
+                <span class="font-['Inter'] text-sm">Advanced Calculus</span>
+                <span class="font-['Space_Mono'] text-xs text-green-600">+150 XP</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"></path>
+                    </svg>
+                    Active Title
+                </span>
+                <span class="font-['Inter'] text-sm font-bold">"Grandmaster"</span>
+                <span class="font-['Space_Mono'] text-xs text-[#5308e7]">TOP 3%</span>
+              </div>
+            </div>
+            <div class="mt-6 pt-4 border-t-2 border-[#1c1b1b]">
+              <div class="bg-[#f5f3f0] p-3">
+                <p class="font-['Space_Mono'] text-[10px] uppercase tracking-wider text-[#5308e7] mb-1 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    // NEXT BATTLE //
+                </p>
+                <p class="font-['Inter'] text-sm font-semibold">Mathematics Tournament</p>
+                <p class="font-['Space_Mono'] text-xs text-gray-600">Starts in 02:14:32</p>
+              </div>
+            </div>
+          </div>
+          <div class="absolute -bottom-4 -right-4 w-20 h-20 bg-[#5308e7] -z-10"></div>
         </div>
-        <div class="bg-white p-6 rounded shadow">
-            <h3 class="font-bold text-xl mb-2">🏆 Compete</h3>
-            <p class="text-gray-600">Challenge classmates in quizzes and climb the leaderboard.</p>
-        </div>
-        <div class="bg-white p-6 rounded shadow">
-            <h3 class="font-bold text-xl mb-2">⭐ Earn XP</h3>
-            <p class="text-gray-600">Win EX points, unlock titles, and prove you're the best.</p>
-        </div>
+      </div>
+
     </div>
+  </section>
+
+  <!-- Stats Bar - Mobile & Tablet (visible on mobile and tablet, hidden on desktop) -->
+  <div class="grid grid-cols-3 gap-3 lg:hidden py-4 md:py-6 border-t border-b border-gray-200 my-4 md:my-6">
+    <div class="text-center">
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">500+</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Scholars</p>
+    </div>
+    <div class="text-center">
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">50+</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Faculty</p>
+    </div>
+    <div class="text-center">
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">10k+</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Quests</p>
+    </div>
+  </div>
+
+  <!-- Live Status Card - Mobile & Tablet (visible on mobile and tablet, hidden on desktop) -->
+  <div class="lg:hidden mb-6 md:mb-8">
+    <div class="bg-white border-2 border-[#1c1b1b] p-4 md:p-5 [box-shadow:4px_4px_0px_0px_#5308e7]">
+      <div class="text-center mb-3 md:mb-4">
+        <div class="inline-block bg-[#5308e7]/10 text-[#5308e7] px-3 py-1 font-['Space_Mono'] text-[9px] md:text-[10px] font-bold tracking-wider border border-[#5308e7]">
+          // LIVE ARENA STATUS //
+        </div>
+      </div>
+      
+      <!-- 2-column grid for tablet -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Left column -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-2 bg-gray-50">
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-yellow-500">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span class="font-['Space_Mono'] text-[10px] text-gray-500">TOP SCHOLAR</span>
+            </div>
+            <span class="font-['Playfair_Display'] text-sm font-bold text-[#5308e7]">RADHIA D.</span>
+            <span class="font-['Space_Mono'] text-[9px] bg-amber-100 px-1 py-0.5">2,450 XP</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-2 bg-gray-50">
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"></path>
+              </svg>
+              <span class="font-['Space_Mono'] text-[10px] text-gray-500">TITLE</span>
+            </div>
+            <span class="font-['Inter'] text-sm font-bold">Grandmaster</span>
+            <span class="font-['Space_Mono'] text-[9px] text-[#5308e7]">TOP 3%</span>
+          </div>
+        </div>
+        
+        <!-- Right column -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-2 bg-gray-50">
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span class="font-['Space_Mono'] text-[10px] text-gray-500">QUEST</span>
+            </div>
+            <span class="font-['Inter'] text-sm">Advanced Calculus</span>
+            <span class="font-['Space_Mono'] text-[9px] text-green-600">+150 XP</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-2 bg-[#f5f3f0]">
+            <div class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span class="font-['Space_Mono'] text-[10px] text-[#5308e7]">NEXT BATTLE</span>
+            </div>
+            <span class="font-['Inter'] text-sm font-semibold">Mathematics Tournament</span>
+            <span class="font-['Space_Mono'] text-[9px] text-gray-500">02:14:32</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Philosophy Section -->
+  <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b] animate-fadeInUp">
+    <div class="grid grid-cols-12 gap-6 md:gap-8 lg:gap-12">
+      <div class="col-span-12 md:col-span-12 lg:col-span-4">
+        <div class="lg:sticky lg:top-20">
+          <p class="font-['Space_Mono'] text-xs md:text-sm text-[#5308e7] mb-4 tracking-[0.2em] uppercase flex items-center gap-2">
+            <span class="w-8 h-px bg-[#5308e7]"></span> THE PHILOSOPHY
+          </p>
+          <div class="w-12 h-12 border-2 border-[#5308e7] mb-6 hidden lg:block"></div>
+        </div>
+      </div>
+      <div class="col-span-12 lg:col-span-8">
+        <h2 class="font-['Playfair_Display'] text-3xl sm:text-4xl md:text-5xl font-bold text-[#1c1b1b] mb-6 md:mb-8 uppercase tracking-tight leading-tight">
+          Beyond the <span class="text-[#5308e7] italic">algorithm.</span>
+        </h2>
+        <div class="space-y-6 max-w-3xl">
+          <p class="font-['Inter'] text-base md:text-lg text-[#1c1b1b] leading-relaxed md:leading-[32px] font-medium">
+            In an era of mindless scrolling and algorithmic noise, <span class="font-bold">ARIS4.0</span> stands as a bastion of curated intellectual pursuit. 
+            We reject the generic. We champion the difficult.
+          </p>
+          <p class="font-['Inter'] text-base md:text-lg text-[#484456] leading-relaxed md:leading-[32px] border-l-4 border-[#5308e7] pl-4 md:pl-6">
+            Our platform is designed for those who find beauty in complex axioms and thrill in the pursuit of verification. 
+            This is not just learning; it's an aesthetic evolution of the mind.
+          </p>
+          <div class="flex items-center gap-3 pt-4">
+            <div class="w-10 h-10 rounded-full bg-[#5308e7]/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#5308e7]">
+                    <path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"></path>
+                </svg>
+            </div>
+            <p class="font-['Space_Mono'] text-xs text-[#5308e7] uppercase tracking-wider">"Knowledge is power. XP is proof."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b]">
+    <div class="text-center mb-8 md:mb-12 lg:mb-16">
+      <p class="font-['Space_Mono'] text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase mb-3">// THE ARSENAL //</p>
+      <h2 class="font-['Playfair_Display'] text-2xl sm:text-3xl md:text-4xl font-bold text-[#1c1b1b]">Three Pillars. One Arena.</h2>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8">
+        
+        <div class="group border-2 border-[#1c1b1b] bg-white p-5 md:p-6 lg:p-8 flex flex-col [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#5308e7] transition-all duration-200">
+          <div class="mb-4 md:mb-6">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-[#5308e7]/10 flex items-center justify-center mb-3 md:mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#5308e7]">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+            </div>
+            <div class="flex justify-between items-baseline border-b-2 border-[#eae7e7] pb-2 md:pb-3 mb-3 md:mb-4">
+              <span class="font-['Space_Mono'] text-[10px] md:text-xs font-bold text-[#5308e7]">MODULE 01</span>
+              <span class="font-['Space_Mono'] text-[8px] md:text-[10px] text-gray-400 tracking-wider bg-gray-100 px-2 py-1">CURATED</span>
+            </div>
+            <h3 class="font-['Playfair_Display'] text-xl md:text-2xl font-bold text-[#1c1b1b] uppercase tracking-tight mb-2 md:mb-3">STUDY VAULT</h3>
+            <p class="font-['Inter'] text-xs md:text-sm text-[#484456] leading-relaxed">
+              Access premium notes, structural textbooks, and syllabus summaries — all compiled and verified by expert faculty.
+            </p>
+          </div>
+          <div class="mt-auto pt-4">
+            <span class="font-['Space_Mono'] text-[10px] md:text-xs text-[#5308e7] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                EXPLORE 
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="group border-2 border-[#1c1b1b] bg-white p-5 md:p-6 lg:p-8 flex flex-col [box-shadow:4px_4px_0px_0px_#5308e7] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-200 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-[#5308e7] text-white px-2 md:px-3 py-0.5 md:py-1 text-[8px] md:text-[10px] font-['Space_Mono']">POPULAR</div>
+          <div class="mb-4 md:mb-6">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-[#5308e7]/10 flex items-center justify-center mb-3 md:mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#5308e7]">
+                    <path d="M20.59 13.41l-5.82 5.82a2 2 0 0 1-2.83 0L4 12V4h8l7.59 7.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="8" y1="8" x2="8" y2="8.01"></line>
+                </svg>
+            </div>
+            <div class="flex justify-between items-baseline border-b-2 border-[#eae7e7] pb-2 md:pb-3 mb-3 md:mb-4">
+              <span class="font-['Space_Mono'] text-[10px] md:text-xs font-bold text-[#5308e7]">MODULE 02</span>
+              <span class="font-['Space_Mono'] text-[8px] md:text-[10px] text-[#5308e7] tracking-wider bg-[#5308e7]/10 px-2 py-1">LIVE</span>
+            </div>
+            <h3 class="font-['Playfair_Display'] text-xl md:text-2xl font-bold text-[#1c1b1b] uppercase tracking-tight mb-2 md:mb-3">COMPETE ARENA</h3>
+            <p class="font-['Inter'] text-xs md:text-sm text-[#484456] leading-relaxed">
+              Challenge peers in rigorous assessments, tackle daily quests, and claim your throne on the global leaderboard.
+            </p>
+          </div>
+          <div class="mt-auto pt-4">
+            <span class="font-['Space_Mono'] text-[10px] md:text-xs text-[#5308e7] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                JOIN BATTLE 
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="group border-2 border-[#1c1b1b] bg-white p-5 md:p-6 lg:p-8 flex flex-col [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#5308e7] transition-all duration-200">
+          <div class="mb-4 md:mb-6">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-[#5308e7]/10 flex items-center justify-center mb-3 md:mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#5308e7]">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </div>
+            <div class="flex justify-between items-baseline border-b-2 border-[#eae7e7] pb-2 md:pb-3 mb-3 md:mb-4">
+              <span class="font-['Space_Mono'] text-[10px] md:text-xs font-bold text-[#5308e7]">MODULE 03</span>
+              <span class="font-['Space_Mono'] text-[8px] md:text-[10px] text-gray-400 tracking-wider bg-gray-100 px-2 py-1">PRESTIGE</span>
+            </div>
+            <h3 class="font-['Playfair_Display'] text-xl md:text-2xl font-bold text-[#1c1b1b] uppercase tracking-tight mb-2 md:mb-3">XP METRICS</h3>
+            <p class="font-['Inter'] text-xs md:text-sm text-[#484456] leading-relaxed">
+              Earn execution points, unlock prestigious titles, and transform every achievement into competitive power.
+            </p>
+          </div>
+          <div class="mt-auto pt-4">
+            <span class="font-['Space_Mono'] text-[10px] md:text-xs text-[#5308e7] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                TRACK PROGRESS 
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </span>
+          </div>
+        </div>
+
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b]">
+    <div class="text-center mb-8 md:mb-12 lg:mb-16">
+      <p class="font-['Space_Mono'] text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase mb-3">// THE PATH //</p>
+      <h2 class="font-['Playfair_Display'] text-2xl sm:text-3xl md:text-4xl font-bold text-[#1c1b1b]">From Zero to Grandmaster</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
+      <div class="text-center">
+        <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-[#5308e7]/10 rounded-full flex items-center justify-center text-xl md:text-2xl font-['Space_Mono'] font-bold text-[#5308e7] mb-3 md:mb-4 border-2 border-[#5308e7]">1</div>
+        <h3 class="font-['Playfair_Display'] text-lg md:text-xl font-bold mb-2">Register</h3>
+        <p class="font-['Inter'] text-xs md:text-sm text-[#484456]">Create your scholar profile</p>
+      </div>
+      <div class="text-center">
+        <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-[#5308e7]/10 rounded-full flex items-center justify-center text-xl md:text-2xl font-['Space_Mono'] font-bold text-[#5308e7] mb-3 md:mb-4 border-2 border-[#5308e7]">2</div>
+        <h3 class="font-['Playfair_Display'] text-lg md:text-xl font-bold mb-2">Join Class</h3>
+        <p class="font-['Inter'] text-xs md:text-sm text-[#484456]">Select your level & instructor</p>
+      </div>
+      <div class="text-center">
+        <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-[#5308e7]/10 rounded-full flex items-center justify-center text-xl md:text-2xl font-['Space_Mono'] font-bold text-[#5308e7] mb-3 md:mb-4 border-2 border-[#5308e7]">3</div>
+        <h3 class="font-['Playfair_Display'] text-lg md:text-xl font-bold mb-2">Complete Quests</h3>
+        <p class="font-['Inter'] text-xs md:text-sm text-[#484456]">Earn XP, climb leaderboards</p>
+      </div>
+      <div class="text-center">
+        <div class="w-14 h-14 md:w-16 md:h-16 mx-auto bg-[#5308e7]/10 rounded-full flex items-center justify-center text-xl md:text-2xl font-['Space_Mono'] font-bold text-[#5308e7] mb-3 md:mb-4 border-2 border-[#5308e7]">4</div>
+        <h3 class="font-['Playfair_Display'] text-lg md:text-xl font-bold mb-2">Achieve Status</h3>
+        <p class="font-['Inter'] text-xs md:text-sm text-[#484456]">Unlock titles & recognition</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="py-12 md:py-16 lg:py-24 bg-[#1c1b1b] text-[#fcf9f8] my-8 md:my-12 lg:my-16 relative overflow-hidden rounded-none">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute top-0 left-0 w-full h-full" style="background-image: radial-gradient(#6c3bff 2px, transparent 2px); background-size: 30px 30px;"></div>
+    </div>
+    
+    <div class="relative z-10 text-center px-4">
+      <p class="font-['Space_Mono'] text-[10px] md:text-xs lg:text-sm text-[#cbbeff] tracking-[0.2em] uppercase mb-3 md:mb-4">// LIMITED SLOTS //</p>
+      <h2 class="font-['Playfair_Display'] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 leading-tight">
+        THE FUTURE IS AN<br/><span class="italic text-[#cbbeff]">INTELLECTUAL ARENA.</span>
+      </h2>
+      <p class="font-['Inter'] text-sm md:text-base lg:text-lg text-gray-300 max-w-2xl mx-auto mb-6 md:mb-8 lg:mb-10">
+        Join 500+ scholars already leveling up their minds. The arena awaits.
+      </p>
+      
+      {% if not user.is_authenticated %}
+      <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+        <a href="{% url 'register' %}" class="group inline-flex items-center justify-center gap-2 bg-[#6c3bff] text-white font-['Space_Mono'] text-[11px] md:text-xs lg:text-sm font-bold px-6 md:px-8 lg:px-12 py-3 md:py-4 lg:py-5 [box-shadow:4px_4px_0px_0px_#3b1b8a] hover:bg-[#5308e7] transition-all uppercase tracking-widest">
+            JOIN THE VANGUARD
+            <span class="group-hover:translate-x-1 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </span>
+        </a>
+        <a href="{% url 'login' %}" class="inline-flex items-center justify-center border-2 border-[#cbbeff] text-[#cbbeff] px-6 md:px-8 lg:px-12 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] md:text-xs lg:text-sm font-bold uppercase tracking-widest hover:bg-white/10 transition-all">
+            EXISTING USER
+        </a>
+      </div>
+      <p class="mt-4 md:mt-6 font-['Space_Mono'] text-[9px] md:text-[10px] lg:text-xs text-gray-400 uppercase tracking-widest flex items-center justify-center gap-2">
+        <span class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        ENROLLMENT PORTAL STATUS: OPEN
+      </p>
+      {% else %}
+      <div class="inline-block border-2 border-[#cbbeff] px-4 md:px-6 lg:px-8 py-2 md:py-3 lg:py-4">
+        <p class="font-['Space_Mono'] text-[10px] md:text-xs lg:text-sm text-[#cbbeff] uppercase tracking-widest">
+          ✓ AUTHENTICATED PROFILE IDENTITY // LEVEL: {% if user.xp %}{{ user.xp }}{% else %}INITIATE{% endif %}
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
 </div>
+
+<!-- Custom Animations -->
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .animate-fadeInUp {
+    animation: fadeInUp 0.8s ease-out;
+  }
+  
+  .animate-fadeInRight {
+    animation: fadeInRight 0.8s ease-out;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fadeInUp, .animate-fadeInRight, .animate-pulse {
+      animation: none;
+    }
+  }
+</style>
 {% endblock %}

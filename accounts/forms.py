@@ -18,7 +18,7 @@ class RegisterForm(UserCreationForm):
     role = forms.ChoiceField(
         choices=ROLE_CHOICES,
         required=True,
-        widget=forms.Select(attrs={'class': 'w-full border border-gray-300 rounded p-2'})
+        widget=forms.RadioSelect()
     )
     
     class Meta:
