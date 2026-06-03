@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('select-level/', views.select_level_view, name='select_level'),
     path('pending-approval/', views.pending_approval_view, name='pending_approval'),
+    path('kamati/<int:id>/', views.kamati_view, name='kamati'),
     path('test/', views.tail, name='test'),
 ]
 

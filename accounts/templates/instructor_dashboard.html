@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Main Content: Bento/Asymmetric Grid Container -->
+<main class="max-w-[1440px] mx-auto px-5 md:px-16 py-12 pb-32">
+  
+  <!-- Hero Header Section -->
+  <header class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-20">
+    <div class="md:col-span-8">
+      <h1 class="font-['Playfair_Display'] text-5xl md:text-7xl mb-4 font-black tracking-tight leading-none text-[#1c1b1b] uppercase">
+        The Faculty
+      </h1>
+      <p class="font-['Space_Mono'] text-xs uppercase tracking-widest text-[#5e5e5e]">
+        // Active Node Roster: Welcoming Instructor {{ request.user.username }}
+      </p>
+    </div>
+    
+    <!-- Action Gateways -->
+    <div class="md:col-span-4 flex flex-col md:items-end justify-end gap-4 mt-8 md:mt-0">
+      <a href="#" class="w-full md:w-auto text-center bg-[#5308e7] text-white px-8 py-4 font-['Space_Mono'] text-xs font-bold tracking-wider uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:scale-95 rounded-none">
+        ASSEMBLE LIVE SESSION
+      </a>
+      <a href="#" class="w-full md:w-auto text-center border border-[#1c1b1b] text-[#1c1b1b] bg-transparent px-8 py-4 font-['Space_Mono'] text-xs font-bold tracking-wider uppercase hover:bg-[#1c1b1b] hover:text-white transition-all active:scale-95 rounded-none">
+        DRAFT CORE QUIZ
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Grid Framework -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+    
+    <!-- Section 1: Active Secondary Cohorts -->
+    <section class="md:col-span-12 mb-16">
+      <div class="flex items-baseline justify-between mb-8 border-b border-[#cac3d9] pb-2">
+        <h2 class="font-['Playfair_Display'] text-2xl font-bold italic text-[#1c1b1b]">Academic Cohorts</h2>
+        <span class="font-['Space_Mono'] text-xs text-[#5e5e5e] uppercase tracking-wider">// SYSTEM RUNTIME: REGISTRY VERIFIED</span>
+      </div>
+      
+      <!-- Asymmetric Level Selection Matrix -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Form 1 & Form 2 Cluster (Left Block) -->
+        <div class="md:col-span-7 group border border-[#1c1b1b] p-8 bg-white hover:bg-[#f0eded] transition-colors cursor-pointer relative overflow-hidden">
+          <div class="flex justify-between items-start mb-12">
+            <div>
+              <span class="font-['Space_Mono'] text-[10px] text-[#5308e7] uppercase tracking-widest block mb-1">// LOWER CURRICULUM</span>
+              <h3 class="font-['Playfair_Display'] text-3xl font-black text-[#1c1b1b] uppercase">Forms 1 & 2</h3>
+            </div>
+            <span class="font-['Space_Mono'] text-5xl text-[#cbbeff]/40 font-black">01</span>
+          </div>
+          <div class="mt-auto">
+            <div class="grid grid-cols-2 gap-4 mb-4 font-['Space_Mono'] text-xs text-[#1c1b1b]">
+              <div>
+                <div class="text-[#5e5e5e] uppercase">Active Students</div>
+                <div class="text-2xl font-bold mt-1">48</div>
+              </div>
+              <div class="text-right">
+                <div class="text-[#5e5e5e] uppercase">Quiz Velocity</div>
+                <div class="text-2xl font-bold text-[#5308e7]">84%</div>
+              </div>
+            </div>
+            <!-- Custom Editorial Metric Bar -->
+            <div class="h-1 bg-[#e5e2e1] w-full">
+              <div class="h-full bg-[#5308e7]" style="width: 84%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form 3 & Form 4 Cluster (Right Block - Asymmetric Top Margin Offset) -->
+        <div class="md:col-span-5 md:mt-16 group border border-[#1c1b1b] p-8 bg-[#1c1b1b] text-white hover:bg-[#5308e7] transition-colors cursor-pointer">
+          <div class="flex justify-between items-start mb-12">
+            <div>
+              <span class="font-['Space_Mono'] text-[10px] text-[#cbbeff] uppercase tracking-widest block mb-1">// UPPER GRADUATION TRACK</span>
+              <h3 class="font-['Playfair_Display'] text-3xl font-black uppercase tracking-tight">Forms 3 & 4</h3>
+            </div>
+            <span class="material-symbols-outlined text-4xl text-white">terminal</span>
+          </div>
+          <div class="mt-auto">
+            <div class="grid grid-cols-2 gap-4 mb-4 font-['Space_Mono'] text-xs text-white">
+              <div>
+                <div class="text-[#e5e2e1]/60 uppercase">Active Students</div>
+                <div class="text-2xl font-bold mt-1">32</div>
+              </div>
+              <div class="text-right">
+                <div class="text-[#e5e2e1]/60 uppercase">Syllabus Depth</div>
+                <div class="text-2xl font-bold">59%</div>
+              </div>
+            </div>
+            <div class="h-1 bg-white/20 w-full">
+              <div class="h-full bg-white" style="width: 59%;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 2: Evaluation Queue & Performance Streams -->
+    <section class="md:col-span-8">
+      <div class="flex items-baseline justify-between mb-8 border-b border-[#1c1b1b] pb-2">
+        <h2 class="font-['Playfair_Display'] text-2xl font-bold italic text-[#1c1b1b]">Evaluation Ledger</h2>
+        <span class="font-['Space_Mono'] text-xs text-[#5e5e5e] uppercase tracking-wider">AWAITING REVIEW TRACKING</span>
+      </div>
+      
+      <!-- Interactive Ledger Rows -->
+      <div class="space-y-0">
+        
+        <!-- Row Item 1 -->
+        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
+          <div class="mb-4 md:mb-0">
+            <div class="font-['Space_Mono'] text-xs text-[#5308e7] mb-1">FORM 4 / NATIONAL PREP</div>
+            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Mock Assessment Submissions: Mathematics</h4>
+          </div>
+          <div class="flex items-center gap-6">
+            <span class="px-3 py-1 bg-[#1c1b1b] text-white font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">9 PENDING</span>
+            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
+          </div>
+        </div>
+
+        <!-- Row Item 2 -->
+        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
+          <div class="mb-4 md:mb-0">
+            <div class="font-['Space_Mono'] text-xs text-red-600 mb-1">FORM 1 / DIAGNOSTIC</div>
+            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Introductory English Essay Module</h4>
+          </div>
+          <div class="flex items-center gap-6">
+            <span class="px-3 py-1 bg-red-100 text-red-700 border border-red-300 font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">URGENT</span>
+            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
+          </div>
+        </div>
+
+        <!-- Row Item 3 -->
+        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
+          <div class="mb-4 md:mb-0">
+            <div class="font-['Space_Mono'] text-xs text-[#5e5e5e] mb-1">FORM 3 / FIELDWORK</div>
+            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Geography Structural Project Outlines</h4>
+          </div>
+          <div class="flex items-center gap-6">
+            <span class="px-3 py-1 bg-[#eae7e7] text-[#484456] font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">COMPLETED</span>
+            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Side Graphic Context Panel (Fills layout balance) -->
+    <aside class="md:col-span-4 mt-12 md:mt-0">
+      <div class="sticky top-28">
+        <div class="relative w-full aspect-[3/4] overflow-hidden grayscale contrast-125 mb-4 border border-[#1c1b1b]">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMIxFWTGEqbGDo9spOE6x5PiQ2vnMPzbhhVvOSgdErEjAzWNQTSFBzCedOz02Rzzivu7Er0kASAUh_wXFg7yCwCR6I-AkYSSVZ6WacHo75PxT8MHpFgeQBybTmyTGSEr3t-_TNDSwdcVv4j3SGNJU65r-xQ_vYFJ47mpApctoAp_iLYieKQS0QykVtL6N7fPx24h_HD8Awt3qCCKaxCizY-GsqLAULaH8Xt9YXA7frP_18tCNPeGKC2Y04Wrc2YqfP7lroMZA_6Ho" 
+               alt="Structural Architecture" 
+               class="object-cover w-full h-full"/>
+        </div>
+        <div class="border-l-2 border-[#5308e7] pl-4 py-2">
+          <p class="font-['Space_Mono'] text-xs font-bold uppercase tracking-tight text-[#1c1b1b]">
+            Fig 4.1: Architecture of Rigor
+          </p>
+          <p class="font-['Inter'] text-xs text-[#5e5e5e] italic mt-1 leading-relaxed">
+            Managing secondary systemic integrity with automated quiz checkpoints and multi-role performance trees.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+{% endblock %}

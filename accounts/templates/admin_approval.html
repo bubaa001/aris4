@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hidden">
+  {% csrf_token %}
+</div>
+
+<div class="max-w-[1440px] mx-auto px-5 md:px-16 my-16">
+  
+  <div class="mb-16 border-b-2 border-[#1c1b1b] pb-6">
+    <span class="font-['Space_Mono'] text-xs font-normal text-[#5308e7] tracking-[0.2em] uppercase block mb-2">
+      // CORE CONTROL GATEWAY
+    </span>
+    <h1 class="font-['Playfair_Display'] text-4xl md:text-5xl font-black text-[#1c1b1b] uppercase tracking-tight">
+      Faculty Verification Console
+    </h1>
+  </div>
+
+  <div class="grid grid-cols-12 gap-10 items-start">
+    
+    <div class="col-span-12 md:col-span-8 space-y-12">
+      
+      <div>
+        <h2 class="font-['Space_Mono'] text-xs font-bold tracking-[0.1em] text-[#5308e7] uppercase mb-6 border-b border-[#eae7e7] pb-2">
+          PENDING APPROVAL QUEUE (<span id="pending-count">{{ pending_instructors|length }}</span>)
+        </h2>
+        
+        <div id="pending-container" class="border border-[#1c1b1b] bg-white divide-y divide-[#1c1b1b] rounded-none {% if not pending_instructors %}hidden{% endif %}">
+          {% for instructor in pending_instructors %}
+            <div id="user-row-{{ instructor.id }}" class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 class="font-['Playfair_Display'] text-xl font-bold text-[#1c1b1b]">{{ instructor.username }}</h3>
+                <p class="font-['Space_Mono'] text-xs text-[#484456] mt-1">EMBED DATE: {{ instructor.date_joined|date:"Y-m-d H:i" }}</p>
+              </div>
+              <div>
+                <a href="{% url 'approve_instructor' instructor.id %}" data-action="toggle-status" class="inline-block bg-[#5308e7] text-white font-['Space_Mono'] text-xs font-normal tracking-[0.1em] uppercase px-6 py-3 border border-[#1c1b1b] [box-shadow:3px_3px_0px_0px_#1c1b1b] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:[box-shadow:4px_4px_0px_0px_#1c1b1b] transition-all rounded-none">
+                  GRANT CLEARANCE &rarr;
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div id="pending-empty-state" class="border border-dashed border-[#1c1b1b] p-12 text-center bg-white rounded-none {% if pending_instructors %}hidden{% endif %}">
+          <p class="font-['Space_Mono'] text-xs text-[#484456] uppercase tracking-wider">
+            // NO SYSTEM IDENTITIES AWAITING VERIFICATION CURRENTLY
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="font-['Space_Mono'] text-xs font-bold tracking-[0.1em] text-[#1c1b1b] uppercase mb-6 border-b border-[#eae7e7] pb-2">
+          VERIFIED ACTIVE FACULTY (<span id="approved-count">{{ approved_instructors|length }}</span>)
+        </h2>
+        
+        <div id="approved-container" class="border border-[#1c1b1b] bg-white divide-y divide-[#1c1b1b] rounded-none {% if not approved_instructors %}hidden{% endif %}">
+          {% for instructor in approved_instructors %}
+            <div id="user-row-{{ instructor.id }}" class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <span class="w-2 h-2 bg-green-500 rounded-none"></span>
+                <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ instructor.username }}</span>
+              </div>
+              <div>
+                <a href="{% url 'disapprove_instructor' instructor.id %}" data-action="toggle-status" class="inline-block bg-white text-red-600 font-['Space_Mono'] text-[11px] font-bold tracking-wider uppercase px-4 py-2 border border-red-600 hover:bg-red-50 transition-colors rounded-none">
+                  // REVOKE CLEARANCE
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div id="approved-empty-state" class="border border-dashed border-[#eae7e7] p-6 text-center bg-white rounded-none {% if approved_instructors %}hidden{% endif %}">
+          <p class="font-['Space_Mono'] text-xs text-gray-400">// NO ACTIVE INSTRUCTORS ON RECORD</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-4">
+      <div class="border-2 border-[#1c1b1b] p-6 bg-[#f0eded] rounded-none [box-shadow:4px_4px_0px_0px_#5308e7]">
+        <h3 class="font-['Space_Mono'] text-xs font-bold tracking-wider text-[#1c1b1b] uppercase border-b border-[#1c1b1b] pb-2 mb-4">
+          GATE KEEPER TELEMETRY
+        </h3>
+        <p class="font-['Inter'] text-xs text-[#484456] leading-relaxed mb-4">
+          This secure portal authorizes verified accounts to instantiate courses and populate quiz execution parameters. Ensure identity check protocols align with UDSM academic registries before assigning live keys.
+        </p>
+        <span class="font-['Space_Mono'] text-[10px] block opacity-60 uppercase">// ARIS_OS INTEGRITY CHECK: PASS</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Helper function to extract token from browser cookie string
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    // FALLBACK: If cookie store hasn't populated yet, read the generated DOM element token value directly
+    if (!cookieValue) {
+      const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+      if (csrfInput) cookieValue = csrfInput.value;
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener("click", async (event) => {
+    const targetLink = event.target.closest('[data-action="toggle-status"]');
+    if (!targetLink) return;
+    
+    event.preventDefault();
+    
+    const requestUrl = targetLink.getAttribute("href");
+    const csrftoken = getCookie('csrftoken');
+    
+    try {
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: { 
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": csrftoken
+        }
+      });
+      
+      if (response.ok) {
+        window.location.reload(); 
+      } else {
+        console.error("Server authentication payload validation failed.");
+      }
+    } catch (err) {
+      console.error("Asynchronous pipeline update failure:", err);
+    }
+  });
+</script>
+{% endblock %}

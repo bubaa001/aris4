@@ -12,7 +12,7 @@
     </p>
   </div>
     
-  <form method="POST" class="space-y-8">
+  <form method="POST" action="{% url 'login' %}" class="space-y-8">
     {% csrf_token %}
     
     {% for field in form %}
