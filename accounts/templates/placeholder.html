@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl px-6 py-24 text-center">
+  <div class="inline-flex items-center justify-center rounded-full bg-[#4f14e0] px-4 py-2 mb-8 text-xs font-bold uppercase tracking-[0.35em] text-white">
+    WORK IN PROGRESS
+  </div>
+  <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-6">{{ title }}</h1>
+  <p class="text-lg text-slate-600 mb-12">{{ message|default:'This page is coming soon. Please check back later.' }}</p>
+  <div class="flex flex-col gap-4 sm:flex-row sm:justify-center">
+    <a href="{% url 'home' %}" class="inline-block rounded-md border border-black bg-black px-8 py-4 text-sm font-semibold text-white hover:bg-white hover:text-black transition-colors">Return Home</a>
+    <a href="{% url 'study_dashboard' %}" class="inline-block rounded-md border border-black bg-transparent px-8 py-4 text-sm font-semibold text-black hover:bg-black hover:text-white transition-colors">Go to Dashboard</a>
+  </div>
+</section>
+{% endblock %}

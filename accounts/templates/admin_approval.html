@@ -91,53 +91,50 @@
 </div>
 
 <script>
-  // Helper function to extract token from browser cookie string
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
+  document.addEventListener('DOMContentLoaded', () => {
+    const getCookie = (name) => {
+      const cookieValue = document.cookie.split(';').find(cookie => cookie.trim().startsWith(name + '='));
+      if (cookieValue) {
+        return decodeURIComponent(cookieValue.trim().substring(name.length + 1));
       }
-    }
-    // FALLBACK: If cookie store hasn't populated yet, read the generated DOM element token value directly
-    if (!cookieValue) {
       const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-      if (csrfInput) cookieValue = csrfInput.value;
-    }
-    return cookieValue;
-  }
+      return csrfInput ? csrfInput.value : null;
+    };
 
-  document.addEventListener("click", async (event) => {
-    const targetLink = event.target.closest('[data-action="toggle-status"]');
-    if (!targetLink) return;
-    
-    event.preventDefault();
-    
-    const requestUrl = targetLink.getAttribute("href");
-    const csrftoken = getCookie('csrftoken');
-    
-    try {
-      const response = await fetch(requestUrl, {
-        method: "POST",
-        headers: { 
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": csrftoken
-        }
-      });
-      
-      if (response.ok) {
-        window.location.reload(); 
-      } else {
-        console.error("Server authentication payload validation failed.");
+    document.body.addEventListener('click', async (event) => {
+      const targetLink = event.target.closest('[data-action="toggle-status"]');
+      if (!targetLink) return;
+
+      event.preventDefault();
+      const requestUrl = targetLink.href;
+      const csrftoken = getCookie('csrftoken');
+
+      if (!csrftoken) {
+        console.error('CSRF token not found');
+        return;
       }
-    } catch (err) {
-      console.error("Asynchronous pipeline update failure:", err);
-    }
+
+      try {
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json',
+          },
+          credentials: 'same-origin',
+        });
+
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.text();
+          console.error('Approval request failed:', response.status, data);
+        }
+      } catch (err) {
+        console.error('Approval request error:', err);
+      }
+    });
   });
 </script>
 {% endblock %}

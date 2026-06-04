@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="w-full pb-24">
+    <section class="px-margin-mobile pt-10 pb-6 border-b border-on-surface">
+        <span class="font-label-mono text-label-mono uppercase text-primary mb-2 block tracking-widest">Digital Repository</span>
+        <h2 class="font-headline-lg-mobile text-headline-lg-mobile">The Archive</h2>
+    </section>
+
+    {% if featured_record %}
+    <section class="mt-8 px-margin-mobile">
+        <div class="relative group overflow-hidden border border-on-background">
+            <div class="aspect-square w-full">
+                {% if featured_record.cover_image %}
+                    <img alt="{{ featured_record.title }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="{{ featured_record.cover_image.url }}"/>
+                {% else %}
+                    <div class="w-full h-full bg-surface-container flex items-center justify-center font-label-mono text-secondary">NO_IMAGE_ARTIFACT</div>
+                {% endif %}
+            </div>
+            <div class="absolute bottom-0 left-0 p-6 bg-surface border-t border-r border-on-background max-w-[80%]">
+                <h3 class="font-headline-md text-headline-md mb-2">{{ featured_record.title|default:"Curated Knowledge" }}</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">{{ featured_record.summary }}</p>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <nav class="mt-12 px-margin-mobile flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+        <a href="{% url 'archive_index' %}" class="px-4 py-1 font-label-mono text-label-mono whitespace-nowrap {% if not active_category %}bg-on-surface text-surface{% else %}border border-on-surface text-on-surface hover:bg-primary-fixed{% endif %} transition-colors">
+            ALL_RECORDS
+        </a>
+        {% for category in categories %}
+        <a href="{% url 'archive_category' slug=category.slug %}" class="px-4 py-1 font-label-mono text-label-mono whitespace-nowrap {% if active_category == category.slug %}bg-on-surface text-surface{% else %}border border-on-surface text-on-surface hover:bg-primary-fixed{% endif %} transition-colors">
+            {{ category.name|upper }}
+        </a>
+        {% endfor %}
+    </nav>
+
+    <section class="mt-8 space-y-16">
+        {% if archive_items %}
+            {% for item in archive_items %}
+            <div class="asymmetric-item px-margin-mobile flex flex-col gap-4 transition-all duration-700 ease-out opacity-0 translate-y-10 {% if forloop.counter|divisibleby:2 %}ps-[20%]{% else %}pe-[20%]{% endif %}">
+                <div class="flex justify-between items-baseline border-b border-on-surface-variant pb-1">
+                    <span class="font-label-mono text-label-mono text-primary font-bold">{{ item.status_label|upper|default:"RECORD" }}</span>
+                    <span class="font-label-mono text-label-mono opacity-60">{{ item.timestamp_string|default:"Q3 2026" }}</span>
+                </div>
+
+                {% if item.layout_variant == 'reading' %}
+                    <div class="p-4 border border-on-surface bg-surface-container-low">
+                        <h4 class="font-label-bold text-label-bold uppercase tracking-tighter">{{ item.subtitle|default:"Reading Material" }}</h4>
+                        <p class="font-headline-md text-headline-md mt-1 leading-none italic text-primary">{{ item.title }}</p>
+                        <p class="mt-4 text-on-surface-variant text-sm">{{ item.description }}</p>
+                    </div>
+                {% elif item.layout_variant == 'quote' %}
+                    <div class="border-l-4 border-primary pl-4">
+                        <h4 class="font-headline-md text-headline-md leading-tight italic">{{ item.title }}</h4>
+                        <p class="mt-2 text-on-surface-variant">{{ item.description }}</p>
+                    </div>
+                {% else %}
+                    <div>
+                        <h4 class="font-headline-md text-headline-md leading-tight">{{ item.title }}</h4>
+                        <p class="mt-2 text-on-surface-variant {% if item.is_italic %}italic{% endif %}">{{ item.description }}</p>
+                    </div>
+                    {% if item.has_certificate %}
+                        <a href="{{ item.certificate_url }}" class="w-fit font-label-mono text-label-mono border-b border-primary text-primary hover:text-on-primary-fixed-variant transition-all">VIEW_CERTIFICATE</a>
+                    {% elif item.has_actions %}
+                        <div class="flex gap-4">
+                            <a href="{{ item.download_url }}" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">download</a>
+                            <button type="button" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}{{ item.get_absolute_url }}')">share</button>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="px-margin-mobile text-center py-12 border border-dashed border-outline-variant">
+                <p class="font-label-mono text-label-mono text-secondary">NO_COMPARTMENTALIZED_DATA_FOUND</p>
+            </div>
+        {% endif %}
+
+        <div class="w-full bg-primary py-12 px-margin-mobile overflow-hidden relative">
+            <div class="absolute -right-10 top-0 text-[120px] font-bold text-on-primary opacity-5 select-none pointer-events-none italic">
+                ARCHIVE
+            </div>
+            <div class="relative z-10 max-w-[80%]">
+                <h5 class="font-headline-md text-headline-md text-on-primary">Continued Learning</h5>
+                <p class="text-on-primary-container mt-2 opacity-80">Knowledge is not a destination, but a persistent state of exploration.</p>
+                <a href="{% url 'study_dashboard' %}" class="inline-block mt-6 px-8 py-3 bg-white text-primary font-label-mono text-label-mono uppercase tracking-widest hover:scale-105 transition-transform">EXPLORE_NEW</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                    observer.unobserve(entry.target); // Kill tracking loop after item reveals
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.asymmetric-item').forEach(item => {
+            observer.observe(item);
+        });
+    });
+</script>
+{% endblock %}

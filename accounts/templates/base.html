@@ -4,39 +4,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLNportal</title>
+    <title>aris4.0 // identity authentication</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col justify-between">
     
     <!-- Navbar -->
-{% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register'  and request.resolver_match.url_name != 'home' %}
+{% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'home' %}
 <nav class="w-full bg-[#fcfbfa] border-b border-gray-300 px-6 py-4 shadow-sm text-black">
   <div class="max-w-7xl mx-auto flex items-center justify-between">
     
     <div class="flex items-center gap-6">
-      <a href="#" class="font-serif text-3xl font-black tracking-tight text-black select-none">
+      <a href="{% url 'home' %}" class="font-serif text-3xl font-black tracking-tight text-black select-none">
         aris4.o
       </a>
 
       <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-600 ml-4">
-        <a href="#" class="hover:text-[#4f14e0] transition-colors py-1">Dashboard</a>
-        <a href="#" class="hover:text-[#4f14e0] transition-colors py-1">Quests</a>
-        <a href="#" class="hover:text-[#4f14e0] transition-colors py-1">Leaderboard</a>
+        <!-- Dynamic Dashboard Routing based on User Role -->
+        {% if user.is_authenticated %}
+            {% if user.role == 'admin' or user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="hover:text-[#4f14e0] transition-colors py-1">Dashboard</a>
+            {% elif user.role == 'instructor' %}
+                <a href="{% url 'instructor_dashboard' %}" class="hover:text-[#4f14e0] transition-colors py-1">Dashboard</a>
+            {% else %}
+                <a href="{% url 'study_dashboard' %}" class="hover:text-[#4f14e0] transition-colors py-1">Dashboard</a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'login' %}" class="hover:text-[#4f14e0] transition-colors py-1">Dashboard</a>
+        {% endif %}
+
+        <!-- Update 'quests' and 'leaderboard' if you have explicit named routes for them -->
+        <a href="{% url 'study_dashboard' %}" class="hover:text-[#4f14e0] transition-colors py-1">Quests</a>
+        <a href="{% url 'study_dashboard' %}" class="hover:text-[#4f14e0] transition-colors py-1">Leaderboard</a>
       </div>
     </div>
 
     <div class="flex items-center gap-4">
+      <!-- Only display XP badge if the user is logged in and has a student role -->
+      {% if user.is_authenticated and user.role == 'student' %}
       <div class="bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest px-3 py-1.5 uppercase border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] select-none">
-        1250 xp
+        {{ user.xp }} xp
       </div>
-
-      
+      {% endif %}
     </div>
 
   </div>
 </nav>
-
 {% endif %}
 
     <!-- Main Content -->
@@ -44,55 +57,112 @@
         {% block content %}
         {% endblock %}
     </main>
-<!-- mobile bottom bar  -->
-  <!-- mobile bottom bar  -->
+
+  <!-- Mobile Bottom Bar -->
   {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+  <div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t border-gray-300 shadow-lg sm:hidden">
+    <div class="grid grid-cols-4 h-20">
+        
+      <!-- Mobile Journal Link -->
+      {% if user.is_authenticated and user.role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% elif user.is_authenticated and user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% elif user.is_authenticated and user.role == 'instructor' %}
+        <a href="{% url 'instructor_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% elif user.is_authenticated and user.role == 'student' %}
+        <a href="{% url 'study_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% else %}
+        <a href="{% url 'home' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% endif %}
+        <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+        <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>  
+        <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Journal</span>
+      </a>
 
-    <div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t border-gray-300 shadow-lg sm:hidden">
-  <div class="grid grid-cols-4 h-20">
-      
-    <button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
-      <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
-      <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-      </svg>  
-      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Journal</span>
-    </button>
+      <!-- Mobile Study/Dashboard Link -->
+      {% if user.is_authenticated and user.role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+          <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+          <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+            <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
+          </svg>
+          <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Admin</span>
+        </a>
+      {% elif user.is_authenticated and user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+          <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+          <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+            <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
+          </svg>
+          <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Admin</span>
+        </a>
+      {% elif user.is_authenticated and user.role == 'instructor' %}
+        <a href="{% url 'instructor_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+          <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+          <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+            <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
+          </svg>
+          <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Teach</span>
+        </a>
+      {% elif user.is_authenticated and user.role == 'student' %}
+        <a href="{% url 'study_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+          <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+          <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+            <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
+          </svg>
+          <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Study</span>
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+          <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+          <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
+            <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
+          </svg>
+          <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Login</span>
+        </a>
+      {% endif %}
 
-    <button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
-      <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
-      <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
-        <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
-      </svg>
-      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Study</span>
-    </button>
+      <!-- Mobile Archive/Quests Link -->
+      <a href="{% url 'archive_index' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+        <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+        <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="5" x="2" y="3" rx="1"></rect>
+          <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
+          <path d="M10 12h4"></path>
+        </svg>
+        <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Archive</span>
+      </a>
 
-    <button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
-      <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
-      <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="20" height="5" x="2" y="3" rx="1"></rect>
-        <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
-        <path d="M10 12h4"></path>
-      </svg>
-      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Archive</span>
-    </button>
+      <!-- Mobile Profile/Identity Link -->
+      {% if user.is_authenticated and user.role == 'student' %}
+        <a href="{% url 'student_profile' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% elif user.is_authenticated and user.role == 'instructor' %}
+        <a href="{% url 'teacher_profile' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% elif user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% else %}
+        <a href="{% url 'login' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      {% endif %}
+        <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
+        <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Profile</span>
+      </a>
 
-    <button class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
-      <div class="w-10 h-[3px] bg-transparent group-hover:bg-[#4f14e0] rounded-full mb-1 transition-colors"></div>
-      <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Profile</span>
-    </button>
-
+    </div>
   </div>
-</div>
-       
-{% endif %}
-</body>
-</html>
+  {% endif %}
+
 </body>
 </html>

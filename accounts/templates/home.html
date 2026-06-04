@@ -3,15 +3,13 @@
 {% block content %}
 <div class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-16">
   
-  <!-- Hero Section -->
   <section class="min-h-[90vh] flex flex-col justify-center py-8 md:py-12 lg:py-16">
     <div class="grid grid-cols-12 gap-4 md:gap-6 lg:gap-8 items-start md:items-center">
       
-      <!-- Left Content - Takes full width on tablet, adjusts columns -->
       <div class="col-span-12 md:col-span-12 lg:col-span-6 xl:col-span-6">
         <div class="animate-fadeInUp">
           <span class="font-['Space_Mono'] text-[10px] sm:text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase block mb-3 md:mb-4 lg:mb-6 border-l-4 border-[#5308e7] pl-3">
-            SYSTEM ENGINE // VERSION 4.0
+             Aris // VERSION 4.0
           </span>
           
           <h1 class="font-['Playfair_Display'] text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[84px] font-black text-[#1c1b1b] leading-[1.1] tracking-[-0.02em] mb-4 md:mb-6 lg:mb-8">
@@ -25,12 +23,11 @@
             <span class="font-semibold bg-gradient-to-r from-[#5308e7] to-[#8b5cf6] bg-clip-text text-transparent">Avant-Garde.</span>
           </p>
 
-          <!-- CTA Buttons -->
           <div class="flex flex-col sm:flex-row gap-3 md:gap-4 lg:gap-6">
             {% if user.is_authenticated %}
                 {% if user.role == 'student' %}
                     <a href="{% url 'select_level' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
-                        ENTER THE ARENA 
+                        WELCOME BACK, SCHOLAR
                         <span class="group-hover:translate-x-1 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -40,7 +37,17 @@
                     </a>
                 {% elif user.role == 'instructor' %}
                     <a href="{% url 'dashboard' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
-                        FACULTY TERMINAL 
+                        READY TO TEACH
+                        <span class="group-hover:translate-x-1 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
+                {% elif user.role == 'admin' or user.is_superuser %}
+                    <a href="{% url 'admin_dashboard' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
+                        ADMIN CONSOLE
                         <span class="group-hover:translate-x-1 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -51,7 +58,7 @@
                 {% endif %}
             {% else %}
                 <a href="{% url 'register' %}" class="group inline-flex items-center justify-center gap-2 bg-[#5308e7] text-white px-6 md:px-8 lg:px-10 py-3 md:py-4 lg:py-5 font-['Space_Mono'] text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.1em] uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all duration-150">
-                    JOIN THE VANGUARD
+                    START TODAY!
                     <span class="group-hover:translate-x-1 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -65,25 +72,23 @@
             {% endif %}
           </div>
 
-          <!-- Stats - Visible on Desktop only, hidden on Tablet -->
           <div class="hidden lg:grid grid-cols-3 gap-4 mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-gray-200">
             <div>
-              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">500+</p>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">{{ student_count }}</p>
               <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Active Scholars</p>
             </div>
             <div>
-              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">50+</p>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">{{ instructor_count }}</p>
               <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Expert Faculty</p>
             </div>
             <div>
-              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">10k+</p>
-              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Quests Completed</p>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">{{ active_quests }}</p>
+              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Active Quests Available</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Content - Live Arena Status (Desktop only, hidden on tablet) -->
       <div class="hidden xl:block xl:col-span-6">
         <div class="relative animate-fadeInRight">
           <div class="absolute inset-0 bg-gradient-to-br from-[#5308e7]/10 to-transparent rounded-3xl"></div>
@@ -101,8 +106,8 @@
                     </svg>
                     Top Scholar
                 </span>
-                <span class="font-['Playfair_Display'] text-lg font-bold text-[#5308e7]">RADHIA D.</span>
-                <span class="font-['Space_Mono'] text-xs bg-amber-100 px-2 py-1">2,450 XP</span>
+                <span class="font-['Playfair_Display'] text-lg font-bold text-[#5308e7]">{{ top_student_name }}</span>
+                <span class="font-['Space_Mono'] text-xs bg-amber-100 px-2 py-1 font-bold">{{ top_student_xp }} XP</span>
               </div>
               <div class="flex justify-between items-center border-b border-gray-200 pb-3">
                 <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
@@ -112,8 +117,8 @@
                     </svg>
                     Current Quest
                 </span>
-                <span class="font-['Inter'] text-sm">Advanced Calculus</span>
-                <span class="font-['Space_Mono'] text-xs text-green-600">+150 XP</span>
+                <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ current_quest_title }}</span>
+                <span class="font-['Space_Mono'] text-xs text-green-600 font-bold"></span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
@@ -122,8 +127,8 @@
                     </svg>
                     Active Title
                 </span>
-                <span class="font-['Inter'] text-sm font-bold">"Grandmaster"</span>
-                <span class="font-['Space_Mono'] text-xs text-[#5308e7]">TOP 3%</span>
+                <span class="font-['Inter'] text-sm font-black text-[#1c1b1b]">"{{ active_title }}"</span>
+                <span class="font-['Space_Mono'] text-xs text-[#5308e7] font-bold">TOP METRIC</span>
               </div>
             </div>
             <div class="mt-6 pt-4 border-t-2 border-[#1c1b1b]">
@@ -136,7 +141,7 @@
                     // NEXT BATTLE //
                 </p>
                 <p class="font-['Inter'] text-sm font-semibold">Mathematics Tournament</p>
-                <p class="font-['Space_Mono'] text-xs text-gray-600">Starts in 02:14:32</p>
+                <p class="font-['Space_Mono'] text-xs text-gray-600"> </p>
               </div>
             </div>
           </div>
@@ -147,23 +152,21 @@
     </div>
   </section>
 
-  <!-- Stats Bar - Mobile & Tablet (visible on mobile and tablet, hidden on desktop) -->
   <div class="grid grid-cols-3 gap-3 lg:hidden py-4 md:py-6 border-t border-b border-gray-200 my-4 md:my-6">
     <div class="text-center">
-      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">500+</p>
-      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Scholars</p>
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">{{ student_count }}</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Scholars</p>
     </div>
     <div class="text-center">
-      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">50+</p>
-      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Faculty</p>
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">{{ instructor_count }}</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Faculty</p>
     </div>
     <div class="text-center">
-      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">10k+</p>
-      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456]">Quests</p>
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">{{ active_quests }}</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Quests</p>
     </div>
   </div>
 
-  <!-- Live Status Card - Mobile & Tablet (visible on mobile and tablet, hidden on desktop) -->
   <div class="lg:hidden mb-6 md:mb-8">
     <div class="bg-white border-2 border-[#1c1b1b] p-4 md:p-5 [box-shadow:4px_4px_0px_0px_#5308e7]">
       <div class="text-center mb-3 md:mb-4">
@@ -172,9 +175,7 @@
         </div>
       </div>
       
-      <!-- 2-column grid for tablet -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- Left column -->
         <div class="space-y-3">
           <div class="flex items-center justify-between p-2 bg-gray-50">
             <div class="flex items-center gap-2">
@@ -183,8 +184,8 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-gray-500">TOP SCHOLAR</span>
             </div>
-            <span class="font-['Playfair_Display'] text-sm font-bold text-[#5308e7]">RADHIA D.</span>
-            <span class="font-['Space_Mono'] text-[9px] bg-amber-100 px-1 py-0.5">2,450 XP</span>
+            <span class="font-['Playfair_Display'] text-sm font-bold text-[#5308e7]">{{ top_student_name }}</span>
+            <span class="font-['Space_Mono'] text-[9px] bg-amber-100 px-1 py-0.5 font-bold">{{ top_student_xp }} XP</span>
           </div>
           
           <div class="flex items-center justify-between p-2 bg-gray-50">
@@ -194,12 +195,11 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-gray-500">TITLE</span>
             </div>
-            <span class="font-['Inter'] text-sm font-bold">Grandmaster</span>
-            <span class="font-['Space_Mono'] text-[9px] text-[#5308e7]">TOP 3%</span>
+            <span class="font-['Inter'] text-sm font-bold text-[#1c1b1b]">"{{ active_title }}"</span>
+            <span class="font-['Space_Mono'] text-[9px] text-[#5308e7] font-bold">TOP METRIC</span>
           </div>
         </div>
         
-        <!-- Right column -->
         <div class="space-y-3">
           <div class="flex items-center justify-between p-2 bg-gray-50">
             <div class="flex items-center gap-2">
@@ -209,8 +209,8 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-gray-500">QUEST</span>
             </div>
-            <span class="font-['Inter'] text-sm">Advanced Calculus</span>
-            <span class="font-['Space_Mono'] text-[9px] text-green-600">+150 XP</span>
+            <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ current_quest_title }}</span>
+            <span class="font-['Space_Mono'] text-[9px] text-green-600 font-bold"></span>
           </div>
           
           <div class="flex items-center justify-between p-2 bg-[#f5f3f0]">
@@ -221,15 +221,14 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-[#5308e7]">NEXT BATTLE</span>
             </div>
-            <span class="font-['Inter'] text-sm font-semibold">Mathematics Tournament</span>
-            <span class="font-['Space_Mono'] text-[9px] text-gray-500">02:14:32</span>
+            <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">Mathematics Tournament</span>
+            <span class="font-['Space_Mono'] text-[9px] text-gray-500"></span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Philosophy Section -->
   <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b] animate-fadeInUp">
     <div class="grid grid-cols-12 gap-6 md:gap-8 lg:gap-12">
       <div class="col-span-12 md:col-span-12 lg:col-span-4">
@@ -245,10 +244,7 @@
           Beyond the <span class="text-[#5308e7] italic">algorithm.</span>
         </h2>
         <div class="space-y-6 max-w-3xl">
-          <p class="font-['Inter'] text-base md:text-lg text-[#1c1b1b] leading-relaxed md:leading-[32px] font-medium">
-            In an era of mindless scrolling and algorithmic noise, <span class="font-bold">ARIS4.0</span> stands as a bastion of curated intellectual pursuit. 
-            We reject the generic. We champion the difficult.
-          </p>
+         
           <p class="font-['Inter'] text-base md:text-lg text-[#484456] leading-relaxed md:leading-[32px] border-l-4 border-[#5308e7] pl-4 md:pl-6">
             Our platform is designed for those who find beauty in complex axioms and thrill in the pursuit of verification. 
             This is not just learning; it's an aesthetic evolution of the mind.
@@ -266,7 +262,6 @@
     </div>
   </section>
 
-  <!-- Features Grid -->
   <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b]">
     <div class="text-center mb-8 md:mb-12 lg:mb-16">
       <p class="font-['Space_Mono'] text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase mb-3">// THE ARSENAL //</p>
@@ -362,7 +357,6 @@
     </div>
   </section>
 
-  <!-- How It Works -->
   <section class="py-12 md:py-16 lg:py-20 border-t border-[#1c1b1b]">
     <div class="text-center mb-8 md:mb-12 lg:mb-16">
       <p class="font-['Space_Mono'] text-xs md:text-sm text-[#5308e7] tracking-[0.2em] uppercase mb-3">// THE PATH //</p>
@@ -392,9 +386,7 @@
     </div>
   </section>
 
-  <!-- CTA Banner -->
   <section class="py-12 md:py-16 lg:py-24 bg-[#1c1b1b] text-[#fcf9f8] my-8 md:my-12 lg:my-16 relative overflow-hidden rounded-none">
-    <!-- Background Pattern -->
     <div class="absolute inset-0 opacity-5">
       <div class="absolute top-0 left-0 w-full h-full" style="background-image: radial-gradient(#6c3bff 2px, transparent 2px); background-size: 30px 30px;"></div>
     </div>
@@ -405,13 +397,13 @@
         THE FUTURE IS AN<br/><span class="italic text-[#cbbeff]">INTELLECTUAL ARENA.</span>
       </h2>
       <p class="font-['Inter'] text-sm md:text-base lg:text-lg text-gray-300 max-w-2xl mx-auto mb-6 md:mb-8 lg:mb-10">
-        Join 500+ scholars already leveling up their minds. The arena awaits.
+        Join {{ student_count }} scholars already leveling up their minds. The arena awaits.
       </p>
       
       {% if not user.is_authenticated %}
       <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
         <a href="{% url 'register' %}" class="group inline-flex items-center justify-center gap-2 bg-[#6c3bff] text-white font-['Space_Mono'] text-[11px] md:text-xs lg:text-sm font-bold px-6 md:px-8 lg:px-12 py-3 md:py-4 lg:py-5 [box-shadow:4px_4px_0px_0px_#3b1b8a] hover:bg-[#5308e7] transition-all uppercase tracking-widest">
-            JOIN THE VANGUARD
+            NEW SCHOLAR JOIN NOW 
             <span class="group-hover:translate-x-1 transition-transform">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -430,7 +422,7 @@
       {% else %}
       <div class="inline-block border-2 border-[#cbbeff] px-4 md:px-6 lg:px-8 py-2 md:py-3 lg:py-4">
         <p class="font-['Space_Mono'] text-[10px] md:text-xs lg:text-sm text-[#cbbeff] uppercase tracking-widest">
-          ✓ AUTHENTICATED PROFILE IDENTITY // LEVEL: {% if user.xp %}{{ user.xp }}{% else %}INITIATE{% endif %}
+          ✓ AUTHENTICATED PROFILE IDENTITY // LEVEL: {% if user.xp %}{{ user.xp }} XP{% else %}INITIATE{% endif %}
         </p>
       </div>
       {% endif %}
@@ -439,7 +431,6 @@
 
 </div>
 
-<!-- Custom Animations -->
 <style>
   @keyframes fadeInUp {
     from {

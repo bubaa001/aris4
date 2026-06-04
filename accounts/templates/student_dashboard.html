@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
+    <!-- Header Greeting Section -->
+    <header class="grid grid-cols-12 mb-16">
+        <div class="col-span-12 md:col-span-8">
+            <h1 class="font-display-lg text-[64px] md:text-display-lg leading-[1.1] text-on-background mb-4">Hi, {{ current_student.first_name|default:"Alex" }}!</h1>
+            <p class="font-label-mono text-label-mono uppercase text-secondary tracking-widest">
+                {{ academic_status.semester_label|default:"Spring Semester" }} • Week {{ academic_status.current_week|default:"08" }}
+            </p>
+        </div>
+        <div class="hidden md:flex col-span-4 justify-end items-end">
+            <div class="w-full h-[1px] bg-on-background opacity-20"></div>
+        </div>
+    </header>
+
+    <!-- Bento Box Interactive Layout Grid Matrix -->
+    <div class="grid grid-cols-12 gap-gutter">
+        <!-- Momentum Stat Module: XP Progress Graphic Container -->
+        <section class="col-span-12 md:col-span-5 bg-on-background text-background p-8 relative overflow-hidden flex flex-col justify-between h-[400px]">
+            <div class="z-10">
+                <span class="font-label-mono text-label-mono block mb-2 opacity-70">DAILY MOMENTUM</span>
+                <h2 class="font-headline-md text-headline-md leading-tight">Level {{ academic_status.current_level|default:"14" }} {{ academic_status.tier_title|default:"Professional" }}</h2>
+            </div>
+            <div class="z-10 space-y-4">
+                <div class="flex justify-between items-end">
+                    <span class="font-display-lg text-[48px] leading-none">{{ academic_status.xp_percentage|default:"82" }}%</span>
+                    <span class="font-label-mono text-label-mono mb-2">{{ academic_status.xp_to_next|default:"350" }} XP TO NEXT</span>
+                </div>
+                <div class="w-full h-12 border border-background p-1 flex">
+                    <div class="h-full bg-primary-container transition-all duration-500" style="width: {{ academic_status.xp_percentage|default:'82' }}%;"></div>
+                </div>
+            </div>
+            <!-- Structural Background Graphic Element -->
+            <div class="absolute -right-10 -bottom-10 opacity-20 pointer-events-none select-none">
+                <span class="text-[200px] font-bold leading-none font-headline-lg">{{ academic_status.current_level|default:"14" }}</span>
+            </div>
+        </section>
+
+        <!-- Dynamic Deadlines and Course Assignments Module -->
+        <section class="col-span-12 md:col-span-7 space-y-6">
+            <div class="flex justify-between items-baseline border-b border-on-background pb-2">
+                <h3 class="font-label-mono text-label-mono font-bold">UPCOMING DEADLINES</h3>
+                <a class="font-label-mono text-label-mono underline hover:text-primary transition-colors" href="{% url 'deadlines_list' %}">VIEW ALL</a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[320px]">
+                {% if active_deadlines %}
+                    {% for deadline in active_deadlines|slice:":2" %}
+                    <!-- Deadline Custom Card Module -->
+                    <div class="group relative overflow-hidden border border-on-background bg-white {% if forloop.counter == 2 %}translate-y-4 md:translate-y-8{% endif %}">
+                        {% if deadline.cover_image %}
+                            <img alt="{{ deadline.title }}" class="absolute inset-0 w-full h-full object-cover grayscale brightness-50 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" src="{{ deadline.cover_image.url }}"/>
+                        {% else %}
+                            <div class="absolute inset-0 bg-neutral-900 flex items-center justify-center font-label-mono text-neutral-700">NO_IMAGE_ARTIFACT</div>
+                        {% endif %}
+                        <div class="absolute inset-0 p-6 flex flex-col justify-end text-white z-10">
+                            <span class="font-label-mono text-[10px] mb-1 px-2 py-0.5 w-fit {% if deadline.type == 'QUIZ' %}bg-primary-container{% else %}bg-on-background border border-white{% endif %}">
+                                {{ deadline.type|upper }} • {{ deadline.due_date|date:"m.d" }}
+                            </span>
+                            <h4 class="font-headline-md text-headline-md leading-tight">{{ deadline.title }}</h4>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Default Static Fallback State Blocks -->
+                    <div class="group relative overflow-hidden border border-on-background bg-white">
+                        <div class="absolute inset-0 bg-neutral-900 p-6 flex flex-col justify-end text-white">
+                            <span class="font-label-mono text-[10px] mb-1 px-2 py-0.5 bg-primary-container w-fit">QUIZ • 03.14</span>
+                            <h4 class="font-headline-md text-headline-md leading-tight">Modern Algorithm Structures</h4>
+                        </div>
+                    </div>
+                    <div class="group relative overflow-hidden border border-on-background bg-white translate-y-4 md:translate-y-8">
+                        <div class="absolute inset-0 bg-neutral-800 p-6 flex flex-col justify-end text-white">
+                            <span class="font-label-mono text-[10px] mb-1 px-2 py-0.5 bg-on-background border border-white w-fit">ESSAY • 03.16</span>
+                            <h4 class="font-headline-md text-headline-md leading-tight">Neural Ethics & Aesthetics</h4>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Asymmetric Class Enrollment Grid Matrix Stream -->
+        <section class="col-span-12 mt-16">
+            <div class="grid grid-cols-12 gap-gutter items-start">
+                <div class="col-span-12 md:col-span-3 sticky top-24">
+                    <h2 class="font-display-lg text-headline-lg mb-4">My Classes</h2>
+                    <p class="font-body-md text-body-md text-on-surface-variant max-w-xs">A curated selection of currently active modules for the seasonal academic cycle.</p>
+                    <div class="mt-8 space-y-2">
+                        <div class="h-[1px] w-full bg-on-background"></div>
+                        <div class="h-[1px] w-2/3 bg-on-background"></div>
+                        <div class="h-[1px] w-1/3 bg-on-background"></div>
+                    </div>
+                </div>
+                
+                <div class="col-span-12 md:col-span-9 space-y-12">
+                    {% if enrolled_classes %}
+                        {% for module in enrolled_classes %}
+                        <!-- Iterative Course Block Module with Structural Asymmetry Transforms -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 border-b border-on-background pb-12 group 
+                            {% if forloop.counter == 2 %}md:ml-24{% elif forloop.counter == 3 %}md:mr-12{% endif %}">
+                            <div class="md:col-span-2 font-label-mono text-label-mono text-secondary pt-2">{{ module.code|upper }}</div>
+                            <div class="md:col-span-7">
+                                <a href="{{ module.get_absolute_url }}">
+                                    <h3 class="font-headline-lg text-headline-md md:text-headline-lg mb-4 group-hover:text-primary transition-colors cursor-pointer">{{ module.title }}</h3>
+                                </a>
+                                <div class="flex gap-4">
+                                    <span class="px-3 py-1 border border-on-background font-label-mono text-label-mono uppercase">{{ module.schedule_string }}</span>
+                                    <span class="px-3 py-1 border border-on-background font-label-mono text-label-mono uppercase">{{ module.location_room }}</span>
+                                </div>
+                            </div>
+                            <div class="md:col-span-3 flex justify-end items-center pt-8 md:pt-0">
+                                <a href="{{ module.get_absolute_url }}" class="w-12 h-12 bg-white border border-on-background flex items-center justify-center hover:bg-on-background hover:text-white transition-all brutalist-shadow">
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Mock System Structural Fallbacks if Class Queries Yield Empty Sets -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 border-b border-on-background pb-12 group">
+                            <div class="md:col-span-2 font-label-mono text-label-mono text-secondary pt-2">CS-402</div>
+                            <div class="md:col-span-7">
+                                <h3 class="font-headline-lg text-headline-md md:text-headline-lg mb-4 group-hover:text-primary transition-colors cursor-pointer">Advanced Visual Systems</h3>
+                                <div class="flex gap-4">
+                                    <span class="px-3 py-1 border border-on-background font-label-mono text-label-mono">MONDAYS 14:00</span>
+                                    <span class="px-3 py-1 border border-on-background font-label-mono text-label-mono">RM 402</span>
+                                </div>
+                            </div>
+                            <div class="md:col-span-3 flex justify-end items-center pt-8 md:pt-0">
+                                <button type="button" class="w-12 h-12 bg-white border border-on-background flex items-center justify-center hover:bg-on-background hover:text-white transition-all brutalist-shadow">
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Right Margin Fixed Structural Subtext Label -->
+    <div class="fixed right-0 top-1/2 -rotate-90 origin-right translate-x-1/2 hidden lg:block pointer-events-none select-none">
+        <span class="font-label-mono text-[10px] tracking-[1em] text-outline-variant opacity-50 uppercase">Academic Archive System 4.0 // {% now "Y" %}</span>
+    </div>
+</main>
+
+<!-- Isolated Script Environment Block -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Scroll Intersection Observer for Brutalist Card Reveal Transitions
+        const observerOptions = {
+            threshold: 0.05,
+            rootMargin: '0px 0px -20px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.group').forEach(el => {
+            el.classList.add('transition-all', 'duration-1000', 'opacity-0', 'translate-y-4');
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}
