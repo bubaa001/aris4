@@ -1,162 +1,75 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
-<main class="relative pb-24">
-    <!-- Hero Masthead: The Scholar Header Component -->
-    <section class="px-margin-mobile pt-8 pb-4 border-b border-on-surface">
-        <div class="relative mb-8">
-            <div class="absolute -top-4 -left-2 z-10">
-                <h2 class="font-display-lg text-[64px] leading-tight uppercase text-primary opacity-20 select-none">THE</h2>
-                <h2 class="font-display-lg text-[84px] leading-[0.8] uppercase text-on-surface -mt-4">SCHOLAR</h2>
-            </div>
-            
-            <!-- Asymmetrical Image Wrapper Box -->
-            <div class="mt-20 ml-auto w-4/5 aspect-square border border-on-surface bg-surface-container overflow-hidden hard-shadow-black relative z-0">
-                {% if student.profile_picture %}
-                    <img alt="{{ student.full_name|default:'Student' }} profile" class="w-full h-full object-cover grayscale brightness-110" src="{{ student.profile_picture.url }}"/>
-                {% else %}
-                    <!-- Brutalist Unset State Minimal Block -->
-                    <div class="w-full h-full bg-neutral-900 flex flex-col items-center justify-center p-4 text-center">
-                        <span class="font-label-mono text-neutral-600 tracking-widest text-[12px]">aris4.0 // ARCHIVAL_IDENTITY</span>
-                    </div>
-                {% endif %}
-                <div class="absolute bottom-0 right-0 bg-primary text-white p-4">
-                    <p class="font-label-mono text-label-mono uppercase tracking-widest">EST. {{ student.enrolled_year|default:"2024" }}</p>
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+    
+    <section class="mb-12 pb-8 border-b border-gray-300">
+        <div class="flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+                <p class="font-mono text-xs text-[#4f14e0] uppercase tracking-widest mb-1">Student Profile</p>
+                <h1 class="font-serif text-4xl md:text-5xl font-black text-gray-900">{{ student.full_name|default:"Student" }}</h1>
+                <div class="flex items-baseline gap-3 mt-2">
+                    <span class="font-mono text-xs bg-gray-900 text-white px-2 py-1">{{ student.rank_title|default:"SCHOLAR" }}</span>
+                    <span class="font-mono text-xs text-gray-500">{{ student.xp_percentage|default:"0" }}% XP</span>
                 </div>
             </div>
+            <div class="mt-6 md:mt-0">
+                <a href="{% url 'logout' %}" class="font-mono text-xs uppercase tracking-widest text-red-600 hover:text-red-800 transition-colors border border-red-600 hover:border-red-800 px-4 py-2 inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    LOGOUT
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div class="pb-6 border-b border-gray-200">
+            <p class="font-mono text-xs uppercase text-gray-500 mb-4">XP Progress</p>
+            <div class="flex items-baseline gap-1 mb-3">
+                <span class="font-serif text-4xl font-black text-gray-900">{{ student.xp_percentage|default:"0" }}</span>
+                <span class="font-mono text-xs text-gray-500">%</span>
+            </div>
+            <div class="w-full h-2 bg-gray-200">
+                <div class="h-full bg-[#4f14e0]" style="width: {{ student.xp_percentage|default:'0' }}%"></div>
+            </div>
+        </div>
+        <div class="pb-6 border-b border-gray-200">
+            <p class="font-mono text-xs uppercase text-gray-500 mb-4">Enrolled Classes</p>
+            <div class="flex items-baseline gap-1">
+                <span class="font-serif text-4xl font-black text-gray-900">{{ enrolled_count|default:"0" }}</span>
+                <span class="font-mono text-xs text-gray-500">classes</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-12">
+        <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+            <h2 class="font-serif text-2xl font-bold text-gray-900">My Classes</h2>
+            <a href="{% url 'select_level' %}" class="font-mono text-xs underline hover:text-[#4f14e0] transition-colors text-gray-500">MANAGE</a>
         </div>
         
-        <!-- Identity Metadata Block -->
-        <div class="flex flex-col gap-1 mt-12">
-            <p class="font-label-mono text-label-mono text-primary uppercase tracking-widest">Student Identity</p>
-            <h1 class="font-headline-lg-mobile text-headline-lg-mobile">{{ student.full_name|default:"Alex Stone" }}</h1>
-            <div class="flex items-baseline gap-2">
-                <span class="font-label-mono text-label-mono bg-on-surface text-surface px-2 py-1 cursor-pointer select-none transition-colors duration-200" id="rank-badge-toggle">
-                    RANK: {{ student.rank_title|default:"VANGUARD" }}
-                </span>
-                <span class="font-label-mono text-label-mono text-secondary">LVL {{ student.level|default:"42" }}</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Grid Module (Bento Spread Matrix) -->
-    <section class="grid grid-cols-4 border-b border-on-surface">
-        <div class="col-span-2 border-r border-on-surface p-6 flex flex-col justify-between">
-            <p class="font-label-mono text-label-mono uppercase">XP Progress</p>
-            <div class="mt-8">
-                <div class="flex items-baseline gap-1">
-                    <span class="font-display-lg text-4xl">{{ student.xp_percentage|default:"88" }}</span>
-                    <span class="font-label-mono text-label-mono text-secondary">%</span>
-                </div>
-                <div class="w-full h-1 bg-surface-container-highest mt-2 relative">
-                    <div class="absolute top-0 left-0 h-full bg-primary" style="width: {{ student.xp_percentage|default:'88' }}%"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-span-2 p-6 flex flex-col justify-between">
-            <p class="font-label-mono text-label-mono uppercase">Study Hours</p>
-            <div class="mt-8">
-                <div class="flex items-baseline gap-1">
-                    <span class="font-display-lg text-4xl">{{ student.total_hours|default:"1,240" }}</span>
-                </div>
-                <p class="font-label-mono text-label-mono text-secondary uppercase text-[10px]">Total Accumulated</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Unlocked Achievements / System Titles Layout -->
-    <section class="px-margin-mobile py-10 border-b border-on-surface">
-        <h3 class="font-label-mono text-label-mono text-primary uppercase mb-6 tracking-[0.2em]">Unlocked Titles</h3>
-        <div class="flex flex-wrap gap-2">
-            {% if unlocked_titles %}
-                {% for title in unlocked_titles %}
-                    <span class="{% if title.is_active %}bg-primary text-white{% else %}border border-on-surface text-on-surface{% endif %} {% if title.is_muted %}opacity-50{% endif %} {% if title.is_italic %}italic{% endif %} px-4 py-2 font-label-mono text-label-mono cursor-default select-none">
-                        {{ title.slug_name }}
-                    </span>
-                {% endfor %}
-            {% else %}
-                <!-- Static System Defaults Fallback Grid -->
-                <span class="border border-on-surface px-4 py-2 font-label-mono text-label-mono hover:bg-on-surface hover:text-surface transition-colors cursor-default">CYPHER_ADEPT</span>
-                <span class="bg-primary text-white px-4 py-2 font-label-mono text-label-mono">VOID_WALKER</span>
-                <span class="border border-on-surface px-4 py-2 font-label-mono text-label-mono opacity-50">ARCHIVIST_LVL3</span>
-                <span class="border border-on-surface px-4 py-2 font-label-mono text-label-mono italic">PHILOSOPHICAL_ENGINEER</span>
-            {% endif %}
-        </div>
-    </section>
-
-    <!-- Learning Manifesto (High Contrast Editorial Feature) -->
-    <section class="px-margin-mobile py-12 bg-on-surface text-surface relative overflow-hidden">
-        <div class="relative z-10">
-            <h3 class="font-headline-md text-headline-md italic mb-8 border-b border-surface-variant pb-4">Learning Manifesto</h3>
-            <p class="font-body-lg text-body-lg leading-relaxed mb-8 first-letter:text-6xl first-letter:font-display-lg first-letter:mr-3 first-letter:float-left first-letter:text-primary">
-                {{ student.manifesto|default:"Education is not the filling of a vessel, but the lighting of a flame. At aris4.0, we transcend traditional boundaries. My pursuit is focused on the synthesis of algorithmic logic and humanistic inquiry. Every node reached is a question redefined." }}
-            </p>
-            <div class="grid grid-cols-2 gap-8 pt-8 border-t border-surface-variant">
-                <div>
-                    <p class="font-label-mono text-label-mono text-primary-fixed-dim uppercase mb-2">Focus Alpha</p>
-                    <p class="font-label-bold text-label-bold">{{ student.focus_alpha|default:"Neural Architecture" }}</p>
-                </div>
-                <div>
-                    <p class="font-label-mono text-label-mono text-primary-fixed-dim uppercase mb-2">Focus Beta</p>
-                    <p class="font-label-bold text-label-bold">{{ student.focus_beta|default:"Ancient Epigraphy" }}</p>
-                </div>
-            </div>
-        </div>
-        <!-- Subtle Vector Graphic Structural Mask -->
-        <div class="absolute -bottom-10 -right-10 opacity-10 pointer-events-none">
-            <span class="material-symbols-outlined text-[300px]" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
-        </div>
-    </section>
-
-    <!-- Recent Dynamic Logs & Document Artifacts -->
-    <section class="px-margin-mobile py-10">
-        <div class="flex justify-between items-end mb-8">
-            <h3 class="font-label-mono text-label-mono text-primary uppercase tracking-[0.2em]">Recent Dossiers</h3>
-            <a href="{% url 'dossier_archive' %}" class="font-label-mono text-label-mono text-secondary underline hover:text-primary transition-colors">VIEW ALL</a>
-        </div>
-        
-        <ul class="space-y-4">
-            {% if recent_dossiers %}
-                {% for dossier in recent_dossiers %}
-                <li class="group py-4 border-b border-on-surface cursor-pointer hover:pl-2 transition-all">
-                    <a href="{{ dossier.get_absolute_url }}" class="flex items-center justify-between w-full">
-                        <div class="flex flex-col">
-                            <span class="font-label-mono text-[10px] text-secondary">{{ dossier.published_date|date:"d.m.y" }}</span>
-                            <span class="font-label-bold text-label-bold group-hover:text-primary transition-colors">{{ dossier.title }}</span>
-                        </div>
-                        <span class="material-symbols-outlined transition-transform group-hover:translate-x-2">arrow_forward</span>
-                    </a>
-                </li>
-                {% endfor %}
-            {% else %}
-                <!-- Fallback Mock Structural Content Items -->
-                <li class="group flex items-center justify-between py-4 border-b border-on-surface cursor-pointer hover:pl-2 transition-all">
-                    <div class="flex flex-col">
-                        <span class="font-label-mono text-[10px] text-secondary">04.12.24</span>
-                        <span class="font-label-bold text-label-bold group-hover:text-primary transition-colors">The Ethics of Synthetic Intuition</span>
+        {% if enrolled_classes %}
+        <div class="space-y-3">
+            {% for class in enrolled_classes %}
+            <a href="{% url 'student_class' slug=class.slug %}" class="block border-b border-gray-200 pb-3 pt-2 hover:bg-gray-50 transition-colors group -mx-5 md:-mx-16 px-5 md:px-16">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">{{ class.code }}</span>
+                        <h3 class="font-serif text-xl font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ class.title }}</h3>
                     </div>
-                    <span class="material-symbols-outlined transition-transform group-hover:translate-x-2">arrow_forward</span>
-                </li>
-            {% endif %}
-        </ul>
+                    <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="font-mono text-sm text-gray-500 uppercase tracking-wider text-center py-12">No classes enrolled</p>
+        {% endif %}
     </section>
+
 </main>
-
-<!-- Isolated Interactive Logic Sandbox -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const rankBadge = document.getElementById('rank-badge-toggle');
-        if (rankBadge) {
-            const initialText = rankBadge.textContent.trim();
-            const topTierMetric = "XP: TOP 1%";
-
-            rankBadge.addEventListener('click', () => {
-                rankBadge.classList.toggle('bg-primary');
-                rankBadge.classList.toggle('bg-on-surface');
-                rankBadge.textContent = rankBadge.textContent.trim() === initialText ? topTierMetric : initialText;
-            });
-        }
-    });
-</script>
 {% endblock %}

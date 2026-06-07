@@ -1,68 +1,65 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="w-full max-w-md mx-auto my-8 md:my-16 px-5">
-  
-  <div class="mb-8 md:mb-12 border-b-2 border-[#1c1b1b] pb-4">
-    <h2 class="font-['Playfair_Display'] text-3xl md:text-4xl font-black tracking-tight text-[#1c1b1b] uppercase select-none">
-      Create Account
-    </h2>
-    <p class="font-['Space_Mono'] text-xs font-normal text-[#5308e7] tracking-[0.1em] uppercase mt-2">
-      aris4.0 // identity authentication
-    </p>
-  </div>
-    
-  <form method="POST" class="space-y-6 md:space-y-8">
-    {% csrf_token %}
-    
-    {% for field in form %}
-    <div class="flex flex-col group">
-      <label class="font-['Space_Mono'] text-[11px] font-bold tracking-[0.1em] uppercase text-[#484456] group-focus-within:text-[#5308e7] transition-colors mb-2">
-        {{ field.label }}
-      </label>
-      
-      {% if field.name == 'role' %}
-        <!-- Manually render role options as flex row -->
-        <div class="flex flex-row gap-3 md:gap-4 w-full pt-2">
-          {% for choice in field.field.choices %}
-            <label class="flex-1 cursor-pointer">
-              <input type="radio" 
-                     name="{{ field.name }}" 
-                     value="{{ choice.0 }}"
-                     class="hidden peer"
-                     {% if field.value == choice.0 %}checked{% endif %}>
-              <div class="border border-[#1c1b1b] p-3 md:p-5 font-['Playfair_Display'] text-base md:text-lg font-black text-center bg-white text-[#1c1b1b] transition-all peer-checked:bg-[#5308e7] peer-checked:text-white peer-checked:[box-shadow:4px_4px_0px_0px_#1c1b1b] hover:border-[#5308e7] cursor-pointer">
-                {{ choice.1 }}
-              </div>
-            </label>
-          {% endfor %}
+<div class="min-h-screen flex items-center justify-center px-6 py-16">
+    <div class="w-full max-w-lg">
+        <!-- Magazine Masthead -->
+        <div class="border-t-4 border-black pt-6 mb-10">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-3 block">Identity Registration</span>
+            <h1 class="font-serif text-5xl md:text-6xl font-black tracking-tight text-black leading-none">Create Account</h1>
+            <p class="font-mono text-xs text-gray-500 mt-3 uppercase tracking-wider">aris4.0 // identity authentication</p>
         </div>
-      {% else %}
-        <div class="relative border-b border-[#1c1b1b] group-focus-within:border-b-2 group-focus-within:border-[#5308e7] transition-all pb-1 
-                    [&>input]:w-full [&>input]:bg-transparent [&>input]:text-sm md:[&>input]:text-base [&>input]:font-normal [&>input]:text-[#1c1b1b] 
-                    [&>input]:focus:outline-none [&>input]:py-1 [&>input]:font-['Inter'] [&>input]:rounded-none [&>input]:border-0 [&>input]:px-0">
-          {{ field }}
-        </div>
-      {% endif %}
-      
-      {% if field.errors %}
-      <p class="font-['Space_Mono'] text-[11px] text-red-600 uppercase tracking-wide mt-2 font-bold">
-        // EXCEPTION: {{ field.errors.0 }}
-      </p>
-      {% endif %}
-    </div>
-    {% endfor %}
-    
-    <div class="pt-4 md:pt-6">
-      <button type="submit" class="w-full bg-[#5308e7] text-white font-['Space_Mono'] text-xs font-normal tracking-[0.1em] uppercase py-4 md:py-5 border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] active:translate-x-[0px] active:translate-y-[0px] active:[box-shadow:2px_2px_0px_0px_#1c1b1b] transition-all duration-150 rounded-none">
-        Initialize Profile &rarr;
-      </button>
-    </div>
-  </form>
-  
-  <p class="mt-8 md:mt-10 text-left font-['Space_Mono'] text-xs text-[#484456] uppercase tracking-wide">
-    Already mapped? <a href="{% url 'login' %}" class="text-[#1c1b1b] font-bold underline hover:text-[#5308e7] transition-colors">Authenticate</a>
-  </p>
 
+        <form method="POST" class="space-y-7">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="group">
+                <label class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 group-focus-within:text-[#4f14e0] transition-colors block mb-2">
+                    {{ field.label }}
+                </label>
+                
+                {% if field.name == 'role' %}
+                    <div class="flex gap-4 w-full pt-1">
+                        {% for choice in field.field.choices %}
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" 
+                                   name="{{ field.name }}" 
+                                   value="{{ choice.0 }}"
+                                   class="hidden peer"
+                                   {% if field.value == choice.0 %}checked{% endif %}>
+                            <div class="border border-gray-300 p-4 font-serif text-lg font-black text-center bg-white text-black transition-all peer-checked:bg-[#4f14e0] peer-checked:text-white peer-checked:border-[#4f14e0] hover:border-[#4f14e0] cursor-pointer">
+                                {{ choice.1 }}
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2 [&>input]:border-0 [&>input]:px-0 [&>input]:rounded-none">
+                        {{ field }}
+                    </div>
+                {% endif %}
+                
+                {% if field.errors %}
+                <p class="font-mono text-[10px] text-red-600 uppercase tracking-wider mt-2 font-bold">
+                    // {{ field.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-[#4f14e0] hover:bg-black hover:border-black transition-all duration-300">
+                    Initialize Profile →
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
+                Already mapped? <a href="{% url 'login' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Authenticate</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

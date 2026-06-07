@@ -1,58 +1,39 @@
+import random
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.db import models
 from types import SimpleNamespace
 from .forms import RegisterForm, LoginForm
-from .models import User, Quest, AcademicClass, Deadline, ArchiveCategory, ArchiveItem
-
-
-
-
+from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, ProfileTrait, ArchiveTag, LibraryBook, InstructorProfile
 
 
 def home_view(request):
     student_count = User.objects.filter(role='student').count()
     instructor_count = User.objects.filter(role='instructor').count()
-    active_quests = Quest.objects.count()
+    class_count = AcademicClass.objects.count()
    
     top_student = User.objects.filter(role='student').order_by('-xp').first()
     top_student_name = "NO SCHOLARS YET"
     top_student_xp = 0
-    current_quest_title = "System Standby"
     active_title = "Initiate"
     if top_student:
         top_student_name = top_student.username.upper()
         top_student_xp = top_student.xp
-
-        latest_quest = Quest.objects.filter(level='form_1').order_by('-created_at').first() # Can adapt level dynamically
-        if latest_quest:
-            current_quest_title = latest_quest.title
-        elif Quest.objects.exists():
-            current_quest_title = Quest.objects.latest('created_at').title
-
-        if top_student_xp >= 2000:
-            active_title = "Grandmaster"
-        elif top_student_xp >= 1000:
-            active_title = "Elite Scholar"
-        else:
-            active_title = "Alpha Vanguard"    
-   
+        _, active_title, _, _ = get_tier_info(top_student_xp or 0)
+    
     context = {
         'student_count': student_count,
         'instructor_count': instructor_count,
-        'active_quests_count': active_quests,
+        'class_count': class_count,
         'top_student_name': top_student_name,
         'top_student_xp': top_student_xp,
-        'current_quest_title': current_quest_title,
         'active_title': active_title,
     }
     return render(request, 'home.html', context)
-
-def tail(request):
-    return render(request, 'test.html')
 
 
 @ensure_csrf_cookie
@@ -90,7 +71,30 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 def select_level_view(request):
-    return render(request, 'select_level.html')
+    """Show all classes that have an instructor assigned, for students to enroll."""
+    classes = AcademicClass.objects.filter(instructor__isnull=False)
+    enrolled_class_ids = []
+    if request.user.is_authenticated:
+        enrolled_class_ids = list(request.user.enrolled_classes.values_list('id', flat=True))
+    
+    # Handle enrollment
+    if request.method == 'POST' and request.user.is_authenticated:
+        class_id = request.POST.get('class_id')
+        action = request.POST.get('action')
+        if class_id and action == 'enroll':
+            academic_class = get_object_or_404(AcademicClass, id=class_id)
+            if request.user not in academic_class.students.all():
+                academic_class.students.add(request.user)
+            return redirect('study_dashboard')
+        elif class_id and action == 'unenroll':
+            academic_class = get_object_or_404(AcademicClass, id=class_id)
+            academic_class.students.remove(request.user)
+            return redirect('select_level')
+    
+    return render(request, 'select_level.html', {
+        'classes': classes,
+        'enrolled_class_ids': enrolled_class_ids,
+    })
 
 def instructor_dashboard_view(request):
     if not request.user.is_authenticated:
@@ -99,7 +103,11 @@ def instructor_dashboard_view(request):
         return redirect('home')
     if not request.user.is_approved:
         return redirect('pending_approval')
-    return render(request, 'instructor_dashboard.html')
+    
+    my_classes = AcademicClass.objects.filter(instructor=request.user)
+    return render(request, 'instructor_dashboard.html', {
+        'my_classes': my_classes,
+    })
 
 
 def pending_approval_view(request):
@@ -152,21 +160,44 @@ def disapprove_instructor_view(request, user_id):
     return JsonResponse({'status': 'disapproved'})
 
 
-def kamati_view(request, id):
-    return render(request, 'kamati.html', {'kamati_id': id})
-
-
 @login_required
 def student_dashboard_view(request):
     user = request.user
     
-    # Dynamic XP Tier System calculations for Level 14 Professional
-    current_xp = user.xp if hasattr(user, 'xp') else 1250 # fallback for baseline standard models
-    base_level = 14
-    level_range_max = 2000
-    level_range_min = 1000
+    current_xp = user.xp if hasattr(user, 'xp') else 0
     
-    # Progress Math
+    # Dynamic level system based on XP thresholds
+    if current_xp < 500:
+        # Level 1: 0 - 500 XP (beginners)
+        base_level = 1
+        level_range_min = 0
+        level_range_max = 500
+        tier_title = 'Initiate'
+    elif current_xp < 1500:
+        # Level 2: 500 - 1500 XP
+        base_level = 2
+        level_range_min = 500
+        level_range_max = 1500
+        tier_title = 'Scholar'
+    elif current_xp < 3000:
+        # Level 3: 1500 - 3000 XP
+        base_level = 3
+        level_range_min = 1500
+        level_range_max = 3000
+        tier_title = 'Alpha Vanguard'
+    elif current_xp < 5000:
+        # Level 4: 3000 - 5000 XP
+        base_level = 4
+        level_range_min = 3000
+        level_range_max = 5000
+        tier_title = 'Elite Scholar'
+    else:
+        # Level 5+: 5000+ XP (every 3000 XP per level)
+        base_level = 5 + (current_xp - 5000) // 3000
+        level_range_min = 5000 + ((current_xp - 5000) // 3000) * 3000
+        level_range_max = level_range_min + 3000
+        tier_title = 'Grandmaster'
+    
     total_in_tier = level_range_max - level_range_min
     progress_in_tier = current_xp - level_range_min
     xp_percentage = int((progress_in_tier / total_in_tier) * 100) if total_in_tier > 0 else 100
@@ -176,35 +207,338 @@ def student_dashboard_view(request):
         'semester_label': 'Spring Semester',
         'current_week': '08',
         'current_level': base_level,
-        'tier_title': 'Professional' if current_xp >= 1000 else 'Initiate',
+        'tier_title': tier_title,
         'xp_percentage': min(100, max(0, xp_percentage)),
         'xp_to_next': xp_to_next,
     }
     
-    # Query datasets
-    active_deadlines = Deadline.objects.filter(due_date__gte=timezone.now()).order_by('due_date')[:2]
     enrolled_classes = AcademicClass.objects.filter(students=user)
     
     context = {
         'current_student': user,
         'academic_status': academic_status,
-        'active_deadlines': active_deadlines,
         'enrolled_classes': enrolled_classes,
     }
     return render(request, 'student_dashboard.html', context)
+
+
+@login_required
+def student_class_view(request, slug):
+    """Student views a class they're enrolled in, sees content and quizzes grouped by module."""
+    academic_class = get_object_or_404(AcademicClass, slug=slug)
+    if request.user not in academic_class.students.all() and request.user.role != 'instructor':
+        return redirect('study_dashboard')
+    
+    # Get all quizzes for this class to build submission map
+    quizzes = academic_class.quizzes.all()
+    submissions = StudentQuizSubmission.objects.filter(
+        student=request.user,
+        quiz__in=quizzes
+    )
+    submission_map = {s.quiz_id: s for s in submissions}
+    
+    # Build module-based structure with content and quizzes
+    modules = academic_class.modules.prefetch_related(
+        models.Prefetch('contents', queryset=ClassContent.objects.all()),
+        models.Prefetch('quizzes', queryset=Quiz.objects.prefetch_related('questions')),
+    ).all()
+    
+    # Attach submission info to quizzes in each module
+    module_data = []
+    for module in modules:
+        module_quiz_data = []
+        for quiz in module.quizzes.all():
+            sub = submission_map.get(quiz.id)
+            module_quiz_data.append({
+                'quiz': quiz,
+                'submission': sub,
+                'has_submitted': sub is not None,
+            })
+        module_data.append({
+            'module': module,
+            'contents': module.contents.all(),
+            'quiz_data': module_quiz_data,
+        })
+    
+    # Also get orphaned items (no module assigned)
+    orphaned_contents = academic_class.contents.filter(module__isnull=True)
+    orphaned_quizzes = academic_class.quizzes.filter(module__isnull=True)
+    
+    # Build quiz data for orphaned quizzes too
+    orphaned_quiz_data = []
+    for quiz in orphaned_quizzes:
+        sub = submission_map.get(quiz.id)
+        orphaned_quiz_data.append({
+            'quiz': quiz,
+            'submission': sub,
+            'has_submitted': sub is not None,
+        })
+    
+    return render(request, 'student_class_detail.html', {
+        'class': academic_class,
+        'module_data': module_data,
+        'orphaned_contents': orphaned_contents,
+        'orphaned_quiz_data': orphaned_quiz_data,
+    })
+
+
+@login_required
+def instructor_class_view(request, slug):
+    """Instructor manages a class: adds modules, content, creates quizzes."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    
+    academic_class = get_object_or_404(AcademicClass, slug=slug, instructor=request.user)
+    
+    # Handle module creation
+    if request.method == 'POST' and request.POST.get('action') == 'add_module':
+        title = request.POST.get('module_title', '').strip()
+        if title:
+            last_order = academic_class.modules.aggregate(max_order=models.Max('order'))['max_order'] or 0
+            Module.objects.create(
+                academic_class=academic_class,
+                title=title,
+                order=last_order + 1,
+            )
+        return redirect('instructor_class', slug=slug)
+    
+    # Handle module deletion
+    if request.method == 'POST' and request.POST.get('action') == 'delete_module':
+        module_id = request.POST.get('module_id')
+        if module_id:
+            Module.objects.filter(id=module_id, academic_class=academic_class).delete()
+        return redirect('instructor_class', slug=slug)
+    
+    # Handle content creation (now linked to a module)
+    if request.method == 'POST' and request.POST.get('action') == 'add_content':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        module_id = request.POST.get('module_id')
+        if title:
+            content = ClassContent.objects.create(
+                academic_class=academic_class,
+                title=title,
+                description=description,
+            )
+            if module_id:
+                content.module_id = module_id
+                content.save(update_fields=['module_id'])
+        return redirect('instructor_class', slug=slug)
+    
+    # Handle content deletion
+    if request.method == 'POST' and request.POST.get('action') == 'delete_content':
+        content_id = request.POST.get('content_id')
+        if content_id:
+            ClassContent.objects.filter(id=content_id, academic_class=academic_class).delete()
+        return redirect('instructor_class', slug=slug)
+    
+    # Handle quiz creation (now linked to a module)
+    if request.method == 'POST' and request.POST.get('action') == 'create_quiz':
+        title = request.POST.get('quiz_title', '').strip()
+        description = request.POST.get('quiz_description', '').strip()
+        module_id = request.POST.get('module_id')
+        
+        if title:
+            quiz = Quiz.objects.create(
+                title=title,
+                description=description,
+                creator=request.user,
+                academic_class=academic_class,
+            )
+            if module_id:
+                quiz.module_id = module_id
+                quiz.save(update_fields=['module_id'])
+            
+            # Process questions
+            question_texts = request.POST.getlist('question_text[]')
+            for qi, qtext in enumerate(question_texts):
+                if not qtext.strip():
+                    continue
+                
+                question = Question.objects.create(
+                    quiz=quiz,
+                    text=qtext.strip(),
+                    order=qi,
+                )
+                
+                # Process choices for this question
+                choice_texts = request.POST.getlist(f'choice_text_{qi}[]')
+                correct_choice = request.POST.get(f'correct_choice_{qi}')
+                
+                has_correct = False
+                for ci, ctext in enumerate(choice_texts):
+                    if not ctext.strip():
+                        continue
+                    is_correct = (str(ci) == correct_choice)
+                    if is_correct:
+                        has_correct = True
+                    Choice.objects.create(
+                        question=question,
+                        text=ctext.strip(),
+                        is_correct=is_correct,
+                        order=ci,
+                    )
+                
+                # Server-side safeguard: if no correct answer was marked, mark the first choice as correct
+                if not has_correct:
+                    first_choice = question.choices.first()
+                    if first_choice:
+                        first_choice.is_correct = True
+                        first_choice.save(update_fields=['is_correct'])
+        
+        return redirect('instructor_class', slug=slug)
+    
+    # Handle quiz deletion
+    if request.method == 'POST' and request.POST.get('action') == 'delete_quiz':
+        quiz_id = request.POST.get('quiz_id')
+        if quiz_id:
+            Quiz.objects.filter(id=quiz_id, academic_class=academic_class).delete()
+        return redirect('instructor_class', slug=slug)
+    
+    # Build module-based structure
+    modules = academic_class.modules.prefetch_related(
+        models.Prefetch('contents', queryset=ClassContent.objects.all()),
+        models.Prefetch('quizzes', queryset=Quiz.objects.prefetch_related('questions__choices', 'submissions')),
+    ).all()
+    
+    # Also get orphaned items (no module assigned)
+    orphaned_contents = academic_class.contents.filter(module__isnull=True)
+    orphaned_quizzes = academic_class.quizzes.filter(module__isnull=True)
+    
+    # Build student quiz stats for the enrolled students section
+    all_quizzes = list(academic_class.quizzes.all())
+    all_submissions = StudentQuizSubmission.objects.filter(quiz__in=all_quizzes).select_related('student')
+    
+    # Build a map: student_id -> { total_quizzes, completed_quizzes, total_score, total_possible, submissions_list }
+    student_stats = {}
+    for student in academic_class.students.all():
+        student_stats[student.id] = {
+            'student': student,
+            'total_quizzes': len(all_quizzes),
+            'completed_quizzes': 0,
+            'total_score': 0,
+            'total_possible': 0,
+            'submissions': [],
+        }
+    
+    for sub in all_submissions:
+        if sub.student_id in student_stats:
+            stats = student_stats[sub.student_id]
+            stats['completed_quizzes'] += 1
+            stats['total_score'] += sub.score
+            stats['total_possible'] += sub.total
+            stats['submissions'].append(sub)
+    
+    # Sort students by completion rate (most completed first), then by score percentage
+    student_list = sorted(student_stats.values(), key=lambda s: (-s['completed_quizzes'], -s['total_score'] if s['total_possible'] > 0 else 0))
+    
+    return render(request, 'instructor_class_detail.html', {
+        'class': academic_class,
+        'modules': modules,
+        'orphaned_contents': orphaned_contents,
+        'orphaned_quizzes': orphaned_quizzes,
+        'student_list': student_list,
+    })
+
+
+def get_tier_info(xp):
+    """Return (level, tier_title, range_min, range_max) for a given XP value."""
+    if xp < 500:
+        return (1, 'Initiate', 0, 500)
+    elif xp < 1500:
+        return (2, 'Scholar', 500, 1500)
+    elif xp < 3000:
+        return (3, 'Alpha Vanguard', 1500, 3000)
+    elif xp < 5000:
+        return (4, 'Elite Scholar', 3000, 5000)
+    else:
+        level = 5 + (xp - 5000) // 3000
+        rmin = 5000 + ((xp - 5000) // 3000) * 3000
+        rmax = rmin + 3000
+        return (level, 'Grandmaster', rmin, rmax)
+
+
+def get_leaderboard_data(request):
+    """Build leaderboard context: top 5 students, current user rank, tier list."""
+    students = User.objects.filter(role='student').order_by('-xp')
+    
+    # Top 5 leaderboard
+    top5 = []
+    for i, s in enumerate(students[:5], start=1):
+        level, title, _, _ = get_tier_info(s.xp or 0)
+        top5.append({
+            'rank': i,
+            'username': s.username,
+            'xp': s.xp or 0,
+            'level': level,
+            'title': title,
+        })
+    
+    # Current user's rank and info
+    current_user_rank = None
+    xp_gap_to_top = None
+    current_user_tier = None
+    if request.user.is_authenticated and request.user.role == 'student':
+        for i, s in enumerate(students, start=1):
+            if s.id == request.user.id:
+                current_user_rank = i
+                break
+        if top5:
+            top_xp = top5[0]['xp']
+            xp_gap_to_top = max(0, top_xp - (request.user.xp or 0))
+        _, current_user_tier, _, _ = get_tier_info(request.user.xp or 0)
+    
+    # All tiers definition
+    tiers = [
+        {'level': 1, 'title': 'Initiate', 'range_min': 0, 'range_max': 500, 'description': 'The beginning of the journey'},
+        {'level': 2, 'title': 'Scholar', 'range_min': 500, 'range_max': 1500, 'description': 'Dedicated to the pursuit of knowledge'},
+        {'level': 3, 'title': 'Alpha Vanguard', 'range_min': 1500, 'range_max': 3000, 'description': 'Leading the charge in intellectual warfare'},
+        {'level': 4, 'title': 'Elite Scholar', 'range_min': 3000, 'range_max': 5000, 'description': 'Among the finest minds in the arena'},
+        {'level': 5, 'title': 'Grandmaster', 'range_min': 5000, 'range_max': None, 'description': 'The pinnacle of scholarly dominance'},
+    ]
+    
+    # Mark which tier the current user has reached
+    user_xp = request.user.xp if request.user.is_authenticated else 0
+    for tier in tiers:
+        if tier['range_max'] is None:
+            tier['is_unlocked'] = user_xp >= tier['range_min']
+        else:
+            tier['is_unlocked'] = user_xp >= tier['range_min']
+        # Progress within this tier
+        if tier['range_max'] is None:
+            tier['progress_pct'] = 100 if tier['is_unlocked'] else 0
+        else:
+            tier_range = tier['range_max'] - tier['range_min']
+            clamped = max(0, min(tier['range_max'], user_xp) - tier['range_min'])
+            tier['progress_pct'] = int((clamped / tier_range) * 100) if tier_range > 0 else 0
+    
+    return {
+        'top5_leaderboard': top5,
+        'current_user_rank': current_user_rank,
+        'xp_gap_to_top': xp_gap_to_top,
+        'current_user_tier': current_user_tier,
+        'tiers': tiers,
+        'total_students': students.count(),
+    }
 
 
 def archive_index_view(request):
     categories = ArchiveCategory.objects.all()
     archive_items = ArchiveItem.objects.all().order_by('-id')
     featured_record = ArchiveItem.objects.filter(is_featured=True).first()
+    archive_tags = ArchiveTag.objects.all()
+    library_books = LibraryBook.objects.all().order_by('-uploaded_at')
     
     context = {
         'categories': categories,
         'archive_items': archive_items,
         'featured_record': featured_record,
-        'active_category': None, # Means 'ALL_RECORDS' is selected
+        'active_category': None,
+        'archive_tags': archive_tags,
+        'active_tag': None,
+        'library_books': library_books,
     }
+    context.update(get_leaderboard_data(request))
     return render(request, 'archive_repository.html', context)
 
 
@@ -213,161 +547,509 @@ def archive_category_view(request, slug):
     category = get_object_or_404(ArchiveCategory, slug=slug)
     archive_items = ArchiveItem.objects.filter(category=category).order_by('-id')
     featured_record = ArchiveItem.objects.filter(category=category, is_featured=True).first()
+    archive_tags = ArchiveTag.objects.all()
+    library_books = LibraryBook.objects.all().order_by('-uploaded_at')
     
     context = {
         'categories': categories,
         'archive_items': archive_items,
         'featured_record': featured_record,
         'active_category': slug,
+        'archive_tags': archive_tags,
+        'active_tag': None,
+        'library_books': library_books,
     }
+    context.update(get_leaderboard_data(request))
     return render(request, 'archive_repository.html', context)
 
-# Placeholder views for navigation links referenced in templates
-def deadlines_list_view(request):
-    return render(request, 'placeholder.html', {
-        'title': 'All Deadlines',
-        'message': 'All upcoming deadlines will be listed here once the scheduling module is connected.',
-    })
 
-def class_detail_view(request, slug):
-    course = SimpleNamespace(
-        title='Mathematics Structures',
-        cover_image=None,
-        term='SEM-02',
-        difficulty='ADVANCED',
-        description='A structured journey through the fields of modern mathematics and structural logic.',
-        code='MODULE-042',
+@login_required
+def instructor_manage_classes_view(request):
+    if request.user.role != 'instructor':
+        return redirect('home')
+    if not request.user.is_approved:
+        return redirect('pending_approval')
+    
+    # Handle class creation
+    if request.method == 'POST' and request.POST.get('action') == 'create':
+        code = request.POST.get('code', '').strip()
+        title = request.POST.get('title', '').strip()
+        schedule_string = request.POST.get('schedule_string', '').strip()
+        location_room = request.POST.get('location_room', '').strip()
+        
+        if code and title:
+            from django.utils.text import slugify
+            slug = slugify(code)
+            # Ensure unique slug
+            base_slug = slug
+            counter = 1
+            while AcademicClass.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            
+            AcademicClass.objects.create(
+                code=code,
+                title=title,
+                schedule_string=schedule_string or 'TBD',
+                location_room=location_room or 'TBD',
+                slug=slug,
+                instructor=request.user
+            )
+        return redirect('instructor_manage_classes')
+    
+    # Handle assign/remove
+    if request.method == 'POST':
+        class_id = request.POST.get('class_id')
+        action = request.POST.get('action')
+        
+        if class_id and action:
+            academic_class = get_object_or_404(AcademicClass, id=class_id)
+            
+            if action == 'assign':
+                if academic_class.instructor is None or academic_class.instructor == request.user:
+                    academic_class.instructor = request.user
+                    academic_class.save(update_fields=['instructor'])
+            elif action == 'remove':
+                if academic_class.instructor == request.user:
+                    academic_class.instructor = None
+                    academic_class.save(update_fields=['instructor'])
+        
+        return redirect('instructor_manage_classes')
+    
+    # Get all available classes (those without an instructor, or already assigned to this instructor)
+    available_classes = AcademicClass.objects.filter(
+        models.Q(instructor__isnull=True) | models.Q(instructor=request.user)
     )
-    curriculum_modules = [
-        SimpleNamespace(title='Topology of Shapes', summary='Properties of space preserved under continuous deformations.'),
-        SimpleNamespace(title='Complex Analysis', summary='The investigation of functions of complex numbers.'),
-    ]
-    assessments = [
-        SimpleNamespace(id=1, type='QUIZ', duration_or_due='15 MIN', title='Differential Logic Assessment', description='Rapid fire evaluation of advanced calculus and derivative proofs.'),
-        SimpleNamespace(id=2, type='ASSIGNMENT', duration_or_due='DUE FRI', title='Mandelbrot Submission', description='Construct a visual fractal recursion system.'),
-    ]
-    metrics = {
-        'mastery_score': 68,
-        'logical_reasoning': 'A+',
-        'theoretical_proofs': 'B',
-        'computational_accuracy': 'A-',
-    }
-    return render(request, 'class_detail.html', {
-        'course': course,
-        'curriculum_modules': curriculum_modules,
-        'assessments': assessments,
-        'metrics': metrics,
-    })
-
-
-def dossier_archive_view(request):
-    return archive_index_view(request)
-
-
-def teacher_profile_view(request):
-    user = request.user if request.user.is_authenticated else None
-    instructor = SimpleNamespace(
-        name=(user.get_full_name() or user.username) if user else 'Prof. Aris',
-        title_role='Lead Instructor',
-        bio='Pioneer in the architecture of post-logical frameworks. Bridging classical axiomatic systems with emerging digital metaphysics.',
-        established_year=2024,
-        avatar=None,
-    )
-    academic_focus = [
-        SimpleNamespace(title='Digital Metaphysics', description='Exploring ontology in recursive computational environments.'),
-        SimpleNamespace(title='Algorithmic Semantics', description='Translating formal systems into interpretive structures.'),
-    ]
-    methodologies = [
-        SimpleNamespace(name='Axiomatic Systems Analysis'),
-        SimpleNamespace(name='Formal Logic Structures'),
-    ]
-    manuscripts = [
-        SimpleNamespace(publication_year=2024, title='The Ghost in the Code', publisher_tag='Peer Reviewed / Volume IX', file=None),
-    ]
-    active_cohorts = [
-        SimpleNamespace(access_level='FULL ACCESS', name='Neural Architecture II', description='A deep dive into structural patterns of artificial synapses.', member_count=14, is_private=False),
-    ]
+    # Get classes this instructor already teaches
+    my_classes = AcademicClass.objects.filter(instructor=request.user)
+    
     context = {
-        'instructor': instructor,
-        'academic_focus': academic_focus,
-        'methodologies': methodologies,
-        'manuscripts': manuscripts,
+        'available_classes': available_classes,
+        'my_classes': my_classes,
+    }
+    return render(request, 'instructor_manage_classes.html', context)
+
+
+@login_required
+def teacher_profile_view(request, username=None):
+    """View an instructor's profile.
+    
+    If username is provided, view that instructor's public profile.
+    If no username, view the logged-in instructor's own profile.
+    If the logged-in instructor has no profile yet, redirect to edit.
+    """
+    if username:
+        # Viewing another instructor's profile
+        instructor = get_object_or_404(User, username=username, role='instructor')
+        profile = InstructorProfile.objects.filter(user=instructor).first()
+        if not profile or not profile.has_profile():
+            return render(request, 'teacher_profile.html', {
+                'profile': None,
+                'instructor_user': instructor,
+                'active_cohorts': [],
+                'is_own_profile': request.user == instructor,
+            })
+        taught_classes = AcademicClass.objects.filter(instructor=instructor)
+    else:
+        # Viewing own profile
+        if request.user.role != 'instructor':
+            return redirect('home')
+        instructor = request.user
+        profile = InstructorProfile.objects.filter(user=instructor).first()
+        
+        # If no profile exists, redirect to edit page
+        if not profile or not profile.has_profile():
+            return redirect('edit_instructor_profile')
+        
+        taught_classes = AcademicClass.objects.filter(instructor=instructor)
+    
+    # Pull active cohorts
+    active_cohorts = []
+    for cls in taught_classes:
+        student_count = cls.students.count()
+        active_cohorts.append({
+            'access_level': 'FULL ACCESS',
+            'name': cls.title,
+            'description': f"{cls.code} — {cls.schedule_string} | Room: {cls.location_room}",
+            'member_count': student_count,
+        })
+    
+    context = {
+        'profile': profile,
+        'instructor_user': instructor,
         'active_cohorts': active_cohorts,
-        'next_session_date': 'OCTOBER 2026',
+        'is_own_profile': request.user == instructor,
     }
     return render(request, 'teacher_profile.html', context)
 
 
+@login_required
+def edit_instructor_profile_view(request):
+    """Create or edit an instructor's profile."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    
+    profile, created = InstructorProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        profile.title_role = request.POST.get('title_role', '').strip()
+        profile.bio = request.POST.get('bio', '').strip()
+        
+        if request.FILES.get('avatar'):
+            profile.avatar = request.FILES['avatar']
+        
+        established = request.POST.get('established_year', '').strip()
+        if established:
+            profile.established_year = int(established)
+        
+        # Process academic focus (JSON)
+        focus_titles = request.POST.getlist('focus_title[]')
+        focus_descriptions = request.POST.getlist('focus_description[]')
+        focus_list = []
+        for i, title in enumerate(focus_titles):
+            if title.strip():
+                focus_list.append({
+                    'title': title.strip(),
+                    'description': focus_descriptions[i].strip() if i < len(focus_descriptions) else '',
+                })
+        profile.academic_focus = focus_list
+        
+        # Process methodologies (JSON)
+        method_names = request.POST.getlist('method_name[]')
+        method_list = []
+        for name in method_names:
+            if name.strip():
+                method_list.append({'name': name.strip()})
+        profile.methodologies = method_list
+        
+        # Process manuscripts (JSON)
+        manuscript_years = request.POST.getlist('manuscript_year[]')
+        manuscript_titles = request.POST.getlist('manuscript_title[]')
+        manuscript_tags = request.POST.getlist('manuscript_tag[]')
+        manuscript_list = []
+        for i, title in enumerate(manuscript_titles):
+            if title.strip():
+                manuscript_list.append({
+                    'publication_year': int(manuscript_years[i]) if i < len(manuscript_years) and manuscript_years[i].strip() else 2024,
+                    'title': title.strip(),
+                    'publisher_tag': manuscript_tags[i].strip() if i < len(manuscript_tags) else '',
+                })
+        profile.manuscripts = manuscript_list
+        
+        profile.save()
+        return redirect('teacher_profile')
+    
+    return render(request, 'edit_instructor_profile.html', {
+        'profile': profile,
+    })
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+
 def student_profile_view(request):
     user = request.user if request.user.is_authenticated else None
-    student_name = (user.get_full_name() or user.username) if user else 'Alex Stone'
+    student_name = (user.get_full_name() or user.username) if user else 'Student'
+    
+    # Calculate XP percentage using dynamic level system
+    current_xp = user.xp if user and hasattr(user, 'xp') else 0
+    
+    if current_xp < 500:
+        level_range_min = 0
+        level_range_max = 500
+        rank_title = 'INITIATE'
+    elif current_xp < 1500:
+        level_range_min = 500
+        level_range_max = 1500
+        rank_title = 'SCHOLAR'
+    elif current_xp < 3000:
+        level_range_min = 1500
+        level_range_max = 3000
+        rank_title = 'ALPHA VANGUARD'
+    elif current_xp < 5000:
+        level_range_min = 3000
+        level_range_max = 5000
+        rank_title = 'ELITE SCHOLAR'
+    else:
+        level_range_min = 5000 + ((current_xp - 5000) // 3000) * 3000
+        level_range_max = level_range_min + 3000
+        rank_title = 'GRANDMASTER'
+    
+    xp_percentage = min(100, int(((current_xp - level_range_min) / (level_range_max - level_range_min)) * 100)) if current_xp > 0 else 0
+    
     student = SimpleNamespace(
         full_name=student_name,
-        profile_picture=None,
-        enrolled_year=2024,
-        rank_title='VANGUARD',
-        level=42,
-        xp_percentage=88,
-        total_hours='1,240',
-        manifesto='Education is not the filling of a vessel, but the lighting of a flame.',
-        focus_alpha='Neural Architecture',
-        focus_beta='Ancient Epigraphy',
+        rank_title=rank_title,
+        xp_percentage=xp_percentage,
     )
-    unlocked_titles = [
-        SimpleNamespace(slug_name='CYPHER_ADEPT', is_active=False, is_muted=False, is_italic=False),
-        SimpleNamespace(slug_name='VOID_WALKER', is_active=True, is_muted=False, is_italic=False),
-        SimpleNamespace(slug_name='ARCHIVIST_LVL3', is_active=False, is_muted=True, is_italic=False),
-        SimpleNamespace(slug_name='PHILOSOPHICAL_ENGINEER', is_active=False, is_muted=False, is_italic=True),
-    ]
-    recent_dossiers = [
-        SimpleNamespace(title='The Ethics of Synthetic Intuition', published_date=timezone.now(), get_absolute_url='/archive/dossiers/'),
-    ]
+    
+    enrolled_classes = AcademicClass.objects.filter(students=user) if user and user.is_authenticated else []
+    enrolled_count = enrolled_classes.count()
+    
     return render(request, 'student_profile.html', {
         'student': student,
-        'unlocked_titles': unlocked_titles,
-        'recent_dossiers': recent_dossiers,
+        'enrolled_classes': enrolled_classes,
+        'enrolled_count': enrolled_count,
     })
 
 
-def quiz_detail_view(request, quiz_id):
-    quiz = SimpleNamespace(id=quiz_id, title=f'Quiz {quiz_id}')
-    question = SimpleNamespace(
-        id=1,
-        text='Does the architecture of a digital space dictate the morality of its inhabitants?',
-        subtext='Consider the implications of algorithmic curation and forced architectural constraints in virtual environments.',
-        illustration=None,
-    )
-    options = [
-        SimpleNamespace(id=1, title='Explicit Determinism', description='Architecture creates rigid pathways that eliminate free choice entirely.'),
-        SimpleNamespace(id=2, title='Soft Influence', description='Spatial design nudges behavior while leaving room for individual agency.'),
-    ]
-    return render(request, 'quiz_detail.html', {
+@login_required
+def library_view(request):
+    """Show all library books. Instructors can upload new books here."""
+    books = LibraryBook.objects.all().order_by('-uploaded_at')
+    
+    if request.method == 'POST' and request.user.is_authenticated and request.user.role == 'instructor':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        uploaded_file = request.FILES.get('file')
+        thumbnail = request.FILES.get('thumbnail')
+        
+        if title and uploaded_file:
+            LibraryBook.objects.create(
+                title=title,
+                description=description,
+                file=uploaded_file,
+                thumbnail=thumbnail,
+                uploaded_by=request.user,
+            )
+            return redirect('library')
+    
+    return render(request, 'library.html', {
+        'books': books,
+    })
+
+
+@login_required
+def library_download_view(request, book_id):
+    """Download a library book file."""
+    book = get_object_or_404(LibraryBook, id=book_id)
+    from django.http import FileResponse
+    return FileResponse(book.file.open('rb'), as_attachment=True, filename=book.file.name)
+
+
+@login_required
+def library_delete_view(request, book_id):
+    """Delete a library book (instructor only)."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    book = get_object_or_404(LibraryBook, id=book_id)
+    if request.method == 'POST':
+        book.file.delete(save=False)
+        if book.thumbnail:
+            book.thumbnail.delete(save=False)
+        book.delete()
+        return redirect('library')
+    return redirect('library')
+
+
+@login_required
+def student_take_quiz_view(request, quiz_id):
+    """Student submits answers for a quiz."""
+    if request.user.role != 'student':
+        return redirect('home')
+    
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    # Check if already submitted
+    existing = StudentQuizSubmission.objects.filter(student=request.user, quiz=quiz).first()
+    if existing:
+        return redirect('student_quiz_result', quiz_id=quiz_id)
+    
+    questions = list(quiz.questions.prefetch_related('choices').all())
+    # Shuffle choices for each question so they appear in random order
+    for q in questions:
+        q.shuffled_choices = list(q.choices.all())
+        random.shuffle(q.shuffled_choices)
+    
+    if request.method == 'POST':
+        score = 0
+        total = len(questions)
+        answers = {}
+        
+        for question in questions:
+            choice_id = request.POST.get(f'question_{question.id}')
+            if choice_id:
+                selected_choice = get_object_or_404(Choice, id=choice_id, question=question)
+                answers[str(question.id)] = int(choice_id)
+                if selected_choice.is_correct:
+                    score += 1
+        
+        submission = StudentQuizSubmission.objects.create(
+            student=request.user,
+            quiz=quiz,
+            score=score,
+            total=total,
+            answers=answers,
+        )
+        
+        # Award XP: 50 XP per correct answer
+        xp_earned = score * 50
+        request.user.xp = (request.user.xp or 0) + xp_earned
+        request.user.save(update_fields=['xp'])
+        
+        return redirect('student_quiz_result', quiz_id=quiz_id)
+    
+    return render(request, 'student_take_quiz.html', {
         'quiz': quiz,
-        'question': question,
-        'options': options,
-        'session_name': 'ADVANCED LOGIC',
-        'current_index': 3,
-        'total_questions': 10,
-        'time_remaining': '12:45',
+        'questions': questions,
     })
 
+
 @login_required
-def submit_assignment_view(request, item_id):
-    if request.method == 'POST':
-        return redirect('study_dashboard')
-    return render(request, 'placeholder.html', {
-        'title': 'Submit Assignment',
-        'message': 'This assignment submission page is not yet connected to the file upload workflow. Use the student dashboard until the submission module is active.',
+def student_quiz_result_view(request, quiz_id):
+    """Student views their quiz result."""
+    if request.user.role != 'student':
+        return redirect('home')
+    
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    submission = get_object_or_404(StudentQuizSubmission, student=request.user, quiz=quiz)
+    
+    questions = quiz.questions.prefetch_related('choices').all()
+    
+    # Build result details for each question
+    results = []
+    for question in questions:
+        selected_choice_id = submission.answers.get(str(question.id))
+        selected_choice = None
+        correct_choice = None
+        is_correct = False
+        
+        for choice in question.choices.all():
+            if choice.is_correct:
+                correct_choice = choice
+            if selected_choice_id and choice.id == selected_choice_id:
+                selected_choice = choice
+                is_correct = choice.is_correct
+        
+        results.append({
+            'question': question,
+            'selected_choice': selected_choice,
+            'correct_choice': correct_choice,
+            'is_correct': is_correct,
+        })
+    
+    return render(request, 'student_quiz_result.html', {
+        'quiz': quiz,
+        'submission': submission,
+        'results': results,
     })
 
-@login_required
-def submit_quiz_response_view(request, quiz_id):
-    if request.method == 'POST':
-        return redirect('study_dashboard')
-    return redirect('quiz_detail', quiz_id=quiz_id)
 
-def apply_mentorship_view(request):
-    return render(request, 'placeholder.html', {
-        'title': 'Apply for Mentorship',
-        'message': 'Mentorship applications are being built. Complete your profile and check back to submit your request.',
+@login_required
+def instructor_quiz_submissions_view(request, quiz_id):
+    """Instructor views all student submissions for a quiz, including answers."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    # Ensure this instructor owns the quiz's class
+    if quiz.academic_class and quiz.academic_class.instructor != request.user:
+        return redirect('home')
+    
+    submissions = StudentQuizSubmission.objects.filter(quiz=quiz).select_related('student').order_by('-score')
+    questions = list(quiz.questions.prefetch_related('choices').all())
+    
+    # Build detailed submission data for each student
+    submission_data = []
+    for sub in submissions:
+        question_results = []
+        for question in questions:
+            selected_choice_id = sub.answers.get(str(question.id))
+            selected_choice = None
+            correct_choice = None
+            is_correct = False
+            
+            for choice in question.choices.all():
+                if choice.is_correct:
+                    correct_choice = choice
+                if selected_choice_id and choice.id == selected_choice_id:
+                    selected_choice = choice
+                    is_correct = choice.is_correct
+            
+            question_results.append({
+                'question': question,
+                'selected_choice': selected_choice,
+                'correct_choice': correct_choice,
+                'is_correct': is_correct,
+            })
+        
+        submission_data.append({
+            'student': sub.student,
+            'submission': sub,
+            'question_results': question_results,
+        })
+    
+    # Students enrolled who haven't submitted
+    enrolled_students = quiz.academic_class.students.all() if quiz.academic_class else []
+    submitted_student_ids = [s.student_id for s in submissions]
+    pending_students = [s for s in enrolled_students if s.id not in submitted_student_ids]
+    
+    return render(request, 'instructor_quiz_submissions.html', {
+        'quiz': quiz,
+        'submission_data': submission_data,
+        'pending_students': pending_students,
+        'questions': questions,
+        'total_submissions': submissions.count(),
+        'total_enrolled': enrolled_students.count(),
+    })
+
+
+@login_required
+def instructor_student_performance_view(request, slug, student_id):
+    """Instructor views a specific student's performance across all quizzes in a class."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    
+    academic_class = get_object_or_404(AcademicClass, slug=slug, instructor=request.user)
+    student = get_object_or_404(User, id=student_id, role='student')
+    
+    # Ensure student is enrolled
+    if student not in academic_class.students.all():
+        return redirect('instructor_class', slug=slug)
+    
+    quizzes = academic_class.quizzes.prefetch_related('questions__choices').all()
+    submissions = StudentQuizSubmission.objects.filter(student=student, quiz__in=quizzes).select_related('quiz')
+    submission_map = {s.quiz_id: s for s in submissions}
+    
+    quiz_results = []
+    for quiz in quizzes:
+        sub = submission_map.get(quiz.id)
+        question_details = []
+        if sub:
+            for question in quiz.questions.all():
+                selected_choice_id = sub.answers.get(str(question.id))
+                selected_choice = None
+                correct_choice = None
+                is_correct = False
+                for choice in question.choices.all():
+                    if choice.is_correct:
+                        correct_choice = choice
+                    if selected_choice_id and choice.id == selected_choice_id:
+                        selected_choice = choice
+                        is_correct = choice.is_correct
+                question_details.append({
+                    'question': question,
+                    'selected_choice': selected_choice,
+                    'correct_choice': correct_choice,
+                    'is_correct': is_correct,
+                })
+        
+        quiz_results.append({
+            'quiz': quiz,
+            'submission': sub,
+            'has_submitted': sub is not None,
+            'question_details': question_details,
+        })
+    
+    return render(request, 'instructor_student_performance.html', {
+        'class': academic_class,
+        'student': student,
+        'quiz_results': quiz_results,
+        'total_quizzes': quizzes.count(),
+        'completed_quizzes': submissions.count(),
+        'total_score': sum(s.score for s in submissions),
+        'total_possible': sum(s.total for s in submissions),
     })

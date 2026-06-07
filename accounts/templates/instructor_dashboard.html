@@ -1,168 +1,107 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Main Content: Bento/Asymmetric Grid Container -->
-<main class="max-w-[1440px] mx-auto px-5 md:px-16 py-12 pb-32">
-  
-  <!-- Hero Header Section -->
-  <header class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-20">
-    <div class="md:col-span-8">
-      <h1 class="font-['Playfair_Display'] text-5xl md:text-7xl mb-4 font-black tracking-tight leading-none text-[#1c1b1b] uppercase">
-        The Faculty
-      </h1>
-      <p class="font-['Space_Mono'] text-xs uppercase tracking-widest text-[#5e5e5e]">
-        // Active Node Roster: Welcoming Instructor {{ request.user.username }}
-      </p>
-    </div>
-    
-    <!-- Action Gateways -->
-    <div class="md:col-span-4 flex flex-col md:items-end justify-end gap-4 mt-8 md:mt-0">
-      <a href="#" class="w-full md:w-auto text-center bg-[#5308e7] text-white px-8 py-4 font-['Space_Mono'] text-xs font-bold tracking-wider uppercase border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:scale-95 rounded-none">
-        ASSEMBLE LIVE SESSION
-      </a>
-      <a href="#" class="w-full md:w-auto text-center border border-[#1c1b1b] text-[#1c1b1b] bg-transparent px-8 py-4 font-['Space_Mono'] text-xs font-bold tracking-wider uppercase hover:bg-[#1c1b1b] hover:text-white transition-all active:scale-95 rounded-none">
-        DRAFT CORE QUIZ
-      </a>
-    </div>
-  </header>
-
-  <!-- Main Grid Framework -->
-  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-    
-    <!-- Section 1: Active Secondary Cohorts -->
-    <section class="md:col-span-12 mb-16">
-      <div class="flex items-baseline justify-between mb-8 border-b border-[#cac3d9] pb-2">
-        <h2 class="font-['Playfair_Display'] text-2xl font-bold italic text-[#1c1b1b]">Academic Cohorts</h2>
-        <span class="font-['Space_Mono'] text-xs text-[#5e5e5e] uppercase tracking-wider">// SYSTEM RUNTIME: REGISTRY VERIFIED</span>
-      </div>
-      
-      <!-- Asymmetric Level Selection Matrix -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        <!-- Form 1 & Form 2 Cluster (Left Block) -->
-        <div class="md:col-span-7 group border border-[#1c1b1b] p-8 bg-white hover:bg-[#f0eded] transition-colors cursor-pointer relative overflow-hidden">
-          <div class="flex justify-between items-start mb-12">
-            <div>
-              <span class="font-['Space_Mono'] text-[10px] text-[#5308e7] uppercase tracking-widest block mb-1">// LOWER CURRICULUM</span>
-              <h3 class="font-['Playfair_Display'] text-3xl font-black text-[#1c1b1b] uppercase">Forms 1 & 2</h3>
-            </div>
-            <span class="font-['Space_Mono'] text-5xl text-[#cbbeff]/40 font-black">01</span>
-          </div>
-          <div class="mt-auto">
-            <div class="grid grid-cols-2 gap-4 mb-4 font-['Space_Mono'] text-xs text-[#1c1b1b]">
-              <div>
-                <div class="text-[#5e5e5e] uppercase">Active Students</div>
-                <div class="text-2xl font-bold mt-1">48</div>
-              </div>
-              <div class="text-right">
-                <div class="text-[#5e5e5e] uppercase">Quiz Velocity</div>
-                <div class="text-2xl font-bold text-[#5308e7]">84%</div>
-              </div>
-            </div>
-            <!-- Custom Editorial Metric Bar -->
-            <div class="h-1 bg-[#e5e2e1] w-full">
-              <div class="h-full bg-[#5308e7]" style="width: 84%;"></div>
-            </div>
-          </div>
+<main class="w-full pb-32">
+    <!-- Magazine Masthead -->
+    <section class="px-6 md:px-12 pt-12 pb-8 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-4 block">Faculty Portal</span>
+            <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">The Faculty</h1>
+            <p class="font-mono text-xs text-gray-500 mt-4 uppercase tracking-wider">// Welcome, {{ request.user.username }}</p>
         </div>
-
-        <!-- Form 3 & Form 4 Cluster (Right Block - Asymmetric Top Margin Offset) -->
-        <div class="md:col-span-5 md:mt-16 group border border-[#1c1b1b] p-8 bg-[#1c1b1b] text-white hover:bg-[#5308e7] transition-colors cursor-pointer">
-          <div class="flex justify-between items-start mb-12">
-            <div>
-              <span class="font-['Space_Mono'] text-[10px] text-[#cbbeff] uppercase tracking-widest block mb-1">// UPPER GRADUATION TRACK</span>
-              <h3 class="font-['Playfair_Display'] text-3xl font-black uppercase tracking-tight">Forms 3 & 4</h3>
-            </div>
-            <span class="material-symbols-outlined text-4xl text-white">terminal</span>
-          </div>
-          <div class="mt-auto">
-            <div class="grid grid-cols-2 gap-4 mb-4 font-['Space_Mono'] text-xs text-white">
-              <div>
-                <div class="text-[#e5e2e1]/60 uppercase">Active Students</div>
-                <div class="text-2xl font-bold mt-1">32</div>
-              </div>
-              <div class="text-right">
-                <div class="text-[#e5e2e1]/60 uppercase">Syllabus Depth</div>
-                <div class="text-2xl font-bold">59%</div>
-              </div>
-            </div>
-            <div class="h-1 bg-white/20 w-full">
-              <div class="h-full bg-white" style="width: 59%;"></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
     </section>
 
-    <!-- Section 2: Evaluation Queue & Performance Streams -->
-    <section class="md:col-span-8">
-      <div class="flex items-baseline justify-between mb-8 border-b border-[#1c1b1b] pb-2">
-        <h2 class="font-['Playfair_Display'] text-2xl font-bold italic text-[#1c1b1b]">Evaluation Ledger</h2>
-        <span class="font-['Space_Mono'] text-xs text-[#5e5e5e] uppercase tracking-wider">AWAITING REVIEW TRACKING</span>
-      </div>
-      
-      <!-- Interactive Ledger Rows -->
-      <div class="space-y-0">
-        
-        <!-- Row Item 1 -->
-        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
-          <div class="mb-4 md:mb-0">
-            <div class="font-['Space_Mono'] text-xs text-[#5308e7] mb-1">FORM 4 / NATIONAL PREP</div>
-            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Mock Assessment Submissions: Mathematics</h4>
-          </div>
-          <div class="flex items-center gap-6">
-            <span class="px-3 py-1 bg-[#1c1b1b] text-white font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">9 PENDING</span>
-            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
-          </div>
+    <!-- Quick Actions — Magazine Action Bar -->
+    <section class="px-6 md:px-12 mt-8">
+        <div class="max-w-7xl mx-auto flex flex-wrap gap-3">
+            <a href="{% url 'instructor_manage_classes' %}" class="px-6 py-3 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                Manage Classes
+            </a>
+            <a href="{% url 'teacher_profile' %}" class="px-6 py-3 border border-gray-300 text-black font-mono text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-all duration-300">
+                My Profile
+            </a>
+            <a href="{% url 'library' %}" class="px-6 py-3 border border-gray-300 text-black font-mono text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-all duration-300">
+                School Library
+            </a>
         </div>
-
-        <!-- Row Item 2 -->
-        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
-          <div class="mb-4 md:mb-0">
-            <div class="font-['Space_Mono'] text-xs text-red-600 mb-1">FORM 1 / DIAGNOSTIC</div>
-            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Introductory English Essay Module</h4>
-          </div>
-          <div class="flex items-center gap-6">
-            <span class="px-3 py-1 bg-red-100 text-red-700 border border-red-300 font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">URGENT</span>
-            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
-          </div>
-        </div>
-
-        <!-- Row Item 3 -->
-        <div class="group py-8 flex flex-col md:flex-row md:items-center justify-between border-b border-[#cac3d9] hover:bg-[#f0eded]/40 px-2 transition-all">
-          <div class="mb-4 md:mb-0">
-            <div class="font-['Space_Mono'] text-xs text-[#5e5e5e] mb-1">FORM 3 / FIELDWORK</div>
-            <h4 class="font-['Inter'] text-lg font-bold text-[#1c1b1b]">Geography Structural Project Outlines</h4>
-          </div>
-          <div class="flex items-center gap-6">
-            <span class="px-3 py-1 bg-[#eae7e7] text-[#484456] font-['Space_Mono'] text-[10px] tracking-tighter uppercase rounded-none">COMPLETED</span>
-            <span class="material-symbols-outlined text-[#1c1b1b] group-hover:translate-x-2 transition-transform">arrow_forward</span>
-          </div>
-        </div>
-
-      </div>
     </section>
 
-    <!-- Side Graphic Context Panel (Fills layout balance) -->
-    <aside class="md:col-span-4 mt-12 md:mt-0">
-      <div class="sticky top-28">
-        <div class="relative w-full aspect-[3/4] overflow-hidden grayscale contrast-125 mb-4 border border-[#1c1b1b]">
-          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMIxFWTGEqbGDo9spOE6x5PiQ2vnMPzbhhVvOSgdErEjAzWNQTSFBzCedOz02Rzzivu7Er0kASAUh_wXFg7yCwCR6I-AkYSSVZ6WacHo75PxT8MHpFgeQBybTmyTGSEr3t-_TNDSwdcVv4j3SGNJU65r-xQ_vYFJ47mpApctoAp_iLYieKQS0QykVtL6N7fPx24h_HD8Awt3qCCKaxCizY-GsqLAULaH8Xt9YXA7frP_18tCNPeGKC2Y04Wrc2YqfP7lroMZA_6Ho" 
-               alt="Structural Architecture" 
-               class="object-cover w-full h-full"/>
+    <!-- Create New Class — Magazine Inline Form -->
+    <section class="px-6 md:px-12 mt-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">New Entry</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">Create New Class</h2>
+            </div>
+            <form method="POST" action="{% url 'instructor_manage_classes' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Class Code</label>
+                    <input type="text" name="code" placeholder="e.g. MATH-F1-A" required class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Class Title</label>
+                    <input type="text" name="title" placeholder="e.g. Mathematics Form 1A" required class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Schedule</label>
+                    <input type="text" name="schedule_string" placeholder="e.g. Mon/Wed 10:00-11:30" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Room</label>
+                    <input type="text" name="location_room" placeholder="e.g. Room 204" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div class="md:col-span-2 lg:col-span-4 mt-2">
+                    <button type="submit" class="w-full bg-black text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
+                        CREATE CLASS
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="border-l-2 border-[#5308e7] pl-4 py-2">
-          <p class="font-['Space_Mono'] text-xs font-bold uppercase tracking-tight text-[#1c1b1b]">
-            Fig 4.1: Architecture of Rigor
-          </p>
-          <p class="font-['Inter'] text-xs text-[#5e5e5e] italic mt-1 leading-relaxed">
-            Managing secondary systemic integrity with automated quiz checkpoints and multi-role performance trees.
-          </p>
-        </div>
-      </div>
-    </aside>
+    </section>
 
-  </div>
+    <!-- My Classes — Magazine Article Grid -->
+    <section class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0">Active Cohorts</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">My Classes</h2>
+                <p class="font-mono text-xs text-gray-500 mt-2 uppercase tracking-wider">{{ my_classes|length }} ACTIVE</p>
+            </div>
+
+            {% if my_classes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for class in my_classes %}
+                <a href="{% url 'instructor_class' slug=class.slug %}" class="group border border-gray-200 bg-white hover:border-[#4f14e0] transition-all duration-300 p-6 flex flex-col">
+                    <div class="mb-4">
+                        <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-1">{{ class.code }}</span>
+                        <h3 class="font-serif text-2xl font-black text-black uppercase group-hover:text-[#4f14e0] transition-colors">{{ class.title }}</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4 font-mono text-xs text-black">
+                        <div>
+                            <div class="text-gray-500 uppercase tracking-wider">Enrolled</div>
+                            <div class="text-2xl font-bold mt-1">{{ class.students.count }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-gray-500 uppercase tracking-wider">Contents</div>
+                            <div class="text-2xl font-bold text-[#4f14e0] mt-1">{{ class.contents.count }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-200">
+                        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ class.schedule_string }}</span>
+                        <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">ENTER &rarr;</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 border border-dashed border-gray-300">
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No classes assigned yet</p>
+                <p class="font-mono text-[10px] text-gray-300 mt-2">Create a class above to get started</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
 </main>
 {% endblock %}

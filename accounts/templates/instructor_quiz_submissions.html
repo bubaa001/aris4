@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+
+  <!-- Back Navigation -->
+  <div class="mb-8">
+    <a href="{% url 'instructor_class' slug=quiz.academic_class.slug %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK TO CLASS
+    </a>
+  </div>
+
+  <!-- Quiz Header -->
+  <header class="mb-12 pb-6 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">ASSESSMENT SUBMISSIONS</span>
+    <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
+      {{ quiz.title }}
+    </h1>
+    <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
+      {{ quiz.academic_class.code }} &middot; {{ total_submissions }}/{{ total_enrolled }} submitted
+    </div>
+  </header>
+
+  {% if submission_data %}
+    {% for item in submission_data %}
+    <section class="mb-12 pb-8 border-b border-gray-200">
+      <!-- Student Header -->
+      <div class="flex items-baseline justify-between mb-6">
+        <div>
+          <h2 class="font-serif text-2xl font-bold text-gray-900">{{ item.student.get_full_name|default:item.student.username }}</h2>
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ item.student.xp|default:"0" }} XP</span>
+        </div>
+        <div class="text-right">
+          <span class="font-mono text-lg font-bold {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+            {{ item.submission.score }}/{{ item.submission.total }}
+          </span>
+          <span class="font-mono text-[10px] text-gray-500 block uppercase tracking-wider">
+            Submitted {{ item.submission.submitted_at|date:"d.m.y H:i" }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Question-by-question breakdown -->
+      <div class="space-y-6 pl-4">
+        {% for result in item.question_results %}
+        <div class="pl-4 border-l-2 {% if result.is_correct %}border-green-400{% else %}border-red-400{% endif %}">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Q{{ forloop.counter }}</span>
+            {% if result.is_correct %}
+            <span class="font-mono text-[10px] text-green-600 uppercase tracking-wider font-bold">CORRECT</span>
+            {% else %}
+            <span class="font-mono text-[10px] text-red-600 uppercase tracking-wider font-bold">INCORRECT</span>
+            {% endif %}
+          </div>
+          <p class="font-serif text-lg font-bold text-gray-900 mb-3">{{ result.question.text }}</p>
+          
+          <div class="space-y-1.5">
+            {% for choice in result.question.choices.all %}
+            <div class="flex items-center gap-3 font-mono text-sm {% if choice.is_correct %}text-green-700 font-bold{% elif result.selected_choice and choice.id == result.selected_choice.id and not choice.is_correct %}text-red-600{% else %}text-gray-600{% endif %}">
+              <span class="w-2 h-2 rounded-full inline-block {% if choice.is_correct %}bg-green-500{% elif result.selected_choice and choice.id == result.selected_choice.id %}bg-red-500{% else %}bg-gray-300{% endif %}"></span>
+              <span>{{ choice.text }}</span>
+              {% if choice.is_correct %}
+              <span class="text-[10px] uppercase tracking-wider text-green-600">(correct answer)</span>
+              {% elif result.selected_choice and choice.id == result.selected_choice.id %}
+              <span class="text-[10px] uppercase tracking-wider text-red-600">(student's answer)</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  {% else %}
+  <div class="text-center py-16">
+    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No submissions yet</p>
+    <p class="text-sm text-gray-400 mt-2">Students haven't taken this quiz yet.</p>
+  </div>
+  {% endif %}
+
+  <!-- Pending Students -->
+  {% if pending_students %}
+  <section class="mt-12 pt-8 border-t border-gray-300">
+    <h2 class="font-serif text-xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Pending Submissions</h2>
+    <div class="space-y-2">
+      {% for student in pending_students %}
+      <div class="flex items-center justify-between py-2 border-b border-gray-100">
+        <span class="font-mono text-xs text-gray-900">{{ student.get_full_name|default:student.username }}</span>
+        <span class="font-mono text-[10px] text-amber-600 uppercase tracking-wider">Not submitted</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</main>
+{% endblock %}

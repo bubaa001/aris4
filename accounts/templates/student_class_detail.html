@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+  
+  <div class="mb-8">
+    <a href="{% url 'study_dashboard' %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK TO DASHBOARD
+    </a>
+  </div>
+
+  <header class="mb-12 pb-6 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ class.code }}</span>
+    <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
+      {{ class.title }}
+    </h1>
+    <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
+      {{ class.code }} &middot; {{ class.schedule_string }} &middot; Room {{ class.location_room }} &middot; <a href="{% url 'teacher_profile_by_username' username=class.instructor.username %}" class="text-[#4f14e0] hover:underline">{{ class.instructor.get_full_name|default:class.instructor.username }}</a>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+    <div class="md:col-span-8 space-y-12">
+      
+      {% if module_data %}
+        {% for mod in module_data %}
+        <section>
+          <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+            <h2 class="font-serif text-2xl font-bold text-gray-900">{{ mod.module.title }}</h2>
+            <span class="font-mono text-xs text-gray-500 uppercase tracking-wider">{{ mod.contents|length }} ITEMS</span>
+          </div>
+
+          {% if mod.contents %}
+          <div class="space-y-6">
+            {% for content in mod.contents %}
+            <div class="pl-4 border-l-2 border-gray-200">
+              <h3 class="font-serif text-xl font-bold text-gray-900">{{ content.title }}</h3>
+              <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ content.created_at|date:"d.m.y" }}</span>
+              {% if content.description %}
+              <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ content.description }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="font-mono text-sm text-gray-500 uppercase tracking-wider text-center py-8">No materials in this module</p>
+          {% endif %}
+
+          {% if mod.quiz_data %}
+          <div class="mt-8">
+            <h3 class="font-mono text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 pb-2 border-b border-gray-200">Quizzes</h3>
+            <div class="space-y-4">
+              {% for item in mod.quiz_data %}
+              <div class="pl-4 border-l-2 border-gray-200">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-serif text-lg font-bold text-gray-900">{{ item.quiz.title }}</h4>
+                    <p class="font-mono text-[10px] text-gray-500 mt-1">{{ item.quiz.created_at|date:"d.m.y" }} &middot; {{ item.quiz.questions.count }} questions</p>
+                  </div>
+                  
+                  {% if item.has_submitted %}
+                    <div class="text-right shrink-0 ml-4">
+                      <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+                        Score: {{ item.submission.score }}/{{ item.submission.total }}
+                      </span>
+                      <a href="{% url 'student_quiz_result' quiz_id=item.quiz.id %}" class="block font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider mt-1">VIEW RESULT</a>
+                    </div>
+                  {% else %}
+                    <a href="{% url 'student_take_quiz' quiz_id=item.quiz.id %}" class="text-[#4f14e0] border border-[#4f14e0] px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider hover:bg-[#4f14e0] hover:text-white transition-colors shrink-0 ml-4">
+                      TAKE QUIZ
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </section>
+        {% endfor %}
+      {% else %}
+        <p class="font-mono text-sm text-gray-500 uppercase tracking-wider text-center py-12">No modules available yet</p>
+      {% endif %}
+
+      {% if orphaned_contents or orphaned_quiz_data %}
+      <section>
+        <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+          <h2 class="font-serif text-2xl font-bold text-gray-900">Other Materials</h2>
+          <span class="font-mono text-xs text-gray-500 uppercase tracking-wider">{{ orphaned_contents|length }} ITEMS</span>
+        </div>
+
+        {% if orphaned_contents %}
+        <div class="space-y-6">
+          {% for content in orphaned_contents %}
+          <div class="pl-4 border-l-2 border-gray-200">
+            <h3 class="font-serif text-xl font-bold text-gray-900">{{ content.title }}</h3>
+            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ content.created_at|date:"d.m.y" }}</span>
+            {% if content.description %}
+            <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ content.description }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if orphaned_quiz_data %}
+        <div class="mt-8">
+          <h3 class="font-mono text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 pb-2 border-b border-gray-200">Quizzes</h3>
+          <div class="space-y-4">
+            {% for item in orphaned_quiz_data %}
+            <div class="pl-4 border-l-2 border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-serif text-lg font-bold text-gray-900">{{ item.quiz.title }}</h4>
+                  <p class="font-mono text-[10px] text-gray-500 mt-1">{{ item.quiz.created_at|date:"d.m.y" }} &middot; {{ item.quiz.questions.count }} questions</p>
+                </div>
+                
+                {% if item.has_submitted %}
+                  <div class="text-right shrink-0 ml-4">
+                    <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+                      Score: {{ item.submission.score }}/{{ item.submission.total }}
+                    </span>
+                    <a href="{% url 'student_quiz_result' quiz_id=item.quiz.id %}" class="block font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider mt-1">VIEW RESULT</a>
+                  </div>
+                {% else %}
+                  <a href="{% url 'student_take_quiz' quiz_id=item.quiz.id %}" class="text-[#4f14e0] border border-[#4f14e0] px-5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider hover:bg-[#4f14e0] hover:text-white transition-colors shrink-0 ml-4">
+                    TAKE QUIZ
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+    </div>
+
+
+    <div class="md:col-span-4">
+      <div class="sticky top-24">
+        <h3 class="font-serif text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">Class Info</h3>
+        <div class="space-y-3 font-mono text-xs text-gray-500">
+          <div class="flex justify-between pb-2 border-b border-gray-100">
+            <span class="uppercase tracking-wider">Code</span>
+            <span class="font-bold text-gray-900">{{ class.code }}</span>
+          </div>
+          <div class="flex justify-between pb-2 border-b border-gray-100">
+            <span class="uppercase tracking-wider">Schedule</span>
+            <span class="font-bold text-gray-900">{{ class.schedule_string }}</span>
+          </div>
+          <div class="flex justify-between pb-2 border-b border-gray-100">
+            <span class="uppercase tracking-wider">Room</span>
+            <span class="font-bold text-gray-900">{{ class.location_room }}</span>
+          </div>
+          <div class="flex justify-between pb-2 border-b border-gray-100">
+            <span class="uppercase tracking-wider">Instructor</span>
+            <a href="{% url 'teacher_profile_by_username' username=class.instructor.username %}" class="font-bold text-[#4f14e0] hover:underline">{{ class.instructor.get_full_name|default:class.instructor.username }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

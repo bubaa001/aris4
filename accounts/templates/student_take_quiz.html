@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[800px] mx-auto px-5 md:px-16 py-12 pb-32">
+  
+  <div class="mb-8">
+    <a href="javascript:history.back()" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK
+    </a>
+  </div>
+
+  <header class="mb-12 pb-8 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">QUIZ</span>
+    <h1 class="font-serif text-4xl md:text-5xl mb-4 font-black tracking-tight leading-none text-gray-900 uppercase">
+      {{ quiz.title }}
+    </h1>
+    {% if quiz.description %}
+    <p class="text-sm text-gray-600">{{ quiz.description }}</p>
+    {% endif %}
+    <p class="font-mono text-xs text-gray-500 mt-2">{{ questions|length }} question{{ questions|length|pluralize }}</p>
+  </header>
+
+  <form method="POST">
+    {% csrf_token %}
+    
+    <div class="space-y-10">
+      {% for question in questions %}
+      <div class="pb-8 border-b border-gray-200">
+        <div class="flex items-baseline gap-3 mb-6">
+          <span class="font-mono text-xs text-[#4f14e0] font-bold">{{ forloop.counter }}.</span>
+          <p class="font-serif text-xl font-bold text-gray-900">{{ question.text }}</p>
+        </div>
+        
+        <div class="space-y-3 pl-6">
+          {% for choice in question.shuffled_choices %}
+          <label class="flex items-start gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+            <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" required class="mt-1 shrink-0">
+            <span class="text-sm text-gray-700">{{ choice.text }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-12 pt-8 border-t border-gray-300">
+      <button type="submit" class="w-full bg-[#4f14e0] text-white py-5 font-mono text-sm font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors">
+        SUBMIT ANSWERS
+      </button>
+    </div>
+  </form>
+</main>
+{% endblock %}

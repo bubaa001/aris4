@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+  
+  <!-- Back Navigation -->
+  <div class="mb-8">
+    <a href="{% url 'instructor_dashboard' %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK TO DASHBOARD
+    </a>
+  </div>
+
+  <!-- Class Header — Magazine Byline Style -->
+  <header class="mb-16 pb-8 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ class.code }}</span>
+    <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
+      {{ class.title }}
+    </h1>
+    <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
+      {{ class.code }} &middot; {{ class.schedule_string }} &middot; Room {{ class.location_room }} &middot; {{ class.students.count }} Enrolled
+    </div>
+  </header>
+
+  <!-- Add Module — the only primary action -->
+  <div class="mb-16 pb-8 border-b border-gray-300">
+    <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-center gap-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_module">
+      <input type="text" name="module_title" placeholder="e.g. Week 1: Set Theory" required class="flex-1 border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+      <button type="submit" class="bg-[#4f14e0] text-white px-6 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors shrink-0">
+        + ADD MODULE
+      </button>
+    </form>
+  </div>
+
+  <!-- Modules -->
+  {% if modules %}
+  <div class="space-y-16">
+    {% for module in modules %}
+    <section>
+      <!-- Module Header -->
+      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-200">
+        <h2 class="font-serif text-2xl font-bold text-gray-900 uppercase tracking-tight">{{ module.title }}</h2>
+        <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this module and all its contents?')">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete_module">
+          <input type="hidden" name="module_id" value="{{ module.id }}">
+          <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE MODULE</button>
+        </form>
+      </div>
+
+      <!-- Module Items -->
+      <div class="space-y-6">
+        {% for content in module.contents.all %}
+        <div class="pl-4 border-l-2 border-gray-200">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h3 class="font-serif text-lg font-bold text-gray-900">{{ content.title }}</h3>
+              <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ content.created_at|date:"d.m.y" }}</span>
+              {% if content.description %}
+              <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ content.description }}</p>
+              {% endif %}
+            </div>
+            <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this content?')" class="ml-4 shrink-0">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete_content">
+              <input type="hidden" name="content_id" value="{{ content.id }}">
+              <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+        {% for quiz in module.quizzes.all %}
+        <div class="pl-4 border-l-2 border-gray-200">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">ASSESSMENT</span>
+                <span class="font-mono text-[10px] text-gray-400">&middot;</span>
+                <span class="font-mono text-[10px] text-gray-500">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }}</span>
+                {% with submission_count=quiz.submissions.count %}
+                {% if submission_count > 0 %}
+                <span class="font-mono text-[10px] text-gray-500">&middot; {{ submission_count }} submission{{ submission_count|pluralize }}</span>
+                {% endif %}
+                {% endwith %}
+              </div>
+              <h3 class="font-serif text-lg font-bold text-gray-900 mt-1">{{ quiz.title }}</h3>
+              {% if quiz.description %}
+              <p class="text-sm text-gray-600 mt-1">{{ quiz.description }}</p>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-3 ml-4 shrink-0">
+              <a href="{% url 'instructor_quiz_submissions' quiz_id=quiz.id %}" class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider transition-colors">
+                VIEW SUBMISSIONS
+              </a>
+              <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this quiz and all its data?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_quiz">
+                <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+                <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Add Content / Add Assessment links -->
+        <div class="flex items-center gap-6 pl-4 pt-2">
+          <button type="button" onclick="showAddContent({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">
+            + ADD CONTENT
+          </button>
+          <button type="button" onclick="showQuizStudio({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">
+            + ADD ASSESSMENT
+          </button>
+        </div>
+
+        <!-- Inline Add Content Form (hidden by default) -->
+        <div id="addContentForm_{{ module.id }}" class="hidden pl-4 pt-4">
+          <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-start gap-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_content">
+            <input type="hidden" name="module_id" value="{{ module.id }}">
+            <div class="flex-1 space-y-3">
+              <input type="text" name="title" placeholder="Content title" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+              <textarea name="description" rows="3" placeholder="Write the content here..." class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400"></textarea>
+            </div>
+            <button type="submit" class="bg-gray-900 text-white px-5 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-[#4f14e0] transition-colors shrink-0 mt-1">
+              ADD
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No modules yet</p>
+    <p class="text-sm text-gray-400 mt-2">Create your first module above to start building your curriculum.</p>
+  </div>
+  {% endif %}
+
+  <!-- Orphaned Items (no module) -->
+  {% if orphaned_contents or orphaned_quizzes %}
+  <section class="mt-16 pt-8 border-t border-gray-300">
+    <h2 class="font-serif text-xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Uncategorized</h2>
+    <div class="space-y-4">
+      {% for content in orphaned_contents %}
+      <div class="pl-4 border-l-2 border-gray-200">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="font-serif text-base font-bold text-gray-900">{{ content.title }}</h3>
+            <span class="font-mono text-[10px] text-gray-500">{{ content.created_at|date:"d.m.y" }}</span>
+          </div>
+          <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_content">
+            <input type="hidden" name="content_id" value="{{ content.id }}">
+            <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase">DELETE</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+      {% for quiz in orphaned_quizzes %}
+      <div class="pl-4 border-l-2 border-gray-200">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">ASSESSMENT</span>
+            <h3 class="font-serif text-base font-bold text-gray-900">{{ quiz.title }}</h3>
+          </div>
+          <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_quiz">
+            <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+            <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase">DELETE</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Student Quiz Performance Chart + Table -->
+  <section class="mt-16 pt-8 border-t border-gray-300">
+    <div class="flex items-baseline justify-between mb-6">
+      <h2 class="font-serif text-xl font-bold text-gray-900 uppercase tracking-tight">Student Performance</h2>
+      <span class="font-mono text-xs text-gray-500 uppercase tracking-wider">{{ student_list|length }} enrolled</span>
+    </div>
+    {% if student_list %}
+    <!-- Performance Bars (clickable) -->
+    <div class="space-y-4">
+      {% for item in student_list %}
+      <a href="{% url 'instructor_student_performance' slug=class.slug student_id=item.student.id %}" class="block bg-white border border-gray-200 px-4 py-3 hover:border-[#4f14e0] hover:shadow-sm transition-all group">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ item.student.get_full_name|default:item.student.username }}</span>
+            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ item.student.xp|default:"0" }} XP</span>
+          </div>
+          <div class="text-right">
+            <span class="font-mono text-xs font-bold {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}text-green-600{% elif item.completed_quizzes > 0 %}text-amber-600{% else %}text-gray-400{% endif %}">
+              {{ item.completed_quizzes }}/{{ item.total_quizzes }} quizzes
+            </span>
+            {% if item.total_possible > 0 %}
+            <span class="font-mono text-[10px] text-gray-500 ml-3">{{ item.total_score }}/{{ item.total_possible }} correct</span>
+            {% endif %}
+          </div>
+        </div>
+        <!-- Completion bar -->
+        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500 {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}bg-green-500{% elif item.completed_quizzes > 0 %}bg-amber-500{% else %}bg-gray-300{% endif %}" 
+               style="width: {% widthratio item.completed_quizzes item.total_quizzes 100 %}%">
+          </div>
+        </div>
+        {% if item.total_possible > 0 %}
+        <!-- Accuracy bar -->
+        <div class="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
+          <div class="h-full rounded-full transition-all duration-500 bg-[#4f14e0]" 
+               style="width: {% widthratio item.total_score item.total_possible 100 %}%">
+          </div>
+        </div>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="font-mono text-xs text-gray-500 text-center py-8">No students enrolled yet</p>
+    {% endif %}
+  </section>
+</main>
+
+<!-- Quiz Studio Modal (hidden by default) -->
+<div id="quizStudioOverlay" class="fixed inset-0 bg-black/50 z-50 hidden">
+  <div class="absolute inset-0 flex items-start justify-center pt-12 pb-24 overflow-y-auto">
+    <div class="bg-white w-full max-w-[700px] mx-4 p-8 shadow-2xl">
+      <div class="flex items-baseline justify-between mb-6 pb-4 border-b border-gray-200">
+        <h3 class="font-serif text-2xl font-bold text-gray-900 uppercase tracking-tight">Quiz Studio</h3>
+        <button type="button" onclick="closeQuizStudio()" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider">CLOSE</button>
+      </div>
+
+      <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" id="quizForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_quiz">
+        <input type="hidden" name="module_id" id="quizModuleId" value="">
+
+        <div class="space-y-4 mb-8">
+          <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Quiz Title</label>
+            <input type="text" name="quiz_title" placeholder="e.g. Week 1 Assessment" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+          </div>
+          <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Description</label>
+            <input type="text" name="quiz_description" placeholder="Brief description" class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+          </div>
+        </div>
+
+        <div id="questionsContainer" class="space-y-8 mb-8">
+          <!-- Questions added by JS -->
+        </div>
+
+        <button type="button" id="addQuestionBtn" class="w-full border border-dashed border-gray-300 text-gray-500 px-4 py-3 font-mono text-xs font-bold tracking-wider uppercase hover:border-[#4f14e0] hover:text-[#4f14e0] transition-all mb-6">
+          + ADD QUESTION
+        </button>
+
+        <button type="submit" class="w-full bg-[#4f14e0] text-white px-6 py-4 font-mono text-xs font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors">
+          CREATE QUIZ
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let questionCount = 0;
+
+function showQuizStudio(moduleId) {
+    document.getElementById('quizModuleId').value = moduleId;
+    document.getElementById('quizStudioOverlay').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQuizStudio() {
+    document.getElementById('quizStudioOverlay').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function showAddContent(moduleId) {
+    const form = document.getElementById('addContentForm_' + moduleId);
+    if (form) {
+        form.classList.toggle('hidden');
+    }
+}
+
+document.getElementById('addQuestionBtn').addEventListener('click', function() {
+    addQuestion();
+});
+
+// Validate that every question has a correct answer marked before submitting
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    const blocks = document.querySelectorAll('.question-block');
+    let missing = [];
+    
+    blocks.forEach(function(block) {
+        const index = block.dataset.index;
+        const radios = block.querySelectorAll(`input[name="correct_choice_${index}"]`);
+        let checked = false;
+        radios.forEach(function(r) { if (r.checked) checked = true; });
+        
+        if (!checked) {
+            const qNum = block.querySelector('.font-mono.text-xs').textContent.trim();
+            missing.push(qNum);
+        }
+    });
+    
+    if (missing.length > 0) {
+        e.preventDefault();
+        alert('You must mark a correct answer for: ' + missing.join(', '));
+    }
+});
+
+function addQuestion() {
+    const i = questionCount;
+    const container = document.getElementById('questionsContainer');
+    const div = document.createElement('div');
+    div.className = 'question-block pb-6 border-b border-gray-200';
+    div.dataset.index = i;
+
+    div.innerHTML = `
+        <div class="flex items-center justify-between mb-4">
+            <span class="font-mono text-xs text-[#4f14e0] font-bold uppercase">QUESTION ${i + 1}</span>
+            <button type="button" onclick="this.closest('.question-block').remove()" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">REMOVE</button>
+        </div>
+        <div class="mb-4">
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Question</label>
+            <input type="text" name="question_text[]" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400" placeholder="Enter your question">
+        </div>
+        <div class="choices-container">
+            <div class="flex items-baseline justify-between mb-3">
+                <span class="font-mono text-[10px] uppercase tracking-widest text-gray-500">CHOICES</span>
+                <button type="button" onclick="addChoice(this.closest('.choices-container').querySelector('.choice-list'), ${i})" class="font-mono text-xs text-gray-500 hover:text-[#4f14e0] transition-colors">+ ADD CHOICE</button>
+            </div>
+            <div class="choice-list space-y-2">
+            </div>
+        </div>
+    `;
+
+    container.appendChild(div);
+    
+    // Add two default choices
+    addChoice(div.querySelector('.choice-list'), i);
+    addChoice(div.querySelector('.choice-list'), i);
+    
+    questionCount++;
+}
+
+function addChoice(listElement, index) {
+    const ci = listElement.querySelectorAll('.choice-item').length;
+    const item = document.createElement('div');
+    item.className = 'choice-item flex items-center gap-3';
+    item.innerHTML = `
+        <label class="flex items-center gap-2 shrink-0 cursor-pointer" title="Mark as correct answer">
+            <input type="radio" name="correct_choice_${index}" value="${ci}" class="w-4 h-4 text-[#4f14e0] focus:ring-[#4f14e0]">
+            <span class="font-mono text-[10px] text-[#4f14e0] font-bold uppercase">CORRECT</span>
+        </label>
+        <input type="text" name="choice_text_${index}[]" class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400" placeholder="Option text">
+        <button type="button" onclick="this.closest('.choice-item').remove()" class="font-mono text-[10px] text-gray-400 hover:text-red-600 shrink-0 transition-colors">X</button>
+    `;
+    listElement.appendChild(item);
+}
+
+// Add first question by default when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+    addQuestion();
+});
+
+</script>
+{% endblock %}

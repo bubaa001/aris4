@@ -82,8 +82,8 @@
               <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Expert Faculty</p>
             </div>
             <div>
-              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">{{ active_quests }}</p>
-              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Active Quests Available</p>
+              <p class="font-['Space_Mono'] text-2xl lg:text-3xl font-bold text-[#5308e7]">{{ class_count }}</p>
+              <p class="font-['Inter'] text-xs text-[#484456] uppercase tracking-wide">Active Classes</p>
             </div>
           </div>
         </div>
@@ -117,9 +117,9 @@
                     </svg>
                     Current Quest
                 </span>
-                <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ current_quest_title }}</span>
-                <span class="font-['Space_Mono'] text-xs text-green-600 font-bold"></span>
-              </div>
+                <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">Active Learning Path</span>
+                <span class="font-['Space_Mono'] text-xs text-green-600 font-bold">IN PROGRESS</span>
+            </div>
               <div class="flex justify-between items-center">
                 <span class="font-['Space_Mono'] text-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -162,8 +162,8 @@
       <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Faculty</p>
     </div>
     <div class="text-center">
-      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">{{ active_quests }}</p>
-      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Quests</p>
+      <p class="font-['Space_Mono'] text-lg md:text-xl font-bold text-[#5308e7]">{{ class_count }}</p>
+      <p class="font-['Inter'] text-[9px] md:text-[10px] text-[#484456] uppercase tracking-wider">Classes</p>
     </div>
   </div>
 
@@ -209,8 +209,8 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-gray-500">QUEST</span>
             </div>
-            <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ current_quest_title }}</span>
-            <span class="font-['Space_Mono'] text-[9px] text-green-600 font-bold"></span>
+            <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">Active Learning Path</span>
+            <span class="font-['Space_Mono'] text-[9px] text-green-600 font-bold">IN PROGRESS</span>
           </div>
           
           <div class="flex items-center justify-between p-2 bg-[#f5f3f0]">

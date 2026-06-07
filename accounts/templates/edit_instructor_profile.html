@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[800px] mx-auto px-5 md:px-16 py-12 pb-32">
+  
+  <div class="mb-12 pb-8 border-b border-gray-300">
+    <span class="font-mono text-xs text-[#5308e7] uppercase tracking-widest mb-4 block">Profile Setup</span>
+    <h2 class="font-serif text-4xl md:text-5xl font-black tracking-tight leading-none text-gray-900 mb-4">
+      {% if profile.has_profile %}Edit Your Profile{% else %}Create Your Profile{% endif %}
+    </h2>
+    <p class="text-sm text-gray-600 max-w-md">
+      {% if profile.has_profile %}
+        Update your academic profile. This information will be displayed on your public teacher page.
+      {% else %}
+        Fill in your details to create your instructor profile. It won't be visible until you save it.
+      {% endif %}
+    </p>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" class="space-y-12">
+    {% csrf_token %}
+
+    <!-- Basic Info -->
+    <section>
+      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Basic Information</h3>
+        <span class="text-[#5308e7] font-bold font-mono text-xs">/01</span>
+      </div>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="font-mono text-xs uppercase tracking-widest text-gray-500 block mb-2">Title / Role</label>
+          <input type="text" name="title_role" value="{{ profile.title_role|default:'' }}" placeholder="e.g. Lead Instructor, Professor of Mathematics"
+                 class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+        </div>
+
+        <div>
+          <label class="font-mono text-xs uppercase tracking-widest text-gray-500 block mb-2">Bio</label>
+          <textarea name="bio" rows="5" placeholder="Tell us about your academic background and research interests..."
+                    class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">{{ profile.bio|default:'' }}</textarea>
+        </div>
+
+        <div>
+          <label class="font-mono text-xs uppercase tracking-widest text-gray-500 block mb-2">Avatar</label>
+          {% if profile.avatar %}
+            <div class="mb-3">
+              <img src="{{ profile.avatar.url }}" alt="Current avatar" class="w-24 h-24 object-cover border border-gray-300">
+              <span class="font-mono text-[10px] text-gray-400 mt-1 block">Current avatar</span>
+            </div>
+          {% endif %}
+          <input type="file" name="avatar" accept="image/*"
+                 class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+        </div>
+
+        <div>
+          <label class="font-mono text-xs uppercase tracking-widest text-gray-500 block mb-2">Established Year</label>
+          <input type="number" name="established_year" value="{{ profile.established_year|default:'2024' }}"
+                 class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors max-w-[200px]">
+        </div>
+      </div>
+    </section>
+
+    <!-- Academic Focus -->
+    <section>
+      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Academic Focus</h3>
+        <span class="text-[#5308e7] font-bold font-mono text-xs">/02</span>
+      </div>
+      
+      <div id="focus-container" class="space-y-4">
+        {% if profile.academic_focus %}
+          {% for focus in profile.academic_focus %}
+          <div class="focus-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50">
+            <div class="md:col-span-5">
+              <input type="text" name="focus_title[]" value="{{ focus.title }}" placeholder="Focus title"
+                     class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+            </div>
+            <div class="md:col-span-7">
+              <input type="text" name="focus_description[]" value="{{ focus.description }}" placeholder="Description"
+                     class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="focus-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50">
+          <div class="md:col-span-5">
+            <input type="text" name="focus_title[]" placeholder="Focus title"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+          <div class="md:col-span-7">
+            <input type="text" name="focus_description[]" placeholder="Description"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addFocusEntry()" class="mt-3 border border-gray-300 px-4 py-2 font-mono text-xs hover:bg-gray-900 hover:text-white transition-colors">
+        + ADD FOCUS AREA
+      </button>
+    </section>
+
+    <!-- Methodologies -->
+    <section>
+      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Core Methodologies</h3>
+        <span class="text-[#5308e7] font-bold font-mono text-xs">/03</span>
+      </div>
+      
+      <div id="method-container" class="space-y-4">
+        {% if profile.methodologies %}
+          {% for method in profile.methodologies %}
+          <div class="method-entry p-4 border border-gray-200 bg-gray-50">
+            <input type="text" name="method_name[]" value="{{ method.name }}" placeholder="Methodology name"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="method-entry p-4 border border-gray-200 bg-gray-50">
+          <input type="text" name="method_name[]" placeholder="Methodology name"
+                 class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+        </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addMethodEntry()" class="mt-3 border border-gray-300 px-4 py-2 font-mono text-xs hover:bg-gray-900 hover:text-white transition-colors">
+        + ADD METHODOLOGY
+      </button>
+    </section>
+
+    <!-- Manuscripts -->
+    <section>
+      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Published Manuscripts</h3>
+        <span class="text-[#5308e7] font-bold font-mono text-xs">/04</span>
+      </div>
+      
+      <div id="manuscript-container" class="space-y-4">
+        {% if profile.manuscripts %}
+          {% for paper in profile.manuscripts %}
+          <div class="manuscript-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50">
+            <div class="md:col-span-2">
+              <input type="number" name="manuscript_year[]" value="{{ paper.publication_year }}" placeholder="Year"
+                     class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+            </div>
+            <div class="md:col-span-6">
+              <input type="text" name="manuscript_title[]" value="{{ paper.title }}" placeholder="Title"
+                     class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+            </div>
+            <div class="md:col-span-4">
+              <input type="text" name="manuscript_tag[]" value="{{ paper.publisher_tag }}" placeholder="Publisher / Tag"
+                     class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div class="manuscript-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50">
+          <div class="md:col-span-2">
+            <input type="number" name="manuscript_year[]" placeholder="Year"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+          <div class="md:col-span-6">
+            <input type="text" name="manuscript_title[]" placeholder="Title"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+          <div class="md:col-span-4">
+            <input type="text" name="manuscript_tag[]" placeholder="Publisher / Tag"
+                   class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addManuscriptEntry()" class="mt-3 border border-gray-300 px-4 py-2 font-mono text-xs hover:bg-gray-900 hover:text-white transition-colors">
+        + ADD MANUSCRIPT
+      </button>
+    </section>
+
+    <!-- Submit -->
+    <div class="pt-8 border-t border-gray-300 flex items-center gap-4">
+      <button type="submit" class="bg-[#5308e7] text-white px-12 py-4 font-mono text-xs uppercase tracking-widest hover:scale-105 transition-transform duration-300">
+        {% if profile.has_profile %}Update Profile{% else %}Create Profile{% endif %}
+      </button>
+      {% if profile.has_profile %}
+      <a href="{% url 'teacher_profile' %}" class="border border-gray-300 px-8 py-4 font-mono text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors">
+        Cancel
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</main>
+
+<script>
+function addFocusEntry() {
+  const container = document.getElementById('focus-container');
+  const entry = document.createElement('div');
+  entry.className = 'focus-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50';
+  entry.innerHTML = `
+    <div class="md:col-span-5">
+      <input type="text" name="focus_title[]" placeholder="Focus title"
+             class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+    </div>
+    <div class="md:col-span-7">
+      <input type="text" name="focus_description[]" placeholder="Description"
+             class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+    </div>
+  `;
+  container.appendChild(entry);
+}
+
+function addMethodEntry() {
+  const container = document.getElementById('method-container');
+  const entry = document.createElement('div');
+  entry.className = 'method-entry p-4 border border-gray-200 bg-gray-50';
+  entry.innerHTML = `
+    <input type="text" name="method_name[]" placeholder="Methodology name"
+           class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+  `;
+  container.appendChild(entry);
+}
+
+function addManuscriptEntry() {
+  const container = document.getElementById('manuscript-container');
+  const entry = document.createElement('div');
+  entry.className = 'manuscript-entry grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border border-gray-200 bg-gray-50';
+  entry.innerHTML = `
+    <div class="md:col-span-2">
+      <input type="number" name="manuscript_year[]" placeholder="Year"
+             class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+    </div>
+    <div class="md:col-span-6">
+      <input type="text" name="manuscript_title[]" placeholder="Title"
+             class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+    </div>
+    <div class="md:col-span-4">
+      <input type="text" name="manuscript_tag[]" placeholder="Publisher / Tag"
+             class="w-full border border-gray-300 px-3 py-2 font-mono text-sm bg-white focus:border-[#5308e7] focus:outline-none transition-colors">
+    </div>
+  `;
+  container.appendChild(entry);
+}
+</script>
+{% endblock %}

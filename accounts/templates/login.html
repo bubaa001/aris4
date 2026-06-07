@@ -1,56 +1,58 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="w-full max-w-md mx-auto my-16 px-4">
-  
-  <div class="mb-10 border-b-2 border-black pb-4">
-    <h2 class="font-serif text-4xl font-black tracking-tight text-black uppercase select-none">
-      Sign In
-    </h2>
-    <p class="font-mono text-xs text-gray-500 uppercase tracking-widest mt-2">
-      aris4.o // student access portal
-    </p>
-  </div>
-    
-  <form method="POST" action="{% url 'login' %}" class="space-y-8">
-    {% csrf_token %}
-    
-    {% if form.non_field_errors %}
-    <div class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-      {% for error in form.non_field_errors %}
-        <p>{{ error }}</p>
-      {% endfor %}
-    </div>
-    {% endif %}
+<div class="min-h-screen flex items-center justify-center px-6 py-16">
+    <div class="w-full max-w-lg">
+        <!-- Magazine Masthead -->
+        <div class="border-t-4 border-black pt-6 mb-10">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-3 block">Authentication</span>
+            <h1 class="font-serif text-5xl md:text-6xl font-black tracking-tight text-black leading-none">Sign In</h1>
+            <p class="font-mono text-xs text-gray-500 mt-3 uppercase tracking-wider">aris4.0 // student access portal</p>
+        </div>
 
-    {% for field in form %}
-    <div class="flex flex-col group">
-      <label class="font-mono text-[11px] font-bold tracking-widest uppercase text-gray-400 group-focus-within:text-[#4f14e0] transition-colors mb-2">
-        {{ field.label }}
-      </label>
-      
-      <div class="relative border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 [&>input]:w-full [&>input]:bg-transparent [&>input]:text-lg [&>input]:font-medium [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-1">
-        {{ field }}
-      </div>
-      
-      {% if field.errors %}
-      <p class="font-mono text-xs text-red-600 uppercase tracking-wider mt-1.5 font-bold">
-        // {{ field.errors.0 }}
-      </p>
-      {% endif %}
-    </div>
-    {% endfor %}
-    
-    <div class="pt-4">
-      <button type="submit" class="w-full bg-black text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-black hover:bg-[#4f14e0] hover:border-[#4f14e0] active:translate-x-[2px] active:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(79,20,224,1)] hover:shadow-none transition-all duration-150">
-        Authenticate Session
-      </button>
-    </div>
-  </form>
-  
-  <p class="mt-8 text-left font-mono text-xs text-gray-500 uppercase tracking-wider">
-    New user? <a href="{% url 'register' %}" class="text-black font-bold underline hover:text-[#4f14e0] transition-colors">Register Account</a>
-  </p>
+        <form method="POST" action="{% url 'login' %}" class="space-y-8">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="border border-red-300 bg-red-50 p-4">
+                <p class="font-mono text-[10px] text-red-700 uppercase tracking-wider font-bold">
+                    {% for error in form.non_field_errors %}
+                        // {{ error }}
+                    {% endfor %}
+                </p>
+            </div>
+            {% endif %}
 
+            {% for field in form %}
+            <div class="group">
+                <label class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 group-focus-within:text-[#4f14e0] transition-colors block mb-2">
+                    {{ field.label }}
+                </label>
+                
+                <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2">
+                    {{ field }}
+                </div>
+                
+                {% if field.errors %}
+                <p class="font-mono text-[10px] text-red-600 uppercase tracking-wider mt-2 font-bold">
+                    // {{ field.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-black text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-black hover:bg-[#4f14e0] hover:border-[#4f14e0] transition-all duration-300">
+                    Authenticate Session
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
+                New user? <a href="{% url 'register' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Register Account</a>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

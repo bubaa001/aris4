@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="w-full pb-32">
+    <!-- Magazine Masthead -->
+    <section class="px-6 md:px-12 pt-12 pb-8 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-4 block">School Library</span>
+            <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">The Library</h1>
+            <p class="font-mono text-xs text-gray-500 mt-4 uppercase tracking-wider">A curated collection of knowledge — uploaded by instructors</p>
+        </div>
+    </section>
+
+    <!-- Instructor Upload Form -->
+    {% if user.is_authenticated and user.role == 'instructor' %}
+    <section class="px-6 md:px-12 py-8 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto">
+            <details class="group">
+                <summary class="font-mono text-xs font-bold uppercase tracking-wider text-[#4f14e0] cursor-pointer hover:opacity-70 transition-opacity list-none flex items-center gap-2">
+                    <svg class="w-4 h-4 group-open:rotate-45 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    UPLOAD NEW BOOK
+                </summary>
+                <form method="POST" enctype="multipart/form-data" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                    {% csrf_token %}
+                    <div class="md:col-span-2">
+                        <label class="font-mono text-[10px] uppercase tracking-wider text-gray-500 block mb-1">Book Title</label>
+                        <input type="text" name="title" required class="w-full border border-gray-300 bg-white px-4 py-2.5 font-mono text-sm focus:outline-none focus:border-[#4f14e0] transition-colors">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="font-mono text-[10px] uppercase tracking-wider text-gray-500 block mb-1">Description</label>
+                        <textarea name="description" rows="3" class="w-full border border-gray-300 bg-white px-4 py-2.5 font-mono text-sm focus:outline-none focus:border-[#4f14e0] transition-colors"></textarea>
+                    </div>
+                    <div>
+                        <label class="font-mono text-[10px] uppercase tracking-wider text-gray-500 block mb-1">Document File (PDF, DOC, etc.)</label>
+                        <input type="file" name="file" required class="w-full text-sm font-mono text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-[#4f14e0] file:text-white file:font-mono file:text-xs file:uppercase file:tracking-wider hover:file:opacity-90">
+                    </div>
+                    <div>
+                        <label class="font-mono text-[10px] uppercase tracking-wider text-gray-500 block mb-1">Thumbnail Image (optional)</label>
+                        <input type="file" name="thumbnail" accept="image/*" class="w-full text-sm font-mono text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-gray-800 file:text-white file:font-mono file:text-xs file:uppercase file:tracking-wider hover:file:opacity-90">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="px-8 py-3 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                            Upload to Library
+                        </button>
+                    </div>
+                </form>
+            </details>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Book Grid -->
+    <section class="px-6 md:px-12 py-10">
+        <div class="max-w-7xl mx-auto">
+            {% if books %}
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                {% for book in books %}
+                <div class="group border border-gray-200 bg-white hover:border-[#4f14e0] transition-all duration-300 flex flex-col">
+                    <!-- Thumbnail -->
+                    <div class="aspect-[3/4] bg-gray-100 overflow-hidden relative">
+                        {% if book.thumbnail %}
+                        <img src="{{ book.thumbnail.url }}" alt="{{ book.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-12 h-12 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <!-- Hover overlay -->
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                    </div>
+                    <!-- Info -->
+                    <div class="p-4 flex flex-col flex-grow">
+                        <h3 class="font-serif text-sm font-bold leading-tight text-black group-hover:text-[#4f14e0] transition-colors">{{ book.title }}</h3>
+                        {% if book.description %}
+                        <p class="font-mono text-[10px] text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">{{ book.description }}</p>
+                        {% endif %}
+                        <div class="mt-auto pt-3 flex items-center justify-between">
+                            <span class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">{{ book.uploaded_by.username }}</span>
+                            <div class="flex items-center gap-2">
+                                {% if user.is_authenticated and user.role == 'instructor' %}
+                                <form method="POST" action="{% url 'library_delete' book.id %}" onsubmit="return confirm('Delete this book?')" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="font-mono text-[9px] text-red-400 hover:text-red-600 uppercase tracking-wider transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{% url 'library_download' book.id %}" class="font-mono text-[10px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-20 border border-dashed border-gray-300">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">The library is empty</p>
+                <p class="font-mono text-[10px] text-gray-300 mt-2">Books uploaded by instructors will appear here</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}

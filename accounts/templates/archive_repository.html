@@ -2,91 +2,304 @@
 {% load static %}
 
 {% block content %}
-<main class="w-full pb-24">
-    <section class="px-margin-mobile pt-10 pb-6 border-b border-on-surface">
-        <span class="font-label-mono text-label-mono uppercase text-primary mb-2 block tracking-widest">Digital Repository</span>
-        <h2 class="font-headline-lg-mobile text-headline-lg-mobile">The Archive</h2>
+<main class="w-full pb-32">
+    <!-- Magazine Masthead -->
+    <section class="px-6 md:px-12 pt-12 pb-8 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-4 block">Digital Repository</span>
+            <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">The Archive</h1>
+            <p class="font-mono text-xs text-gray-500 mt-4 uppercase tracking-wider">A curated compendium of knowledge</p>
+        </div>
     </section>
 
+    <!-- Featured Record — Magazine Hero -->
     {% if featured_record %}
-    <section class="mt-8 px-margin-mobile">
-        <div class="relative group overflow-hidden border border-on-background">
-            <div class="aspect-square w-full">
-                {% if featured_record.cover_image %}
-                    <img alt="{{ featured_record.title }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="{{ featured_record.cover_image.url }}"/>
-                {% else %}
-                    <div class="w-full h-full bg-surface-container flex items-center justify-center font-label-mono text-secondary">NO_IMAGE_ARTIFACT</div>
-                {% endif %}
-            </div>
-            <div class="absolute bottom-0 left-0 p-6 bg-surface border-t border-r border-on-background max-w-[80%]">
-                <h3 class="font-headline-md text-headline-md mb-2">{{ featured_record.title|default:"Curated Knowledge" }}</h3>
-                <p class="font-body-md text-body-md text-on-surface-variant">{{ featured_record.summary }}</p>
+    <section class="px-6 md:px-12 mt-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="relative group overflow-hidden border border-gray-300 bg-white">
+                <div class="aspect-[16/9] md:aspect-[21/9] w-full">
+                    {% if featured_record.cover_image %}
+                        <img alt="{{ featured_record.title }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" src="{{ featured_record.cover_image.url }}"/>
+                    {% else %}
+                        <div class="w-full h-full bg-gray-100 flex items-center justify-center font-mono text-xs text-gray-400 uppercase tracking-wider">No Image Artifact</div>
+                    {% endif %}
+                </div>
+                <div class="absolute bottom-0 left-0 p-6 md:p-10 bg-white border-t border-r border-gray-300 max-w-[85%] md:max-w-[60%]">
+                    <span class="font-mono text-[9px] uppercase tracking-[0.2em] text-[#4f14e0] mb-2 block">Featured Record</span>
+                    <h3 class="font-serif text-2xl md:text-4xl font-bold leading-tight text-black">{{ featured_record.title|default:"Curated Knowledge" }}</h3>
+                    <p class="font-mono text-xs text-gray-500 mt-3 leading-relaxed">{{ featured_record.summary }}</p>
+                </div>
             </div>
         </div>
     </section>
     {% endif %}
 
-    <nav class="mt-12 px-margin-mobile flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-        <a href="{% url 'archive_index' %}" class="px-4 py-1 font-label-mono text-label-mono whitespace-nowrap {% if not active_category %}bg-on-surface text-surface{% else %}border border-on-surface text-on-surface hover:bg-primary-fixed{% endif %} transition-colors">
-            ALL_RECORDS
-        </a>
-        {% for category in categories %}
-        <a href="{% url 'archive_category' slug=category.slug %}" class="px-4 py-1 font-label-mono text-label-mono whitespace-nowrap {% if active_category == category.slug %}bg-on-surface text-surface{% else %}border border-on-surface text-on-surface hover:bg-primary-fixed{% endif %} transition-colors">
-            {{ category.name|upper }}
-        </a>
-        {% endfor %}
-    </nav>
+    <!-- RANKED PROGRESSION — Magazine Spread -->
+    <section class="px-6 md:px-12 mt-16">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Ranked Progression</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">The Path to Grandmaster</h2>
+            </div>
 
-    <section class="mt-8 space-y-16">
-        {% if archive_items %}
-            {% for item in archive_items %}
-            <div class="asymmetric-item px-margin-mobile flex flex-col gap-4 transition-all duration-700 ease-out opacity-0 translate-y-10 {% if forloop.counter|divisibleby:2 %}ps-[20%]{% else %}pe-[20%]{% endif %}">
-                <div class="flex justify-between items-baseline border-b border-on-surface-variant pb-1">
-                    <span class="font-label-mono text-label-mono text-primary font-bold">{{ item.status_label|upper|default:"RECORD" }}</span>
-                    <span class="font-label-mono text-label-mono opacity-60">{{ item.timestamp_string|default:"Q3 2026" }}</span>
+            <!-- Tier List — Horizontal scroll on mobile, grid on desktop -->
+            <div class="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory no-scrollbar">
+                {% for tier in tiers %}
+                <div class="flex-shrink-0 w-[70vw] md:w-auto snap-center border {% if tier.is_unlocked %}border-[#4f14e0] bg-[#f0edff]{% else %}border-gray-200 bg-white{% endif %} p-5 md:p-6 transition-all duration-300 hover:shadow-lg">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-mono text-[10px] font-bold {% if tier.is_unlocked %}text-[#4f14e0]{% else %}text-gray-400{% endif %} uppercase tracking-wider">Level {{ tier.level }}</span>
+                        {% if tier.is_unlocked %}
+                        <span class="font-mono text-[8px] font-bold text-[#4f14e0] bg-[#e0d8ff] px-2 py-0.5 uppercase tracking-widest">Unlocked</span>
+                        {% else %}
+                        <span class="font-mono text-[8px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 uppercase tracking-widest">Locked</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="font-serif text-xl md:text-2xl font-bold leading-tight {% if tier.is_unlocked %}text-black{% else %}text-gray-400{% endif %}">{{ tier.title }}</h3>
+                    <p class="font-mono text-[10px] text-gray-500 mt-2 leading-relaxed">{{ tier.description }}</p>
+                    <p class="font-mono text-[9px] text-gray-400 mt-3 uppercase tracking-wider">
+                        {% if tier.range_max %}
+                            {{ tier.range_min }} – {{ tier.range_max }} XP
+                        {% else %}
+                            {{ tier.range_min }}+ XP
+                        {% endif %}
+                    </p>
+                    {% if tier.range_max %}
+                    <div class="mt-3 w-full h-1 bg-gray-200">
+                        <div class="h-full bg-[#4f14e0] transition-all duration-500" style="width: {{ tier.progress_pct }}%"></div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard + Your Standing — Magazine Two-Column Spread -->
+    <section class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Top 5 Leaderboard -->
+                <div class="border border-gray-300 bg-white">
+                    <div class="border-b border-gray-300 bg-gray-50 px-5 py-4">
+                        <span class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#4f14e0]">Top Scholars</span>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        {% if top5_leaderboard %}
+                            {% for entry in top5_leaderboard %}
+                            <div class="flex items-center justify-between px-5 py-4 {% if forloop.first %}bg-[#f0edff]{% endif %} hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <span class="font-serif text-2xl font-black {% if forloop.first %}text-[#4f14e0]{% else %}text-gray-300{% endif %}">
+                                        #{{ entry.rank }}
+                                    </span>
+                                    <div>
+                                        <span class="font-mono text-xs font-bold text-black uppercase tracking-wider">{{ entry.username }}</span>
+                                        <span class="font-mono text-[9px] text-gray-400 block mt-0.5">{{ entry.title }} · Lv.{{ entry.level }}</span>
+                                    </div>
+                                </div>
+                                <span class="font-mono text-xs font-bold text-black">{{ entry.xp }} <span class="text-gray-400 font-normal">XP</span></span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="px-5 py-10 text-center">
+                                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No Scholars Yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
-                {% if item.layout_variant == 'reading' %}
-                    <div class="p-4 border border-on-surface bg-surface-container-low">
-                        <h4 class="font-label-bold text-label-bold uppercase tracking-tighter">{{ item.subtitle|default:"Reading Material" }}</h4>
-                        <p class="font-headline-md text-headline-md mt-1 leading-none italic text-primary">{{ item.title }}</p>
-                        <p class="mt-4 text-on-surface-variant text-sm">{{ item.description }}</p>
+                <!-- Your Standing Card -->
+                <div class="border border-gray-300 bg-white">
+                    <div class="border-b border-gray-300 bg-gray-50 px-5 py-4">
+                        <span class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#4f14e0]">Your Standing</span>
                     </div>
-                {% elif item.layout_variant == 'quote' %}
-                    <div class="border-l-4 border-primary pl-4">
-                        <h4 class="font-headline-md text-headline-md leading-tight italic">{{ item.title }}</h4>
-                        <p class="mt-2 text-on-surface-variant">{{ item.description }}</p>
-                    </div>
-                {% else %}
-                    <div>
-                        <h4 class="font-headline-md text-headline-md leading-tight">{{ item.title }}</h4>
-                        <p class="mt-2 text-on-surface-variant {% if item.is_italic %}italic{% endif %}">{{ item.description }}</p>
-                    </div>
-                    {% if item.has_certificate %}
-                        <a href="{{ item.certificate_url }}" class="w-fit font-label-mono text-label-mono border-b border-primary text-primary hover:text-on-primary-fixed-variant transition-all">VIEW_CERTIFICATE</a>
-                    {% elif item.has_actions %}
-                        <div class="flex gap-4">
-                            <a href="{{ item.download_url }}" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">download</a>
-                            <button type="button" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}{{ item.get_absolute_url }}')">share</button>
+                    {% if user.is_authenticated and user.role == 'student' %}
+                    <div class="p-6 space-y-5">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Current Rank</span>
+                            <span class="font-serif text-2xl font-black text-black">
+                                {% if current_user_rank %}
+                                    #{{ current_user_rank }}<span class="text-gray-300 text-lg">/{{ total_students }}</span>
+                                {% else %}
+                                    UNRANKED
+                                {% endif %}
+                            </span>
                         </div>
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Current Title</span>
+                            <span class="font-mono text-xs font-bold text-[#4f14e0] uppercase tracking-wider">{{ current_user_tier|default:"Initiate" }}</span>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Your XP</span>
+                            <span class="font-mono text-sm font-bold text-black">{{ user.xp|default:"0" }} XP</span>
+                        </div>
+                        {% if xp_gap_to_top is not None and xp_gap_to_top > 0 %}
+                        <div class="pt-2">
+                            <p class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+                                {% if current_user_rank == 1 %}
+                                    <span class="text-[#4f14e0] font-bold">You are the top scholar</span>
+                                {% else %}
+                                    You need <span class="text-[#4f14e0] font-bold">{{ xp_gap_to_top }} XP</span> to beat #1
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                        {% if current_user_rank and current_user_rank > 5 %}
+                        <div class="pt-1">
+                            <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">
+                                {{ current_user_rank|add:"-1" }} scholars behind you
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="p-6 text-center">
+                        <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">Log in as a student to see your rank</p>
+                        <a href="{% url 'login' %}" class="inline-block mt-4 px-8 py-3 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                            Login
+                        </a>
+                    </div>
                     {% endif %}
-                {% endif %}
+                </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="px-margin-mobile text-center py-12 border border-dashed border-outline-variant">
-                <p class="font-label-mono text-label-mono text-secondary">NO_COMPARTMENTALIZED_DATA_FOUND</p>
-            </div>
-        {% endif %}
+        </div>
+    </section>
 
-        <div class="w-full bg-primary py-12 px-margin-mobile overflow-hidden relative">
-            <div class="absolute -right-10 top-0 text-[120px] font-bold text-on-primary opacity-5 select-none pointer-events-none italic">
-                ARCHIVE
+    <!-- Library Section — Magazine Feature -->
+    <section class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">School Library</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">The Library</h2>
+                <p class="font-mono text-xs text-gray-500 mt-2 uppercase tracking-wider">Books uploaded by instructors — download and study offline</p>
             </div>
-            <div class="relative z-10 max-w-[80%]">
-                <h5 class="font-headline-md text-headline-md text-on-primary">Continued Learning</h5>
-                <p class="text-on-primary-container mt-2 opacity-80">Knowledge is not a destination, but a persistent state of exploration.</p>
-                <a href="{% url 'study_dashboard' %}" class="inline-block mt-6 px-8 py-3 bg-white text-primary font-label-mono text-label-mono uppercase tracking-widest hover:scale-105 transition-transform">EXPLORE_NEW</a>
+
+            {% if library_books %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {% for book in library_books|slice:":4" %}
+                <div class="group border border-gray-200 bg-white hover:border-[#4f14e0] transition-all duration-300 flex flex-col">
+                    <div class="aspect-[3/4] bg-gray-100 overflow-hidden relative">
+                        {% if book.thumbnail %}
+                        <img src="{{ book.thumbnail.url }}" alt="{{ book.title }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-3 flex flex-col flex-grow">
+                        <h3 class="font-serif text-xs font-bold leading-tight text-black group-hover:text-[#4f14e0] transition-colors">{{ book.title }}</h3>
+                        <div class="mt-auto pt-2 flex items-center justify-between">
+                            <span class="font-mono text-[8px] text-gray-400 uppercase tracking-wider">{{ book.uploaded_by.username }}</span>
+                            <a href="{% url 'library_download' book.id %}" class="font-mono text-[9px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider">Download</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-6 text-center">
+                <a href="{% url 'library' %}" class="inline-block px-8 py-3 border border-gray-300 text-black font-mono text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-all duration-300">
+                    Browse Full Library →
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-12 border border-dashed border-gray-300">
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No books in the library yet</p>
+                <a href="{% url 'library' %}" class="inline-block mt-4 px-8 py-3 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                    Go to Library
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Category Navigation — Magazine Section Tabs -->
+    <nav class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto flex gap-2 overflow-x-auto pb-4 no-scrollbar border-b border-gray-200">
+            <a href="{% url 'archive_index' %}" class="flex-shrink-0 px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-wider whitespace-nowrap {% if not active_category %}bg-black text-white{% else %}border border-gray-300 text-gray-600 hover:bg-gray-100{% endif %} transition-colors">
+                All Records
+            </a>
+            {% for category in categories %}
+            <a href="{% url 'archive_category' slug=category.slug %}" class="flex-shrink-0 px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-wider whitespace-nowrap {% if active_category == category.slug %}bg-black text-white{% else %}border border-gray-300 text-gray-600 hover:bg-gray-100{% endif %} transition-colors">
+                {{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </nav>
+
+    <!-- Archive Items — Magazine Article Feed -->
+    <section class="px-6 md:px-12 mt-10">
+        <div class="max-w-7xl mx-auto space-y-16">
+            {% if archive_items %}
+                {% for item in archive_items %}
+                <article class="transition-all duration-700 ease-out opacity-0 translate-y-10 {% if forloop.counter|divisibleby:2 %}md:ml-[15%]{% else %}md:mr-[15%]{% endif %}">
+                    <div class="flex items-center gap-4 mb-3">
+                        <span class="font-mono text-[9px] font-bold text-[#4f14e0] uppercase tracking-[0.2em]">{{ item.status_label|default:"Record" }}</span>
+                        <span class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">{{ item.timestamp_string|default:"Q3 2026" }}</span>
+                        {% if item.category %}
+                        <span class="font-mono text-[8px] text-gray-300 uppercase tracking-wider border-l border-gray-200 pl-4">{{ item.category.name }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if item.layout_variant == 'reading' %}
+                        <div class="p-6 md:p-8 border border-gray-300 bg-gray-50">
+                            <span class="font-mono text-[9px] font-bold text-gray-500 uppercase tracking-wider">{{ item.subtitle|default:"Reading Material" }}</span>
+                            <h3 class="font-serif text-2xl md:text-3xl font-bold mt-2 leading-tight italic text-[#4f14e0]">{{ item.title }}</h3>
+                            <p class="font-mono text-xs text-gray-600 mt-4 leading-relaxed">{{ item.description }}</p>
+                        </div>
+                    {% elif item.layout_variant == 'quote' %}
+                        <div class="border-l-4 border-[#4f14e0] pl-6 md:pl-8">
+                            <h3 class="font-serif text-2xl md:text-3xl font-bold leading-tight italic text-black">{{ item.title }}</h3>
+                            <p class="font-mono text-xs text-gray-600 mt-3 leading-relaxed">{{ item.description }}</p>
+                        </div>
+                    {% else %}
+                        <div>
+                            <h3 class="font-serif text-2xl md:text-3xl font-bold leading-tight text-black">{{ item.title }}</h3>
+                            <p class="font-mono text-xs text-gray-600 mt-3 leading-relaxed {% if item.is_italic %}italic{% endif %}">{{ item.description }}</p>
+                        </div>
+                        {% if item.has_certificate %}
+                            <a href="{{ item.certificate_url }}" class="inline-block mt-4 font-mono text-[10px] font-bold text-[#4f14e0] border-b border-[#4f14e0] hover:text-black hover:border-black transition-all uppercase tracking-wider">
+                                View Certificate →
+                            </a>
+                        {% elif item.has_actions %}
+                            <div class="flex gap-4 mt-4">
+                                <a href="{{ item.download_url }}" class="font-mono text-[10px] text-gray-500 hover:text-[#4f14e0] transition-colors uppercase tracking-wider flex items-center gap-1">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Download
+                                </a>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}{{ item.get_absolute_url }}')" class="font-mono text-[10px] text-gray-500 hover:text-[#4f14e0] transition-colors uppercase tracking-wider flex items-center gap-1">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                    Share
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-16 border border-dashed border-gray-300">
+                    <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No Compartmentalized Data Found</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- CTA Footer — Magazine Full-Color Spread -->
+    <section class="mt-16">
+        <div class="w-full bg-[#4f14e0] py-16 md:py-20 px-6 md:px-12 overflow-hidden relative">
+            <div class="max-w-7xl mx-auto relative">
+                <div class="absolute -right-10 top-0 text-[120px] md:text-[200px] font-bold text-white opacity-5 select-none pointer-events-none italic leading-none">
+                    ARCHIVE
+                </div>
+                <div class="relative z-10 max-w-[85%] md:max-w-[60%]">
+                    <h3 class="font-serif text-3xl md:text-5xl font-black text-white leading-tight">Continued Learning</h3>
+                    <p class="font-mono text-sm text-white/70 mt-4 leading-relaxed">Knowledge is not a destination, but a persistent state of exploration.</p>
+                    <a href="{% url 'study_dashboard' %}" class="inline-block mt-8 px-10 py-4 bg-white text-[#4f14e0] font-mono text-xs font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform">
+                        Explore New
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -104,12 +317,12 @@
                 if (entry.isIntersecting) {
                     entry.target.classList.add('opacity-100', 'translate-y-0');
                     entry.target.classList.remove('opacity-0', 'translate-y-10');
-                    observer.unobserve(entry.target); // Kill tracking loop after item reveals
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
-        document.querySelectorAll('.asymmetric-item').forEach(item => {
+        document.querySelectorAll('article').forEach(item => {
             observer.observe(item);
         });
     });

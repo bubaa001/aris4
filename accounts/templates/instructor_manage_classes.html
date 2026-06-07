@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="w-full pb-32">
+    <!-- Magazine Masthead -->
+    <section class="px-6 md:px-12 pt-12 pb-8 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto">
+            <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-4 block">Academic Cohort Assignment</span>
+            <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">Manage Classes</h1>
+            <p class="font-mono text-xs text-gray-500 mt-4 uppercase tracking-wider">// Academic Cohort Assignment Portal</p>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="px-6 md:px-12 mt-8">
+        <div class="max-w-7xl mx-auto">
+            <a href="{% url 'instructor_dashboard' %}" class="inline-block px-6 py-3 border border-gray-300 text-black font-mono text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-all duration-300">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+    </section>
+
+    <!-- Create New Class -->
+    <section class="px-6 md:px-12 mt-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">New Entry</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">Create New Class</h2>
+            </div>
+            <form method="POST" action="{% url 'instructor_manage_classes' %}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Class Code</label>
+                    <input type="text" name="code" placeholder="e.g. MATH-F1-A" required class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Class Title</label>
+                    <input type="text" name="title" placeholder="e.g. Mathematics Form 1A" required class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Schedule</label>
+                    <input type="text" name="schedule_string" placeholder="e.g. Mon/Wed 10:00-11:30" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div>
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Room</label>
+                    <input type="text" name="location_room" placeholder="e.g. Room 204" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                </div>
+                <div class="md:col-span-2 lg:col-span-4 mt-2">
+                    <button type="submit" class="w-full bg-black text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
+                        CREATE CLASS
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- My Assigned Classes -->
+    <section class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Active Cohorts</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">My Assigned Classes</h2>
+                <p class="font-mono text-xs text-gray-500 mt-2 uppercase tracking-wider">{{ my_classes|length }} ACTIVE</p>
+            </div>
+
+            {% if my_classes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for class in my_classes %}
+                <div class="border border-gray-200 bg-white p-6 flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-1">{{ class.code }}</span>
+                            <h3 class="font-serif text-xl font-bold text-black">{{ class.title }}</h3>
+                        </div>
+                    </div>
+                    <div class="font-mono text-xs text-gray-500 space-y-1 mb-6">
+                        <p>Schedule: {{ class.schedule_string }}</p>
+                        <p>Room: {{ class.location_room }}</p>
+                        <p>Students: {{ class.students.count }}</p>
+                    </div>
+                    <div class="mt-auto flex gap-3">
+                        <a href="{% url 'instructor_class' slug=class.slug %}" class="flex-1 border border-[#4f14e0] text-[#4f14e0] px-4 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-[#4f14e0] hover:text-white transition-colors text-center">
+                            MANAGE
+                        </a>
+                        <form method="POST" action="{% url 'instructor_manage_classes' %}" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="class_id" value="{{ class.id }}">
+                            <input type="hidden" name="action" value="remove">
+                            <button type="submit" class="w-full border border-red-400 text-red-500 px-4 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-red-500 hover:text-white transition-colors">
+                                REMOVE
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 border border-dashed border-gray-300">
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No classes assigned yet</p>
+                <p class="font-mono text-[10px] text-gray-300 mt-2">Create a class above or assign one from the available list below</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Available Classes -->
+    <section class="px-6 md:px-12 mt-14">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-8">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Open Registry</span>
+                <h2 class="font-serif text-3xl md:text-5xl font-black tracking-tight text-black mt-2">Available Classes</h2>
+            </div>
+
+            {% if available_classes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for class in available_classes %}
+                <div class="border border-gray-200 bg-white p-6 flex flex-col {% if class.instructor == request.user %}border-l-4 border-l-[#4f14e0]{% endif %}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-1">{{ class.code }}</span>
+                            <h3 class="font-serif text-xl font-bold text-black">{{ class.title }}</h3>
+                        </div>
+                        {% if class.instructor == request.user %}
+                        <span class="font-mono text-[9px] bg-[#4f14e0] text-white px-2 py-1 uppercase shrink-0">Assigned</span>
+                        {% endif %}
+                    </div>
+                    <div class="font-mono text-xs text-gray-500 space-y-1 mb-6">
+                        <p>Schedule: {{ class.schedule_string }}</p>
+                        <p>Room: {{ class.location_room }}</p>
+                        <p>Students: {{ class.students.count }}</p>
+                    </div>
+                    {% if class.instructor != request.user %}
+                    <div class="mt-auto">
+                        <form method="POST" action="{% url 'instructor_manage_classes' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="class_id" value="{{ class.id }}">
+                            <input type="hidden" name="action" value="assign">
+                            <button type="submit" class="w-full bg-black text-white px-4 py-3 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
+                                ASSIGN TO ME
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 border border-dashed border-gray-300">
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No available classes</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %}
