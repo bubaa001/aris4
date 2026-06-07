@@ -29,8 +29,21 @@
                     {{ field.label }}
                 </label>
                 
-                <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2">
+                <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 flex items-center [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2">
                     {{ field }}
+                    {% if field.name == "password" %}
+                    <button type="button" onclick="togglePasswordVisibility()" class="shrink-0 ml-2 p-2 text-gray-400 hover:text-black transition-colors" title="Show/Hide Password">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg id="eyeOffIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                    {% endif %}
                 </div>
                 
                 {% if field.errors %}
@@ -48,11 +61,32 @@
             </div>
         </form>
         
-        <div class="mt-8 pt-6 border-t border-gray-200">
+        <div class="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
             <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
                 New user? <a href="{% url 'register' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Register Account</a>
+            </p>
+            <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
+                <a href="{% url 'password_reset' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Forgot Password?</a>
             </p>
         </div>
     </div>
 </div>
+
+<script>
+function togglePasswordVisibility() {
+    const passwordInput = document.querySelector('input[name="password"]');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const eyeOffIcon = document.getElementById('eyeOffIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.classList.add('hidden');
+        eyeOffIcon.classList.remove('hidden');
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.classList.remove('hidden');
+        eyeOffIcon.classList.add('hidden');
+    }
+}
+</script>
 {% endblock %}

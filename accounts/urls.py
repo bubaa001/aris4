@@ -8,17 +8,15 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('select-level/', views.select_level_view, name='select_level'),
     path('pending-approval/', views.pending_approval_view, name='pending_approval'),
-    path('dashboard/', views.instructor_dashboard_view, name='dashboard'),
     path('instructor-dashboard/', views.instructor_dashboard_view, name='instructor_dashboard'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('teacher-profile/', views.teacher_profile_view, name='teacher_profile'),
-    path('teacher-profile/<str:username>/', views.teacher_profile_view, name='teacher_profile_by_username'),
     path('teacher-profile/edit/', views.edit_instructor_profile_view, name='edit_instructor_profile'),
+    path('teacher-profile/<str:username>/', views.teacher_profile_view, name='teacher_profile_by_username'),
     path('instructor/manage-classes/', views.instructor_manage_classes_view, name='instructor_manage_classes'),
     path('student-profile/', views.student_profile_view, name='student_profile'),
-    path('dossier-archive/', views.archive_index_view, name='dossier_archive'),
-    path('admin-dashboard/approve/<int:user_id>/', views.approve_instructor_view, name='approve_instructor'),
-    path('admin-dashboard/disapprove/<int:user_id>/', views.disapprove_instructor_view, name='disapprove_instructor'),
+    path('admin-dashboard/approve/<int:user_id>/', views.toggle_instructor_approval_view, {'approve': True}, name='approve_instructor'),
+    path('admin-dashboard/disapprove/<int:user_id>/', views.toggle_instructor_approval_view, {'approve': False}, name='disapprove_instructor'),
     path('logout/', views.logout_view, name='logout'),
     
     # Student Dashboard Routing Group
@@ -29,8 +27,8 @@ urlpatterns = [
     path('instructor/class/<slug:slug>/', views.instructor_class_view, name='instructor_class'),
     
     # Digital Repository Archive Routing Group
-    path('archive/', views.archive_index_view, name='archive_index'),
-    path('archive/category/<slug:slug>/', views.archive_category_view, name='archive_category'),
+    path('archive/', views.archive_view, name='archive_index'),
+    path('archive/category/<slug:slug>/', views.archive_view, name='archive_category'),
     path('archive/library/', views.library_view, name='library'),
     path('archive/library/<int:book_id>/download/', views.library_download_view, name='library_download'),
     path('archive/library/<int:book_id>/delete/', views.library_delete_view, name='library_delete'),

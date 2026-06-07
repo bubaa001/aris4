@@ -37,7 +37,7 @@
             <div>
               <h4 class="font-serif text-lg md:text-xl font-bold text-black uppercase tracking-tight">{{ class.title }}</h4>
               <p class="font-mono text-[11px] md:text-xs text-gray-400 mt-1">
-                {{ class.code }} — {{ class.schedule_string }} | Room: {{ class.location_room }}
+                {{ class.code }} — {{ class.schedule_string }} | Meeting: {{ class.meeting_link|default:"TBD" }}
               </p>
               <p class="font-mono text-[11px] md:text-xs text-gray-400 mt-1">
                 Instructor: <a href="{% url 'teacher_profile_by_username' username=class.instructor.username %}" class="text-[#4f14e0] hover:underline">{{ class.instructor.get_full_name|default:class.instructor.username }}</a>
