@@ -38,7 +38,7 @@
                         <div>
                             <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">{{ class.code }}</span>
                             <h3 class="font-serif text-xl font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ class.title }}</h3>
-                            <p class="font-mono text-xs text-gray-500 mt-1">{{ class.schedule_string }} &middot; {{ class.location_room }}</p>
+                            <p class="font-mono text-xs text-gray-500 mt-1">{{ class.schedule_string }} &middot; {{ class.meeting_link|default:"TBD" }}</p>
                         </div>
                         <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">&rarr;</span>
                     </div>

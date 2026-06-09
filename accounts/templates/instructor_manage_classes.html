@@ -43,8 +43,8 @@
                     <input type="text" name="schedule_string" placeholder="e.g. Mon/Wed 10:00-11:30" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
                 </div>
                 <div>
-                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Room</label>
-                    <input type="text" name="location_room" placeholder="e.g. Room 204" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+                    <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Meeting Link</label>
+                    <input type="text" name="meeting_link" placeholder="e.g. https://zoom.us/j/..." class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
                 </div>
                 <div class="md:col-span-2 lg:col-span-4 mt-2">
                     <button type="submit" class="w-full bg-black text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
@@ -76,7 +76,7 @@
                     </div>
                     <div class="font-mono text-xs text-gray-500 space-y-1 mb-6">
                         <p>Schedule: {{ class.schedule_string }}</p>
-                        <p>Room: {{ class.location_room }}</p>
+                        <p>Meeting: {{ class.meeting_link|default:"TBD" }}</p>
                         <p>Students: {{ class.students.count }}</p>
                     </div>
                     <div class="mt-auto flex gap-3">
@@ -127,7 +127,7 @@
                     </div>
                     <div class="font-mono text-xs text-gray-500 space-y-1 mb-6">
                         <p>Schedule: {{ class.schedule_string }}</p>
-                        <p>Room: {{ class.location_room }}</p>
+                        <p>Meeting: {{ class.meeting_link|default:"TBD" }}</p>
                         <p>Students: {{ class.students.count }}</p>
                     </div>
                     {% if class.instructor != request.user %}

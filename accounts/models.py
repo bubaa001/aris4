@@ -26,7 +26,7 @@ class AcademicClass(models.Model):
     code = models.CharField(max_length=20, unique=True)
     title = models.CharField(max_length=200)
     schedule_string = models.CharField(max_length=100)
-    location_room = models.CharField(max_length=100)
+    meeting_link = models.CharField(max_length=200, blank=True, default='')
     students = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='enrolled_classes', blank=True)
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'instructor'}, related_name='taught_classes')
     slug = models.SlugField(unique=True, blank=True)
@@ -100,23 +100,6 @@ class ArchiveItem(models.Model):
 
     def __str__(self):
         return self.title    
-
-
-class ProfileTrait(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-
-class ArchiveTag(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Quiz(models.Model):

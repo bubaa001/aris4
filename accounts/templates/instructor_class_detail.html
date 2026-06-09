@@ -17,7 +17,7 @@
       {{ class.title }}
     </h1>
     <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
-      {{ class.code }} &middot; {{ class.schedule_string }} &middot; Room {{ class.location_room }} &middot; {{ class.students.count }} Enrolled
+      {{ class.code }} &middot; {{ class.schedule_string }} &middot; Meeting: {{ class.meeting_link|default:"TBD" }} &middot; {{ class.students.count }} Enrolled
     </div>
   </header>
 

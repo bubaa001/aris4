@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, ProfileTrait, ArchiveTag, Quiz, Question, Choice, StudentQuizSubmission, AcademicClass, ClassContent
+from .models import User, Quiz, Question, Choice, StudentQuizSubmission, AcademicClass, ClassContent
 
 admin.site.register(User, UserAdmin)
 
@@ -17,18 +17,6 @@ class AcademicClassAdmin(admin.ModelAdmin):
 class ClassContentAdmin(admin.ModelAdmin):
     list_display = ('title', 'academic_class', 'created_at')
     list_filter = ('academic_class',)
-
-
-@admin.register(ProfileTrait)
-class ProfileTraitAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
-    prepopulated_fields = {'slug': ('name',)}
-
-
-@admin.register(ArchiveTag)
-class ArchiveTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
-    prepopulated_fields = {'slug': ('name',)}
 
 
 class QuestionInline(admin.TabularInline):
