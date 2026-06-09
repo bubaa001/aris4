@@ -83,12 +83,36 @@ WSGI_APPLICATION = 'ONLportal.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+import re
+import urllib.parse
+
+DATABASE_URL = config('DATABASE_URL')
+
+# Parse the DATABASE_URL to extract components
+_db_url = DATABASE_URL
+_db_match = re.match(r'postgresql://(.+?):(.+?)@(.+?):(\d+)/(.+?)$', _db_url)
+if _db_match:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _db_match.group(5),
+            'USER': urllib.parse.unquote(_db_match.group(1)),
+            'PASSWORD': urllib.parse.unquote(_db_match.group(2)),
+            'HOST': _db_match.group(3),
+            'PORT': _db_match.group(4),
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+        }
     }
-}
+else:
+    # Fallback to SQLite if DATABASE_URL is not set or invalid
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
