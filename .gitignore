@@ -1,5 +1,7 @@
 # Environment variables
 .env
+.env.local
+.env.production
 
 # Python
 __pycache__/
@@ -10,16 +12,32 @@ build/
 *.egg
 venv/
 .venv/
+*.pyc
+*.pyo
 
 # Django
 db.sqlite3
 media/
+staticfiles/
+*.mo
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # Node
 node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Qodo
+.qodo/
+
+# Logs
+*.log
+logs/
