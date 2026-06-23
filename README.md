@@ -197,14 +197,44 @@ ONLportal/
 ├── templates/             # HTML templates
 ├── media/                 # Uploaded files (local)
 ├── db.sqlite3             # Local SQLite database
+├── tailwindcss.exe        # Tailwind v4 standalone CLI (offline CSS builder)
+├── static_src/
+│   └── tailwind.css       # Source file for Tailwind (@import "tailwindcss")
+├── static/
+│   └── css/
+│       └── tailwind.css   # Built output (50 KB, all classes used in templates)
 ├── manage.py
 └── requirements.txt
 ```
+
+## Tailwind CSS (Offline)
+
+Tailwind is pre-built into `static/css/tailwind.css` — **no CDN, no Node.js, no internet needed.**
+
+### Rebuild after changing templates
+
+```bash
+./tailwindcss.exe -i static_src/tailwind.css -o static/css/tailwind.css --minify
+```
+
+This scans all `.html` files in the project and generates only the CSS classes you actually use (~50 KB).
+
+### Download the CLI (one time only)
+
+The `tailwindcss.exe` binary is ~80 MB and not checked into git. Download it once from:
+
+```
+https://github.com/tailwindlabs/tailwindcss/releases/latest
+→ tailwindcss-windows-x64.exe
+```
+
+Rename to `tailwindcss.exe` and place in the project root.
 
 ## Tech Stack
 
 - **Django 6.0** — web framework
 - **SQLite** — local offline database
+- **Tailwind CSS v4** — utility-first CSS (offline, pre-built)
 - **Supabase** — remote PostgreSQL + file storage
 - **django-q2** — background task queue (Django ORM broker, no Redis needed)
 - **supabase-py** — Supabase client SDK
