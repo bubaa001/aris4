@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db.models.signals import post_migrate
 
 
 class SyncManagerConfig(AppConfig):
@@ -11,12 +12,14 @@ class SyncManagerConfig(AppConfig):
         from sync_manager.signals import register_signals
         register_signals()
 
-        # Create schedule records in the django_q database table.
-        # These drive the cron-like background sync every 60 seconds.
-        self._ensure_schedules()
+        # Connect schedule creation to the post_migrate signal instead of
+        # running it directly in ready().  This avoids Django's "Accessing
+        # the database during app initialization" warning because
+        # post_migrate fires *after* the app registry is fully ready.
+        post_migrate.connect(self._ensure_schedules)
 
     @staticmethod
-    def _ensure_schedules():
+    def _ensure_schedules(sender, **kwargs):
         """Idempotent: create django-q2 Schedule records if they don't exist."""
         try:
             from django_q.models import Schedule

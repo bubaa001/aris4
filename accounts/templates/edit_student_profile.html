@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[800px] mx-auto px-5 md:px-16 py-12 pb-32">
+
+    <section class="mb-12 pb-8 border-b border-gray-300">
+        <h1 class="font-serif text-4xl md:text-5xl font-black text-gray-900">Edit Profile</h1>
+        <p class="font-mono text-xs text-gray-500 mt-2 uppercase tracking-wider">All fields are optional</p>
+    </section>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Avatar -->
+        <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Profile Picture</label>
+            {% if profile.avatar %}
+            <div class="mb-3">
+                <img src="{{ profile.avatar.url }}" alt="Current avatar" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+            </div>
+            {% endif %}
+            <input type="file" name="avatar" accept="image/*"
+                   class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+        </div>
+
+        <!-- Bio -->
+        <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Bio</label>
+            <textarea name="bio" rows="3" maxlength="500"
+                      class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors resize-none"
+                      placeholder="Tell us about yourself...">{{ profile.bio|default:'' }}</textarea>
+        </div>
+
+        <!-- Inspire Message -->
+        <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Inspire Others</label>
+            <input type="text" name="inspire_message" maxlength="280" value="{{ profile.inspire_message|default:'' }}"
+                   class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors"
+                   placeholder="A message to inspire fellow scholars...">
+            <p class="font-mono text-[8px] text-gray-400 mt-1">Max 280 characters</p>
+        </div>
+
+        <!-- Favorite Quote -->
+        <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Favorite Quote</label>
+            <input type="text" name="favorite_quote" maxlength="500" value="{{ profile.favorite_quote|default:'' }}"
+                   class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors"
+                   placeholder="Your favorite quote...">
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full bg-black text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
+            Save Profile
+        </button>
+    </form>
+
+</main>
+{% endblock %}

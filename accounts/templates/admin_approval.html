@@ -30,11 +30,15 @@
             <div id="user-row-{{ instructor.id }}" class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h3 class="font-['Playfair_Display'] text-xl font-bold text-[#1c1b1b]">{{ instructor.username }}</h3>
-                <p class="font-['Space_Mono'] text-xs text-[#484456] mt-1">EMBED DATE: {{ instructor.date_joined|date:"Y-m-d H:i" }}</p>
+                <p class="font-['Space_Mono'] text-xs text-[#484456] mt-1">EMAIL: {{ instructor.email }}</p>
+                <p class="font-['Space_Mono'] text-[10px] text-gray-400 mt-0.5">JOINED: {{ instructor.date_joined|date:"Y-m-d H:i" }}</p>
               </div>
-              <div>
+              <div class="flex items-center gap-3">
                 <a href="{% url 'approve_instructor' instructor.id %}" data-action="toggle-status" class="inline-block bg-[#5308e7] text-white font-['Space_Mono'] text-xs font-normal tracking-[0.1em] uppercase px-6 py-3 border border-[#1c1b1b] [box-shadow:3px_3px_0px_0px_#1c1b1b] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:[box-shadow:4px_4px_0px_0px_#1c1b1b] transition-all rounded-none">
                   GRANT CLEARANCE &rarr;
+                </a>
+                <a href="{% url 'delete_instructor_request' instructor.id %}" data-action="delete-request" class="inline-block bg-white text-red-600 font-['Space_Mono'] text-[11px] font-bold tracking-wider uppercase px-4 py-3 border border-red-400 hover:bg-red-50 transition-colors">
+                  DELETE
                 </a>
               </div>
             </div>
@@ -102,11 +106,17 @@
     };
 
     document.body.addEventListener('click', async (event) => {
-      const targetLink = event.target.closest('[data-action="toggle-status"]');
+      const targetLink = event.target.closest('[data-action]');
       if (!targetLink) return;
 
-      event.preventDefault();
+      const action = targetLink.dataset.action;
       const requestUrl = targetLink.href;
+
+      if (action === 'delete-request') {
+        if (!confirm('Delete this instructor request permanently?')) return;
+      }
+
+      event.preventDefault();
       const csrftoken = getCookie('csrftoken');
 
       if (!csrftoken) {
@@ -126,15 +136,32 @@
         });
 
         if (response.ok) {
-          window.location.reload();
+          if (action === 'delete-request') {
+            const row = targetLink.closest('[id^="user-row-"]');
+            if (row) row.remove();
+            updatePendingCount();
+          } else {
+            window.location.reload();
+          }
         } else {
-          const data = await response.text();
-          console.error('Approval request failed:', response.status, data);
+          console.error('Request failed:', response.status);
         }
       } catch (err) {
-        console.error('Approval request error:', err);
+        console.error('Request error:', err);
       }
     });
+
+    function updatePendingCount() {
+      const container = document.getElementById('pending-container');
+      const empty = document.getElementById('pending-empty-state');
+      const count = document.getElementById('pending-count');
+      const items = container ? container.querySelectorAll('[id^="user-row-"]').length : 0;
+      if (count) count.textContent = items;
+      if (items === 0) {
+        if (container) container.classList.add('hidden');
+        if (empty) empty.classList.remove('hidden');
+      }
+    }
   });
 </script>
 {% endblock %}

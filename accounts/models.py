@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.conf import settings
-from django.utils import timezone
 
 
 # Create your models here.
@@ -33,7 +31,7 @@ class AcademicClass(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.title}"
-    
+ 
 
 class Module(models.Model):
     academic_class = models.ForeignKey(AcademicClass, on_delete=models.CASCADE, related_name='modules')
@@ -177,6 +175,23 @@ class InstructorProfile(models.Model):
     def has_profile(self):
         """Check if the instructor has filled out their profile."""
         return bool(self.bio or self.academic_focus or self.methodologies)
+
+
+class StudentProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
+    avatar = models.ImageField(upload_to='student_avatars/', blank=True, null=True)
+    bio = models.TextField(blank=True, null=True, help_text="Tell us about yourself")
+    inspire_message = models.CharField(max_length=280, blank=True, null=True, help_text="A message to inspire others")
+    favorite_quote = models.CharField(max_length=500, blank=True, null=True, help_text="Your favorite quote")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Student Profile"
+
+    def has_profile(self):
+        return bool(self.avatar or self.bio or self.inspire_message or self.favorite_quote)
 
 
 class StudentQuizSubmission(models.Model):

@@ -127,7 +127,7 @@
                     </svg>
                     Active Title
                 </span>
-                <span class="font-['Inter'] text-sm font-black text-[#1c1b1b]">"{{ active_title }}"</span>
+                <span class="{{ active_title_color|default:'bg-gray-600' }} font-['Space_Mono'] text-[10px] text-white px-3 py-1 font-bold uppercase tracking-wider">{{ active_title }}</span>
                 <span class="font-['Space_Mono'] text-xs text-[#5308e7] font-bold">TOP METRIC</span>
               </div>
             </div>
@@ -195,7 +195,7 @@
               </svg>
               <span class="font-['Space_Mono'] text-[10px] text-gray-500">TITLE</span>
             </div>
-            <span class="font-['Inter'] text-sm font-bold text-[#1c1b1b]">"{{ active_title }}"</span>
+            <span class="{{ active_title_color|default:'bg-gray-600' }} font-['Space_Mono'] text-[9px] text-white px-2 py-1 font-bold uppercase tracking-wider">{{ active_title }}</span>
             <span class="font-['Space_Mono'] text-[9px] text-[#5308e7] font-bold">TOP METRIC</span>
           </div>
         </div>

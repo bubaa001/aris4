@@ -6,44 +6,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.db import models
 from .forms import RegisterForm, LoginForm
-from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile
+from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile, StudentProfile
 from sync_manager.triggers import trigger_sync_after_action
-
-
-
-# HELPER: XP Tier System
-
-
-def get_tier_info(xp):
-    """Return (level, tier_title, range_min, range_max) for a given XP value."""
-    if xp < 500:
-        return (1, 'Initiate', 0, 500)
-    elif xp < 1500:
-        return (2, 'Scholar', 500, 1500)
-    elif xp < 3000:
-        return (3, 'Alpha Vanguard', 1500, 3000)
-    elif xp < 5000:
-        return (4, 'Elite Scholar', 3000, 5000)
-    else:
-        level = 5 + (xp - 5000) // 3000
-        rmin = 5000 + ((xp - 5000) // 3000) * 3000
-        rmax = rmin + 3000
-        return (level, 'Grandmaster', rmin, rmax)
-
-
-def build_xp_context(current_xp):
-    """Build XP progress context dict from a raw XP value."""
-    base_level, tier_title, level_range_min, level_range_max = get_tier_info(current_xp)
-    total_in_tier = level_range_max - level_range_min
-    progress_in_tier = current_xp - level_range_min
-    xp_percentage = int((progress_in_tier / total_in_tier) * 100) if total_in_tier > 0 else 100
-    xp_to_next = max(0, level_range_max - current_xp)
-    return {
-        'current_level': base_level,
-        'tier_title': tier_title,
-        'xp_percentage': min(100, max(0, xp_percentage)),
-        'xp_to_next': xp_to_next,
-    }
+from .tiers import get_tier_info, build_xp_context, TIER_COLORS
 
 
 # HELPER: Quiz Question Results Builder
@@ -86,16 +51,19 @@ def get_leaderboard_data(request):
         level, title, _, _ = get_tier_info(s.xp or 0)
         top5.append({
             'rank': i,
+            'student_id': s.id,
             'username': s.username,
             'xp': s.xp or 0,
             'level': level,
             'title': title,
+            'tier_color_class': TIER_COLORS.get(title, 'bg-gray-600 text-white'),
         })
 
     # Current user's rank and info
     current_user_rank = None
     xp_gap_to_top = None
     current_user_tier = None
+    current_user_tier_color = 'bg-gray-600 text-white'
     if request.user.is_authenticated and request.user.role == 'student':
         for i, s in enumerate(students, start=1):
             if s.id == request.user.id:
@@ -105,6 +73,7 @@ def get_leaderboard_data(request):
             top_xp = top5[0]['xp']
             xp_gap_to_top = max(0, top_xp - (request.user.xp or 0))
         _, current_user_tier, _, _ = get_tier_info(request.user.xp or 0)
+        current_user_tier_color = TIER_COLORS.get(current_user_tier, 'bg-gray-600 text-white')
 
     # All tiers definition
     tiers = [
@@ -130,6 +99,7 @@ def get_leaderboard_data(request):
         'current_user_rank': current_user_rank,
         'xp_gap_to_top': xp_gap_to_top,
         'current_user_tier': current_user_tier,
+        'current_user_tier_color': current_user_tier_color,
         'tiers': tiers,
         'total_students': students.count(),
     }
@@ -148,10 +118,12 @@ def home_view(request):
     top_student_name = "NO SCHOLARS YET"
     top_student_xp = 0
     active_title = "Initiate"
+    active_title_color = 'bg-gray-600 text-white'
     if top_student:
         top_student_name = top_student.username.upper()
         top_student_xp = top_student.xp
         _, active_title, _, _ = get_tier_info(top_student_xp or 0)
+        active_title_color = TIER_COLORS.get(active_title, 'bg-gray-600 text-white')
 
     return render(request, 'home.html', {
         'student_count': student_count,
@@ -160,6 +132,7 @@ def home_view(request):
         'top_student_name': top_student_name,
         'top_student_xp': top_student_xp,
         'active_title': active_title,
+        'active_title_color': active_title_color,
     })
 
 
@@ -168,13 +141,16 @@ def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            trigger_sync_after_action()  # immediate sync attempt for new account
-            if user.role == 'student':
-                return redirect('select_level')
-            elif user.role == 'instructor':
-                return redirect('pending_approval')
+            try:
+                user = form.save()
+                login(request, user)
+                trigger_sync_after_action()
+                if user.role == 'student':
+                    return redirect('select_level')
+                elif user.role == 'instructor':
+                    return redirect('pending_approval')
+            except Exception:
+                form.add_error('username', 'This username is already taken.')
     else:
         form = RegisterForm()
     return render(request, 'register.html', {'form': form})
@@ -300,26 +276,77 @@ def student_class_view(request, slug):
 
 
 @login_required
-def student_profile_view(request):
-    user = request.user if request.user.is_authenticated else None
-    student_name = (user.get_full_name() or user.username) if user else 'Student'
-    current_xp = user.xp if user and hasattr(user, 'xp') else 0
+def student_profile_view(request, username=None):
+    """View a student's profile. If no username given, shows the logged-in user's own profile."""
+    if username:
+        student = get_object_or_404(User, username=username, role='student')
+        is_own = (request.user == student)
+    else:
+        student = request.user
+        is_own = True
 
-    _, rank_title, level_range_min, level_range_max = get_tier_info(current_xp)
-    xp_percentage = min(100, int(((current_xp - level_range_min) / (level_range_max - level_range_min)) * 100)) if current_xp > 0 else 0
+    current_xp = student.xp or 0
+    xp_ctx = build_xp_context(current_xp)
+    rank_title = xp_ctx['tier_title']
+    level = xp_ctx['current_level']
+    xp_to_next = xp_ctx['xp_to_next']
+    xp_percentage = xp_ctx['xp_percentage']
+    tier_color_class = TIER_COLORS.get(rank_title, 'bg-gray-600 text-white')
 
-    enrolled_classes = AcademicClass.objects.filter(students=user) if user and user.is_authenticated else []
+    enrolled_classes = AcademicClass.objects.filter(students=student)
+    student_name = student.get_full_name() or student.username
+
+    # Student profile info (optional fields)
+    profile = StudentProfile.objects.filter(user=student).first()
+
+    # Build tiers list for the journey visualization
+    tiers = [
+        {'level': 1, 'title': 'Initiate', 'range_min': 0, 'range_max': 500},
+        {'level': 2, 'title': 'Scholar', 'range_min': 500, 'range_max': 1500},
+        {'level': 3, 'title': 'Alpha Vanguard', 'range_min': 1500, 'range_max': 3000},
+        {'level': 4, 'title': 'Elite Scholar', 'range_min': 3000, 'range_max': 5000},
+        {'level': 5, 'title': 'Grandmaster', 'range_min': 5000, 'range_max': None},
+    ]
+    for tier in tiers:
+        tier['is_unlocked'] = current_xp >= tier['range_min']
 
     return render(request, 'student_profile.html', {
+        'profile_user': student,
+        'student_profile': profile,
         'student': {
             'full_name': student_name,
             'rank_title': rank_title,
+            'level': level,
             'xp_percentage': xp_percentage,
+            'xp_to_next': xp_to_next,
+            'xp': current_xp,
+            'tier_color_class': tier_color_class,
         },
+        'is_own_profile': is_own,
         'enrolled_classes': enrolled_classes,
         'enrolled_count': enrolled_classes.count(),
+        'tiers': tiers,
     })
 
+
+@login_required
+def edit_student_profile_view(request):
+    """Create or edit a student's profile."""
+    if request.user.role != 'student':
+        return redirect('home')
+
+    profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        if request.FILES.get('avatar'):
+            profile.avatar = request.FILES['avatar']
+        profile.bio = request.POST.get('bio', '').strip()
+        profile.inspire_message = request.POST.get('inspire_message', '').strip()
+        profile.favorite_quote = request.POST.get('favorite_quote', '').strip()
+        profile.save()
+        return redirect('student_profile')
+
+    return render(request, 'edit_student_profile.html', {'profile': profile})
 
 
 # VIEWS: Instructor
@@ -623,7 +650,7 @@ def admin_dashboard_view(request):
 
 @login_required
 def toggle_instructor_approval_view(request, user_id, approve=True):
-    """Approve or disapprove an instructor."""
+    """Approve or disapprove an instructor. Sends email notification."""
     if not (request.user.is_superuser or request.user.role == 'admin'):
         return HttpResponseForbidden('Not authorized')
     if request.method != 'POST':
@@ -632,7 +659,35 @@ def toggle_instructor_approval_view(request, user_id, approve=True):
     instructor = get_object_or_404(User, pk=user_id, role='instructor')
     instructor.is_approved = approve
     instructor.save(update_fields=['is_approved'])
+
+    # Send email notification
+    try:
+        from django.core.mail import send_mail
+        subject = 'Account Approved - aris4.0' if approve else 'Account Disapproved - aris4.0'
+        message = (
+            f"Dear {instructor.username},\n\n"
+            f"Your instructor account on aris4.0 has been {'approved' if approve else 'disapproved'}.\n\n"
+            f"{'You can now log in and start creating classes.' if approve else 'Please contact the administrator for more information.'}\n\n"
+            f"Best regards,\nThe aris4.0 Team"
+        )
+        send_mail(subject, message, None, [instructor.email], fail_silently=True)
+    except Exception:
+        pass  # Email failure shouldn't block the approval action
+
     return JsonResponse({'status': 'approved' if approve else 'disapproved'})
+
+
+@login_required
+def delete_instructor_request_view(request, user_id):
+    """Delete a pending instructor registration request."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('Invalid request method')
+
+    instructor = get_object_or_404(User, pk=user_id, role='instructor', is_approved=False)
+    instructor.delete()
+    return JsonResponse({'status': 'deleted'})
 
 
 

@@ -26,7 +26,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['crusader-easing-overlying.ngrok-free.dev', '127.0.0.1', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://crusader-easing-overlying.ngrok-free.dev']
 
 
 # Application definition
@@ -68,7 +69,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Tell Django to look in a global 'templates' folder at your project root
-        'DIRS': [BASE_DIR / 'templates'], 
+        'DIRS': [BASE_DIR / 'templates',], 
         'APP_DIRS': True, # Tells Django to look inside each app's 'templates' folder
         'OPTIONS': {
             'context_processors': [
@@ -76,6 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.user_tier_context',
             ],
         },
     },

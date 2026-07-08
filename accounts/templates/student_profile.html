@@ -1,74 +1,195 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
-    
-    <section class="mb-12 pb-8 border-b border-gray-300">
-        <div class="flex flex-col md:flex-row md:items-center justify-between">
-            <div>
-                <p class="font-mono text-xs text-[#4f14e0] uppercase tracking-widest mb-1">Student Profile</p>
-                <h1 class="font-serif text-4xl md:text-5xl font-black text-gray-900">{{ student.full_name|default:"Student" }}</h1>
-                <div class="flex items-baseline gap-3 mt-2">
-                    <span class="font-mono text-xs bg-gray-900 text-white px-2 py-1">{{ student.rank_title|default:"SCHOLAR" }}</span>
-                    <span class="font-mono text-xs text-gray-500">{{ student.xp_percentage|default:"0" }}% XP</span>
-                </div>
-            </div>
-            <div class="mt-6 md:mt-0">
-                <a href="{% url 'logout' %}" class="font-mono text-xs uppercase tracking-widest text-red-600 hover:text-red-800 transition-colors border border-red-600 hover:border-red-800 px-4 py-2 inline-flex items-center gap-2">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    LOGOUT
-                </a>
-            </div>
-        </div>
-    </section>
+<main class="w-full pb-32">
 
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <div class="pb-6 border-b border-gray-200">
-            <p class="font-mono text-xs uppercase text-gray-500 mb-4">XP Progress</p>
-            <div class="flex items-baseline gap-1 mb-3">
-                <span class="font-serif text-4xl font-black text-gray-900">{{ student.xp_percentage|default:"0" }}</span>
-                <span class="font-mono text-xs text-gray-500">%</span>
-            </div>
-            <div class="w-full h-2 bg-gray-200">
-                <div class="h-full bg-[#4f14e0]" style="width: {{ student.xp_percentage|default:'0' }}%"></div>
-            </div>
-        </div>
-        <div class="pb-6 border-b border-gray-200">
-            <p class="font-mono text-xs uppercase text-gray-500 mb-4">Enrolled Classes</p>
-            <div class="flex items-baseline gap-1">
-                <span class="font-serif text-4xl font-black text-gray-900">{{ enrolled_count|default:"0" }}</span>
-                <span class="font-mono text-xs text-gray-500">classes</span>
-            </div>
-        </div>
-    </section>
-
-    <section class="mb-12">
-        <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
-            <h2 class="font-serif text-2xl font-bold text-gray-900">My Classes</h2>
-            <a href="{% url 'select_level' %}" class="font-mono text-xs underline hover:text-[#4f14e0] transition-colors text-gray-500">MANAGE</a>
-        </div>
-        
-        {% if enrolled_classes %}
-        <div class="space-y-3">
-            {% for class in enrolled_classes %}
-            <a href="{% url 'student_class' slug=class.slug %}" class="block border-b border-gray-200 pb-3 pt-2 hover:bg-gray-50 transition-colors group -mx-5 md:-mx-16 px-5 md:px-16">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">{{ class.code }}</span>
-                        <h3 class="font-serif text-xl font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ class.title }}</h3>
+    <!-- Profile Masthead — Magazine Spread -->
+    <section class="px-6 md:px-12 pt-12 pb-8 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="flex items-start gap-5 md:gap-8">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0">
+                        {% if student_profile and student_profile.avatar %}
+                        <img src="{{ student_profile.avatar.url }}" alt="{{ student.full_name }}"
+                             class="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover border-2 border-[#4f14e0] shadow-md">
+                        {% else %}
+                        <div class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#e0d8ff] flex items-center justify-center border-2 border-[#4f14e0]">
+                            <span class="font-serif text-2xl md:text-3xl font-black text-[#4f14e0]">{{ student.full_name|slice:":1"|upper }}</span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    <div>
+                        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-3 block">
+                            {% if is_own_profile %}Your Profile{% else %}Scholar Profile{% endif %}
+                        </span>
+                        <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">
+                            {{ student.full_name|default:"Scholar" }}
+                        </h1>
+                        <div class="flex items-center gap-3 mt-4">
+                            <span class="font-mono text-xs font-bold text-[#4f14e0] bg-[#e0d8ff] px-3 py-1 uppercase tracking-wider">
+                                {{ student.rank_title|default:"SCHOLAR" }}
+                            </span>
+                            <span class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
+                                Lv.{{ student.level|default:"1" }} · {{ student.xp|default:"0" }} XP
+                            </span>
+                        </div>
+                    </div>
                 </div>
-            </a>
-            {% endfor %}
+                <div class="flex items-center gap-3">
+                    {% if is_own_profile %}
+                    <a href="{% url 'edit_student_profile' %}" class="font-mono text-[10px] uppercase tracking-widest text-gray-400 hover:text-[#4f14e0] transition-colors border border-gray-300 hover:border-[#4f14e0] px-3 py-1.5">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'logout' %}" class="font-mono text-[10px] uppercase tracking-widest text-red-600 hover:text-red-800 transition-colors">
+                        Logout →
+                    </a>
+                    {% else %}
+                    <span class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">Public profile</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Bio + Inspire + Quote row -->
+            {% if student_profile and student_profile.has_profile %}
+            <div class="mt-8 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                {% if student_profile.bio %}
+                <div>
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-1">Bio</p>
+                    <p class="font-mono text-xs text-gray-700 leading-relaxed">{{ student_profile.bio }}</p>
+                </div>
+                {% endif %}
+                {% if student_profile.inspire_message %}
+                <div>
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-1">Message</p>
+                    <p class="font-serif text-sm italic text-[#4f14e0] leading-relaxed">"{{ student_profile.inspire_message }}"</p>
+                </div>
+                {% endif %}
+                {% if student_profile.favorite_quote %}
+                <div>
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-1">Favorite Quote</p>
+                    <p class="font-serif text-sm italic text-gray-600 leading-relaxed">"{{ student_profile.favorite_quote }}"</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <p class="font-mono text-sm text-gray-500 uppercase tracking-wider text-center py-12">No classes enrolled</p>
-        {% endif %}
+    </section>
+
+    <!-- Stats Row — Magazine Data Strip -->
+    <section class="px-6 md:px-12 mt-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <!-- XP Card -->
+                <div class="border border-gray-200 bg-white p-5 md:p-6">
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-2">Total XP</p>
+                    <p class="font-serif text-3xl md:text-4xl font-black text-black">{{ student.xp|default:"0" }}</p>
+                    <p class="font-mono text-[9px] text-gray-400 mt-1 uppercase tracking-wider">{{ student.xp_to_next|default:"500" }} to next tier</p>
+                </div>
+                <!-- Tier Card -->
+                <div class="border border-gray-200 bg-white p-5 md:p-6">
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-2">Current Tier</p>
+                    <p class="font-serif text-xl md:text-2xl font-bold text-[#4f14e0]">{{ student.rank_title|default:"Initiate" }}</p>
+                    <p class="font-mono text-[9px] text-gray-400 mt-1 uppercase tracking-wider">Level {{ student.level|default:"1" }}</p>
+                </div>
+                <!-- Classes Card -->
+                <div class="border border-gray-200 bg-white p-5 md:p-6">
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-2">Enrolled</p>
+                    <p class="font-serif text-3xl md:text-4xl font-black text-black">{{ enrolled_count|default:"0" }}</p>
+                    <p class="font-mono text-[9px] text-gray-400 mt-1 uppercase tracking-wider">Classes</p>
+                </div>
+                <!-- Progress Card -->
+                <div class="border border-gray-200 bg-white p-5 md:p-6">
+                    <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-2">Tier Progress</p>
+                    <p class="font-serif text-3xl md:text-4xl font-black text-black">{{ student.xp_percentage|default:"0" }}<span class="text-xl text-gray-300">%</span></p>
+                    <div class="mt-2 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#4f14e0] rounded-full" style="width: {{ student.xp_percentage|default:'0' }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tier Journey — Magazine Visual Timeline -->
+    <section class="px-6 md:px-12 mt-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-6">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">The Path</span>
+                <h2 class="font-serif text-2xl md:text-3xl font-black tracking-tight text-black mt-2">Tier Journey</h2>
+            </div>
+            <div class="flex items-center gap-0 overflow-x-auto pb-4 no-scrollbar">
+                {% for tier in tiers %}
+                <div class="flex items-center flex-shrink-0">
+                    <!-- Tier node -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-mono text-sm font-bold
+                                    {% if tier.is_unlocked %}bg-[#4f14e0] text-white{% else %}bg-gray-200 text-gray-400{% endif %}">
+                            {{ tier.level }}
+                        </div>
+                        <span class="font-mono text-[8px] mt-2 text-center uppercase tracking-wider {% if tier.is_unlocked %}text-black font-bold{% else %}text-gray-400{% endif %}">
+                            {{ tier.title }}
+                        </span>
+                        <span class="font-mono text-[7px] text-gray-400 mt-0.5">
+                            {% if tier.range_max %}{{ tier.range_min }}-{{ tier.range_max }}{% else %}{{ tier.range_min }}+{% endif %}
+                        </span>
+                    </div>
+                    <!-- Connector line -->
+                    {% if not forloop.last %}
+                    <div class="w-6 md:w-10 h-0.5 {% if tier.is_unlocked %}bg-[#4f14e0]{% else %}bg-gray-200{% endif %} mx-1 md:mx-2 flex-shrink-0"></div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Classes — Magazine Article Grid -->
+    <section class="px-6 md:px-12 mt-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="border-t-4 border-black pt-6 mb-6">
+                <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Enrollment</span>
+                <h2 class="font-serif text-2xl md:text-3xl font-black tracking-tight text-black mt-2">
+                    {% if is_own_profile %}My Classes{% else %}{{ student.full_name }}'s Classes{% endif %}
+                </h2>
+                {% if is_own_profile %}
+                <a href="{% url 'select_level' %}" class="inline-block mt-3 font-mono text-[10px] font-bold text-[#4f14e0] uppercase tracking-wider hover:text-black transition-colors">
+                    + Enroll in more →
+                </a>
+                {% endif %}
+            </div>
+
+            {% if enrolled_classes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {% for class in enrolled_classes %}
+                <a href="{% url 'student_class' slug=class.slug %}"
+                   class="group border border-gray-200 bg-white hover:border-[#4f14e0] transition-all duration-300 p-5 md:p-6 flex flex-col">
+                    <div class="mb-3">
+                        <span class="font-mono text-[9px] text-[#4f14e0] uppercase tracking-widest block mb-1">{{ class.code }}</span>
+                        <h3 class="font-serif text-lg md:text-xl font-bold text-black group-hover:text-[#4f14e0] transition-colors leading-tight">{{ class.title }}</h3>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            {% if class.instructor %}
+                            <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">{{ class.instructor.username }}</p>
+                            {% endif %}
+                            <p class="font-mono text-[8px] text-gray-300 uppercase tracking-wider mt-0.5">{{ class.schedule_string }}</p>
+                        </div>
+                        <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 border border-dashed border-gray-300">
+                <p class="font-mono text-xs text-gray-400 uppercase tracking-wider">No classes enrolled</p>
+                {% if is_own_profile %}
+                <a href="{% url 'select_level' %}" class="inline-block mt-4 px-6 py-3 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">
+                    Find Classes
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </section>
 
 </main>

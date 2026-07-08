@@ -15,8 +15,11 @@ urlpatterns = [
     path('teacher-profile/<str:username>/', views.teacher_profile_view, name='teacher_profile_by_username'),
     path('instructor/manage-classes/', views.instructor_manage_classes_view, name='instructor_manage_classes'),
     path('student-profile/', views.student_profile_view, name='student_profile'),
+    path('student-profile/edit/', views.edit_student_profile_view, name='edit_student_profile'),
+    path('student-profile/<str:username>/', views.student_profile_view, name='student_profile_by_username'),
     path('admin-dashboard/approve/<int:user_id>/', views.toggle_instructor_approval_view, {'approve': True}, name='approve_instructor'),
     path('admin-dashboard/disapprove/<int:user_id>/', views.toggle_instructor_approval_view, {'approve': False}, name='disapprove_instructor'),
+    path('admin-dashboard/delete/<int:user_id>/', views.delete_instructor_request_view, name='delete_instructor_request'),
     path('logout/', views.logout_view, name='logout'),
     
     # Student Dashboard Routing Group

@@ -45,7 +45,7 @@
             <!-- Tier List — Horizontal scroll on mobile, grid on desktop -->
             <div class="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory no-scrollbar">
                 {% for tier in tiers %}
-                <div class="flex-shrink-0 w-[70vw] md:w-auto snap-center border {% if tier.is_unlocked %}border-[#4f14e0] bg-[#f0edff]{% else %}border-gray-200 bg-white{% endif %} p-5 md:p-6 transition-all duration-300 hover:shadow-lg">
+                <div class="tier-card flex-shrink-0 w-[70vw] md:w-auto snap-center border {% if tier.is_unlocked %}border-[#4f14e0] bg-[#f0edff]{% else %}border-gray-200 bg-white{% endif %} p-5 md:p-6 transition-all duration-300 hover:shadow-lg">
                     <div class="flex items-center justify-between mb-3">
                         <span class="font-mono text-[10px] font-bold {% if tier.is_unlocked %}text-[#4f14e0]{% else %}text-gray-400{% endif %} uppercase tracking-wider">Level {{ tier.level }}</span>
                         {% if tier.is_unlocked %}
@@ -92,8 +92,10 @@
                                         #{{ entry.rank }}
                                     </span>
                                     <div>
-                                        <span class="font-mono text-xs font-bold text-black uppercase tracking-wider">{{ entry.username }}</span>
-                                        <span class="font-mono text-[9px] text-gray-400 block mt-0.5">{{ entry.title }} · Lv.{{ entry.level }}</span>
+                                        <a href="{% url 'student_profile_by_username' username=entry.username %}" class="font-mono text-xs font-bold text-black uppercase tracking-wider hover:text-[#4f14e0] transition-colors">{{ entry.username }}</a>
+                                        <span class="font-mono text-[9px] font-bold text-[#4f14e0] bg-[#e0d8ff] px-2 py-0.5 uppercase tracking-wider mt-0.5 inline-block">
+                                            {{ entry.title }} · Lv.{{ entry.level }}
+                                        </span>
                                     </div>
                                 </div>
                                 <span class="font-mono text-xs font-bold text-black">{{ entry.xp }} <span class="text-gray-400 font-normal">XP</span></span>
@@ -126,7 +128,7 @@
                         </div>
                         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                             <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Current Title</span>
-                            <span class="font-mono text-xs font-bold text-[#4f14e0] uppercase tracking-wider">{{ current_user_tier|default:"Initiate" }}</span>
+                            <span class="{{ current_user_tier_color|default:'bg-gray-600' }} font-mono text-[10px] font-bold text-white px-2 py-1 uppercase tracking-wider">{{ current_user_tier|default:"Initiate" }}</span>
                         </div>
                         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                             <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Your XP</span>
@@ -300,15 +302,25 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
                     observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
 
+        // Animate archive articles
         document.querySelectorAll('article').forEach(item => {
             observer.observe(item);
+        });
+
+        // Animate tier cards with stagger delay — reveal on scroll
+        document.querySelectorAll('.tier-card').forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(24px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.transitionDelay = `${i * 80}ms`;
+            observer.observe(card);
         });
     });
 </script>

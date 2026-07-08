@@ -7,56 +7,67 @@
     <title>aris4.0</title>
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
 </head>
-<body class="bg-[#fcfbfa] min-h-screen flex flex-col pt-16 md:pt-20">
+<body class="bg-[#fcfbfa] min-h-screen flex flex-col" style="padding-top: 72px; padding-bottom: 88px;" onload="if(!document.querySelector('nav.fixed')){this.style.paddingTop='0';this.style.paddingBottom='0';}">
 
 <!-- Navbar -->
 {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'home' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
-<nav class="w-full bg-[#fcfbfa] border-b border-gray-300 px-6 py-4 fixed top-0 left-0 right-0 z-50">
+<nav class="w-full bg-[#fcfbfa] border-b-2 border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-6 py-4 fixed top-0 left-0 right-0 z-50">
   <div class="max-w-7xl mx-auto flex items-center justify-between">
     <!-- Left: Logo -->
     <a href="{% url 'home' %}" class="font-serif text-3xl font-black tracking-tight text-black select-none">aris4.o</a>
 
     <!-- Center: Nav Links (desktop only) -->
-    <div class="hidden md:flex items-center gap-8 font-mono text-xs font-bold uppercase tracking-widest">
+    <div class="hidden md:flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-widest">
+      {% with current=request.resolver_match.url_name %}
       {% if user.is_authenticated %}
         
       <!-- superuser -->
       {% if user.role == 'admin' or user.is_superuser %}
-          <a href="{% url 'admin_dashboard' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Dashboard</a>
+          <a href="{% url 'admin_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
         
         <!-- if ni instructor   -->
           {% elif user.role == 'instructor' %}
-          <a href="{% url 'instructor_dashboard' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Dashboard</a>
-          <a href="{% url 'instructor_manage_classes' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Classes</a>
-          <a href="{% url 'teacher_profile' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Profile</a>
+          <a href="{% url 'instructor_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
+          <a href="{% url 'instructor_manage_classes' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_manage_classes' or current == 'instructor_class' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
+          <a href="{% url 'teacher_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'teacher_profile' or current == 'teacher_profile_by_username' or current == 'edit_instructor_profile' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
 
           
         
         <!-- if ni student -->
           {% else %}
-          <a href="{% url 'study_dashboard' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Dashboard</a>
-          <a href="{% url 'select_level' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Classes</a>
-          <a href="{% url 'student_profile' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Profile</a>
+          <a href="{% url 'study_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'study_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
+          <a href="{% url 'select_level' %}" class="relative px-4 py-2 transition-colors {% if current == 'select_level' or current == 'student_class' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
+          <a href="{% url 'student_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'student_profile' or current == 'student_profile_by_username' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
         {% endif %}
       
       <!-- if user haja login we need a login btn  -->
         {% else %}
-        <a href="{% url 'login' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Dashboard</a>
+        <a href="{% url 'login' %}" class="relative px-4 py-2 text-gray-400 hover:text-[#4f14e0] transition-colors">Dashboard</a>
       
         {% endif %}
-      <a href="{% url 'archive_index' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Archive</a>
-      <a href="{% url 'library' %}" class="text-gray-500 hover:text-[#4f14e0] transition-colors">Library</a>
+      <a href="{% url 'archive_index' %}" class="relative px-4 py-2 transition-colors {% if current == 'archive_index' or current == 'archive_category' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Archive</a>
+      <a href="{% url 'library' %}" class="relative px-4 py-2 transition-colors {% if current == 'library' or current == 'library_download' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Library</a>
+      {% endwith %}
     </div>
 
-    <!-- Right: XP + Logout -->
-    <div class="flex items-center gap-4">
-      {% if user.is_authenticated and user.role == 'student' %}
-      <div class="bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest px-3 py-1.5 uppercase select-none">
-        {{ user.xp }} xp
+    <!-- Right: Tier Badge + XP + Logout -->
+    <div class="flex items-center gap-3">
+      {% if user.is_authenticated and user_tier %}
+      <div class="flex items-center gap-2">
+        <!-- Tier title badge (colored per tier) -->
+        <div class="{{ user_tier.tier_color_class }} font-mono text-[10px] font-bold tracking-widest px-3 py-1.5 uppercase select-none shadow-sm">
+          {{ user_tier.title }}
+        </div>
+        {% if user.role == 'student' %}
+        <!-- XP count -->
+        <div class="bg-[#4f14e0] text-white font-mono text-[10px] font-bold tracking-widest px-3 py-1.5 uppercase select-none shadow-sm">
+          {{ user_tier.xp }} xp
+        </div>
+        {% endif %}
       </div>
       {% endif %}
       {% if user.is_authenticated %}
-      <a href="{% url 'logout' %}" class="hidden md:inline font-mono text-xs text-gray-500 hover:text-red-600 uppercase tracking-wider transition-colors">Logout</a>
+      <a href="{% url 'logout' %}" class="hidden md:inline font-mono text-xs text-red-600 hover:text-red-800 uppercase tracking-wider transition-colors">Logout</a>
       {% endif %}
     </div>
   </div>
@@ -71,16 +82,26 @@
 
 <!-- Mobile Bottom Bar -->
 {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
-<div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t border-gray-300 shadow-lg md:hidden">
+{% with current=request.resolver_match.url_name %}
+<div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t-2 border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] md:hidden">
   <div class="grid grid-cols-4 h-20">
+    <!-- Tab 1: Home / Dashboard -->
     {% if user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'admin_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% elif user.is_authenticated and user.role == 'instructor' %}
-      <a href="{% url 'instructor_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'instructor_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% elif user.is_authenticated and user.role == 'student' %}
-      <a href="{% url 'study_dashboard' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'study_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'study_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% else %}
-      <a href="{% url 'home' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'home' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'home' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% endif %}
       <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -89,8 +110,11 @@
       <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Home</span>
     </a>
 
+    <!-- Tab 2: Study / Classes -->
     {% if user.is_authenticated and user.role == 'student' %}
-      <a href="{% url 'select_level' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'select_level' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'select_level' or current == 'student_class' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
         <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
           <path d="M6 12.5V16a6 6 0 0 0 12 0v-3.5"></path>
@@ -98,7 +122,9 @@
         <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Study</span>
       </a>
     {% elif user.is_authenticated and user.role == 'instructor' %}
-      <a href="{% url 'instructor_manage_classes' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'instructor_manage_classes' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'instructor_manage_classes' or current == 'instructor_class' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
         <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <rect width="20" height="5" x="2" y="3" rx="1"></rect>
           <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
@@ -108,7 +134,10 @@
       </a>
     {% endif %}
 
-    <a href="{% url 'archive_index' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+    <!-- Tab 3: Archive -->
+    <a href="{% url 'archive_index' %}"
+       class="relative flex flex-col items-center justify-center transition-colors group
+              {% if current == 'archive_index' or current == 'archive_category' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
       <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="5" x="2" y="3" rx="1"></rect>
         <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
@@ -117,12 +146,19 @@
       <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Archive</span>
     </a>
 
+    <!-- Tab 4: Profile -->
     {% if user.is_authenticated and user.role == 'student' %}
-      <a href="{% url 'student_profile' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'student_profile' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'student_profile' or current == 'student_profile_by_username' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% elif user.is_authenticated and user.role == 'instructor' %}
-      <a href="{% url 'teacher_profile' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'teacher_profile' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'teacher_profile' or current == 'teacher_profile_by_username' or current == 'edit_instructor_profile' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% else %}
-      <a href="{% url 'login' %}" class="flex flex-col items-center justify-center text-gray-500 hover:text-[#4f14e0] transition-colors group">
+      <a href="{% url 'login' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'login' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% endif %}
       <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -132,6 +168,7 @@
     </a>
   </div>
 </div>
+{% endwith %}
 {% endif %}
 
 </body>

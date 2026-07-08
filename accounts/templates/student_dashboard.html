@@ -3,10 +3,17 @@
 {% block content %}
 <main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
     <header class="mb-12">
-        <h1 class="font-serif text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-2">Hi, {{ current_student.first_name|default:"Scholar" }}!</h1>
-        <p class="font-mono text-xs uppercase text-gray-500 tracking-widest">
-            {{ academic_status.semester_label|default:"Spring Semester" }} &middot; Week {{ academic_status.current_week|default:"08" }}
-        </p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-serif text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-2">Hi, {{ current_student.first_name|default:"Scholar" }}!</h1>
+                <p class="font-mono text-xs uppercase text-gray-500 tracking-widest">
+                    {{ academic_status.semester_label|default:"Spring Semester" }} &middot; Week {{ academic_status.current_week|default:"08" }}
+                </p>
+            </div>
+            <a href="{% url 'edit_student_profile' %}" class="font-mono text-[10px] uppercase tracking-widest text-gray-400 hover:text-[#4f14e0] transition-colors border border-gray-300 hover:border-[#4f14e0] px-3 py-1.5 hidden sm:inline-block">
+                Edit Profile
+            </a>
+        </div>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-8">

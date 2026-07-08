@@ -7,7 +7,14 @@
         <div class="max-w-7xl mx-auto">
             <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-4 block">Faculty Portal</span>
             <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">The Faculty</h1>
-            <p class="font-mono text-xs text-gray-500 mt-4 uppercase tracking-wider">// Welcome, {{ request.user.username }}</p>
+            <div class="flex items-center gap-3 mt-4">
+                {% if user_tier %}
+                <div class="{{ user_tier.tier_color_class }} font-mono text-[10px] font-bold tracking-widest px-3 py-1.5 uppercase select-none shadow-sm">
+                    {{ user_tier.title }}
+                </div>
+                {% endif %}
+                <p class="font-mono text-xs text-gray-500 uppercase tracking-wider">// Welcome, {{ request.user.username }}</p>
+            </div>
         </div>
     </section>
 
