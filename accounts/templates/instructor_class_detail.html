@@ -21,137 +21,235 @@
     </div>
   </header>
 
-  <!-- Add Module — the only primary action -->
-  <div class="mb-16 pb-8 border-b border-gray-300">
-    <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-center gap-4">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="add_module">
-      <input type="text" name="module_title" placeholder="e.g. Week 1: Set Theory" required class="flex-1 border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
-      <button type="submit" class="bg-[#4f14e0] text-white px-6 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors shrink-0">
-        + ADD MODULE
-      </button>
-    </form>
+  <!-- Tab Navigation -->
+  <div class="mb-10 border-b border-gray-300 flex gap-0">
+    <button type="button" id="tabCurriculum" onclick="switchTab('curriculum')" class="px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-[#4f14e0] border-[#4f14e0]">
+      Curriculum
+    </button>
+    <button type="button" id="tabStudents" onclick="switchTab('students')" class="px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-gray-400 border-transparent hover:text-gray-900">
+      Students
+    </button>
   </div>
 
-  <!-- Modules -->
-  {% if modules %}
-  <div class="space-y-16">
-    {% for module in modules %}
-    <section>
-      <!-- Module Header -->
-      <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-200">
-        <h2 class="font-serif text-2xl font-bold text-gray-900 uppercase tracking-tight">{{ module.title }}</h2>
-        <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this module and all its contents?')">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="delete_module">
-          <input type="hidden" name="module_id" value="{{ module.id }}">
-          <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE MODULE</button>
-        </form>
-      </div>
+  <!-- ==================== CURRICULUM TAB ==================== -->
+  <div id="panelCurriculum">
 
-      <!-- Module Items -->
-      <div class="space-y-6">
-        {% for content in module.contents.all %}
-        <div class="pl-4 border-l-2 border-gray-200">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <h3 class="font-serif text-lg font-bold text-gray-900">{{ content.title }}</h3>
-              <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ content.created_at|date:"d.m.y" }}</span>
-              {% if content.description %}
-              <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ content.description }}</p>
-              {% endif %}
+    <!-- Add Module form -->
+    <div class="mb-10 pb-6 border-b border-gray-200">
+      <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-center gap-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_module">
+        <input type="text" name="module_title" placeholder="e.g. Week 1: Set Theory" required class="flex-1 border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+        <button type="submit" class="bg-[#4f14e0] text-white px-6 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors shrink-0">
+          + ADD MODULE
+        </button>
+      </form>
+    </div>
+
+    <!-- Module Search -->
+    <div class="mb-6">
+      <input type="text" id="moduleSearch" placeholder="Search modules, content, and quizzes..."
+             class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+    </div>
+
+    <!-- Module Accordion List -->
+    {% if modules %}
+    <div class="space-y-3" id="moduleAccordion">
+      {% for module in modules %}
+      {% with content_count=module.contents.all|length %}
+      {% with quiz_count=module.quizzes.all|length %}
+      <div class="border border-gray-200 bg-white module-card">
+        <!-- Accordion Header Row: clickable area + actions -->
+        <div class="flex items-stretch">
+          <button type="button" onclick="toggleModule({{ module.id }})" class="flex-1 flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors group min-w-0">
+            <span id="moduleArrow_{{ module.id }}" class="font-mono text-xs text-gray-400 transition-transform shrink-0">&#9654;</span>
+            <div class="min-w-0">
+              <h2 class="font-serif text-lg font-bold text-gray-900 truncate">{{ module.title }}</h2>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="font-mono text-[10px] text-gray-500">{{ content_count }} content{{ content_count|pluralize }}</span>
+                <span class="font-mono text-[10px] text-gray-300">&middot;</span>
+                <span class="font-mono text-[10px] text-[#4f14e0]">{{ quiz_count }} quiz{{ quiz_count|pluralize }}</span>
+              </div>
             </div>
-            <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this content?')" class="ml-4 shrink-0">
+          </button>
+          <div class="flex items-center gap-2 px-4 shrink-0 border-l border-gray-100">
+            <button type="button" onclick="toggleEditModule({{ module.id }})" class="border border-[#4f14e0] text-[#4f14e0] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-[#4f14e0] hover:text-white transition-colors">EDIT</button>
+            <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this module and all its contents?')">
               {% csrf_token %}
-              <input type="hidden" name="action" value="delete_content">
-              <input type="hidden" name="content_id" value="{{ content.id }}">
-              <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE</button>
+              <input type="hidden" name="action" value="delete_module">
+              <input type="hidden" name="module_id" value="{{ module.id }}">
+              <button type="submit" class="border border-[#4f14e0] text-[#4f14e0] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">DELETE</button>
             </form>
           </div>
         </div>
-        {% endfor %}
 
-        {% for quiz in module.quizzes.all %}
-        <div class="pl-4 border-l-2 border-gray-200">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">ASSESSMENT</span>
-                <span class="font-mono text-[10px] text-gray-400">&middot;</span>
-                <span class="font-mono text-[10px] text-gray-500">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }}</span>
-                {% with submission_count=quiz.submissions.count %}
-                {% if submission_count > 0 %}
-                <span class="font-mono text-[10px] text-gray-500">&middot; {{ submission_count }} submission{{ submission_count|pluralize }}</span>
-                {% endif %}
-                {% endwith %}
+        <!-- Inline Edit Module Form (hidden) -->
+        <div id="editModuleForm_{{ module.id }}" class="hidden px-5 pb-4">
+          <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-center gap-4 pt-3 border-t border-gray-100">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_module">
+            <input type="hidden" name="module_id" value="{{ module.id }}">
+            <input type="text" name="module_title" value="{{ module.title }}" required class="flex-1 border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono">
+            <button type="submit" class="bg-[#4f14e0] text-white px-4 py-2 font-mono text-[10px] font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors shrink-0">SAVE</button>
+            <button type="button" onclick="toggleEditModule({{ module.id }})" class="font-mono text-[10px] text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">CANCEL</button>
+          </form>
+        </div>
+
+        <!-- Accordion Body (hidden by default) -->
+        <div id="moduleBody_{{ module.id }}" class="hidden border-t border-gray-100">
+          <div class="px-5 py-4 space-y-4">
+            {% for content in module.contents.all %}
+            <div class="pl-4 border-l-2 border-gray-200">
+              <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">CONTENT</span>
+                    <button type="button" onclick="toggleEditContent({{ content.id }})" class="border border-[#4f14e0] text-[#4f14e0] px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-[#4f14e0] hover:text-white transition-colors">EDIT</button>
+                  </div>
+                  <h3 class="font-serif text-base font-bold text-gray-900 mt-0.5 truncate">{{ content.title }}</h3>
+                  {% if content.description %}
+                  <p class="text-sm text-gray-600 mt-1 leading-relaxed">{{ content.description }}</p>
+                  {% endif %}
+                  <!-- Inline Edit Content Form -->
+                  <div id="editContentForm_{{ content.id }}" class="hidden mt-3 pt-3 border-t border-gray-200">
+                    <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="space-y-3">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="edit_content">
+                      <input type="hidden" name="content_id" value="{{ content.id }}">
+                      <div>
+                        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Title</label>
+                        <input type="text" name="content_title" value="{{ content.title }}" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono">
+                      </div>
+                      <div>
+                        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Description</label>
+                        <textarea name="content_description" rows="3" class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono">{{ content.description|default:'' }}</textarea>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <button type="submit" class="bg-[#4f14e0] text-white px-4 py-2 font-mono text-[10px] font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors">SAVE</button>
+                        <button type="button" onclick="toggleEditContent({{ content.id }})" class="font-mono text-[10px] text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">CANCEL</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                <div class="shrink-0">
+                  <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this content?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_content">
+                    <input type="hidden" name="content_id" value="{{ content.id }}">
+                    <button type="submit" class="border border-[#4f14e0] text-[#4f14e0] px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors">DELETE</button>
+                  </form>
+                </div>
               </div>
-              <h3 class="font-serif text-lg font-bold text-gray-900 mt-1">{{ quiz.title }}</h3>
-              {% if quiz.description %}
-              <p class="text-sm text-gray-600 mt-1">{{ quiz.description }}</p>
-              {% endif %}
             </div>
-            <div class="flex items-center gap-3 ml-4 shrink-0">
-              <a href="{% url 'instructor_quiz_submissions' quiz_id=quiz.id %}" class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider transition-colors">
-                VIEW SUBMISSIONS
-              </a>
-              <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this quiz and all its data?')">
+            {% endfor %}
+
+            {% for quiz in module.quizzes.all %}
+            <div class="pl-4 border-l-2 border-gray-200">
+              <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">ASSESSMENT</span>
+                    <span class="font-mono text-[10px] text-gray-400">&middot;</span>
+                    <span class="font-mono text-[10px] text-gray-500">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }}</span>
+                    {% with submission_count=quiz.submissions.count %}
+                    {% if submission_count > 0 %}
+                    <span class="font-mono text-[10px] text-gray-500">&middot; {{ submission_count }} submission{{ submission_count|pluralize }}</span>
+                    {% endif %}
+                    {% endwith %}
+                  </div>
+                  <h3 class="font-serif text-base font-bold text-gray-900 mt-0.5">{{ quiz.title }}</h3>
+                  {% if quiz.description %}
+                  <p class="text-sm text-gray-600 mt-1">{{ quiz.description }}</p>
+                  {% endif %}
+                  <!-- Inline Edit Quiz Form -->
+                  <div id="editQuizForm_{{ quiz.id }}" class="hidden mt-3 pt-3 border-t border-gray-200">
+                    {% with submission_count=quiz.submissions.count %}
+                    {% if submission_count > 0 %}
+                    <div class="mb-3 bg-amber-50 border-l-4 border-amber-500 p-3">
+                      <p class="font-mono text-[10px] text-amber-800">&#9888; {{ submission_count }} submission{{ submission_count|pluralize }} exist. Only title &amp; description can be edited here.</p>
+                    </div>
+                    {% else %}
+                    <div class="mb-3 bg-blue-50 border-l-4 border-blue-500 p-3">
+                      <p class="font-mono text-[10px] text-blue-800">&#8505; No submissions yet. You can safely edit the title and description.</p>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="space-y-3">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="edit_quiz">
+                      <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+                      <div>
+                        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Title</label>
+                        <input type="text" name="quiz_title" value="{{ quiz.title }}" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono">
+                      </div>
+                      <div>
+                        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Description</label>
+                        <input type="text" name="quiz_description" value="{{ quiz.description|default:'' }}" class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono">
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <button type="submit" class="bg-[#4f14e0] text-white px-4 py-2 font-mono text-[10px] font-bold tracking-wider uppercase hover:bg-gray-900 transition-colors">SAVE</button>
+                        <button type="button" onclick="toggleEditQuiz({{ quiz.id }})" class="font-mono text-[10px] text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">CANCEL</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                  <a href="{% url 'instructor_quiz_submissions' quiz_id=quiz.id %}" class="border border-[#4f14e0] text-[#4f14e0] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-[#4f14e0] hover:text-white transition-colors whitespace-nowrap">VIEW SUBMISSIONS</a>
+                  <button type="button" onclick="toggleEditQuiz({{ quiz.id }})" class="border border-[#4f14e0] text-[#4f14e0] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-[#4f14e0] hover:text-white transition-colors whitespace-nowrap">EDIT</button>
+                  <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete this quiz and all its data?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_quiz">
+                    <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+                    <button type="submit" class="border border-[#4f14e0] text-[#4f14e0] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors whitespace-nowrap">DELETE</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            <!-- Add Content / Add Assessment links -->
+            <div class="flex items-center gap-4 pl-4 pt-1">
+              <button type="button" onclick="showAddContent({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">+ ADD CONTENT</button>
+              <button type="button" onclick="showQuizStudio({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">+ ADD ASSESSMENT</button>
+            </div>
+
+            <!-- Inline Add Content Form -->
+            <div id="addContentForm_{{ module.id }}" class="hidden pl-4 pt-2">
+              <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-start gap-4">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="delete_quiz">
-                <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
-                <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase tracking-wider transition-colors">DELETE</button>
+                <input type="hidden" name="action" value="add_content">
+                <input type="hidden" name="module_id" value="{{ module.id }}">
+                <div class="flex-1 space-y-3">
+                  <input type="text" name="title" placeholder="Content title" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
+                  <textarea name="description" rows="2" placeholder="Write the content here..." class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400"></textarea>
+                </div>
+                <button type="submit" class="bg-gray-900 text-white px-5 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-[#4f14e0] transition-colors shrink-0 mt-1">ADD</button>
               </form>
             </div>
           </div>
         </div>
-        {% endfor %}
-
-        <!-- Add Content / Add Assessment links -->
-        <div class="flex items-center gap-6 pl-4 pt-2">
-          <button type="button" onclick="showAddContent({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">
-            + ADD CONTENT
-          </button>
-          <button type="button" onclick="showQuizStudio({{ module.id }})" class="font-mono text-xs text-gray-500 hover:text-gray-900 uppercase tracking-wider transition-colors">
-            + ADD ASSESSMENT
-          </button>
-        </div>
-
-        <!-- Inline Add Content Form (hidden by default) -->
-        <div id="addContentForm_{{ module.id }}" class="hidden pl-4 pt-4">
-          <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" class="flex items-start gap-4">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="add_content">
-            <input type="hidden" name="module_id" value="{{ module.id }}">
-            <div class="flex-1 space-y-3">
-              <input type="text" name="title" placeholder="Content title" required class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400">
-              <textarea name="description" rows="3" placeholder="Write the content here..." class="w-full border-0 border-b border-gray-300 px-0 py-2 text-sm bg-transparent focus:outline-none focus:border-[#4f14e0] font-mono placeholder:text-gray-400"></textarea>
-            </div>
-            <button type="submit" class="bg-gray-900 text-white px-5 py-2 font-mono text-xs font-bold tracking-wider uppercase hover:bg-[#4f14e0] transition-colors shrink-0 mt-1">
-              ADD
-            </button>
-          </form>
-        </div>
       </div>
-    </section>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="text-center py-16">
-    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No modules yet</p>
-    <p class="text-sm text-gray-400 mt-2">Create your first module above to start building your curriculum.</p>
-  </div>
-  {% endif %}
+      {% endwith %}
+      {% endwith %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 border border-dashed border-gray-300">
+      <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No modules yet</p>
+      <p class="text-sm text-gray-400 mt-2">Create your first module above to start building your curriculum.</p>
+    </div>
+    {% endif %}
 
-  <!-- Orphaned Items (no module) -->
-  {% if orphaned_contents or orphaned_quizzes %}
-  <section class="mt-16 pt-8 border-t border-gray-300">
-    <h2 class="font-serif text-xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Uncategorized</h2>
-    <div class="space-y-4">
-      {% for content in orphaned_contents %}
-      <div class="pl-4 border-l-2 border-gray-200">
-        <div class="flex justify-between items-start">
+    <!-- Orphaned Items -->
+    {% if orphaned_contents or orphaned_quizzes %}
+    <section class="mt-8 pt-6 border-t border-gray-200">
+      <h2 class="font-serif text-lg font-bold text-gray-900 mb-4 uppercase tracking-tight">Uncategorized</h2>
+      <div class="space-y-3">
+        {% for content in orphaned_contents %}
+        <div class="flex items-center justify-between pl-4 border-l-2 border-gray-200 py-2">
           <div>
-            <h3 class="font-serif text-base font-bold text-gray-900">{{ content.title }}</h3>
-            <span class="font-mono text-[10px] text-gray-500">{{ content.created_at|date:"d.m.y" }}</span>
+            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">CONTENT</span>
+            <p class="font-serif text-sm font-bold text-gray-900">{{ content.title }}</p>
           </div>
           <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete?')">
             {% csrf_token %}
@@ -160,14 +258,12 @@
             <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase">DELETE</button>
           </form>
         </div>
-      </div>
-      {% endfor %}
-      {% for quiz in orphaned_quizzes %}
-      <div class="pl-4 border-l-2 border-gray-200">
-        <div class="flex justify-between items-start">
+        {% endfor %}
+        {% for quiz in orphaned_quizzes %}
+        <div class="flex items-center justify-between pl-4 border-l-2 border-gray-200 py-2">
           <div>
             <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest">ASSESSMENT</span>
-            <h3 class="font-serif text-base font-bold text-gray-900">{{ quiz.title }}</h3>
+            <p class="font-serif text-sm font-bold text-gray-900">{{ quiz.title }}</p>
           </div>
           <form method="POST" action="{% url 'instructor_class' slug=class.slug %}" onsubmit="return confirm('Delete?')">
             {% csrf_token %}
@@ -176,58 +272,130 @@
             <button type="submit" class="font-mono text-[10px] text-gray-400 hover:text-red-600 uppercase">DELETE</button>
           </form>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- Student Quiz Performance Chart + Table -->
-  <section class="mt-16 pt-8 border-t border-gray-300">
-    <div class="flex items-baseline justify-between mb-6">
-      <h2 class="font-serif text-xl font-bold text-gray-900 uppercase tracking-tight">Student Performance</h2>
-      <span class="font-mono text-xs text-gray-500 uppercase tracking-wider">{{ student_list|length }} enrolled</span>
-    </div>
-    {% if student_list %}
-    <!-- Performance Bars (clickable) -->
-    <div class="space-y-4">
-      {% for item in student_list %}
-      <a href="{% url 'instructor_student_performance' slug=class.slug student_id=item.student.id %}" class="block bg-white border border-gray-200 px-4 py-3 hover:border-[#4f14e0] hover:shadow-sm transition-all group">
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-3">
-            <span class="font-mono text-xs font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ item.student.get_full_name|default:item.student.username }}</span>
-            <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">{{ item.student.xp|default:"0" }} XP</span>
-          </div>
-          <div class="text-right">
-            <span class="font-mono text-xs font-bold {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}text-green-600{% elif item.completed_quizzes > 0 %}text-amber-600{% else %}text-gray-400{% endif %}">
-              {{ item.completed_quizzes }}/{{ item.total_quizzes }} quizzes
-            </span>
-            {% if item.total_possible > 0 %}
-            <span class="font-mono text-[10px] text-gray-500 ml-3">{{ item.total_score }}/{{ item.total_possible }} correct</span>
-            {% endif %}
-          </div>
-        </div>
-        <!-- Completion bar -->
-        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-500 {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}bg-green-500{% elif item.completed_quizzes > 0 %}bg-amber-500{% else %}bg-gray-300{% endif %}" 
-               style="width: {% widthratio item.completed_quizzes item.total_quizzes 100 %}%">
-          </div>
-        </div>
-        {% if item.total_possible > 0 %}
-        <!-- Accuracy bar -->
-        <div class="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
-          <div class="h-full rounded-full transition-all duration-500 bg-[#4f14e0]" 
-               style="width: {% widthratio item.total_score item.total_possible 100 %}%">
-          </div>
-        </div>
-        {% endif %}
-      </a>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="font-mono text-xs text-gray-500 text-center py-8">No students enrolled yet</p>
+    </section>
     {% endif %}
-  </section>
+  </div>
+
+  <!-- ==================== STUDENTS TAB ==================== -->
+  <div id="panelStudents" class="hidden">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Cohort</span>
+        <h2 class="font-serif text-3xl md:text-4xl font-black tracking-tight text-black mt-2">Student Performance</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{% url 'instructor_student_directory' slug=class.slug %}"
+           class="bg-[#4f14e0] text-white px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">
+          FULL DIRECTORY &rarr;
+        </a>
+      </div>
+    </div>
+
+    {% if student_list %}
+    {% with total_quiz_count=student_list.0.total_quizzes %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white border border-gray-200 p-5">
+        <span class="font-mono text-[9px] text-gray-500 uppercase tracking-wider">Enrolled</span>
+        <p class="font-serif text-3xl font-black text-black mt-1">{{ total_students }}</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-5">
+        <span class="font-mono text-[9px] text-gray-500 uppercase tracking-wider">Quizzes</span>
+        <p class="font-serif text-3xl font-black text-black mt-1">{{ total_quiz_count }}</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-5">
+        <span class="font-mono text-[9px] text-gray-500 uppercase tracking-wider">Avg Completion</span>
+        <p class="font-serif text-3xl font-black mt-1 {% if avg_completion_pct >= 80 %}text-green-600{% elif avg_completion_pct >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">{{ avg_completion_pct }}%</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-5">
+        <span class="font-mono text-[9px] text-gray-500 uppercase tracking-wider">Class Avg</span>
+        <p class="font-serif text-3xl font-black mt-1 {% if class_avg_pct >= 80 %}text-green-600{% elif class_avg_pct >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">{{ class_avg_pct }}%</p>
+      </div>
+    </div>
+    {% endwith %}
+
+    <!-- Search -->
+    <div class="mb-6">
+      <input type="text" id="studentSearch" placeholder="Search students by name or username..."
+             class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors">
+    </div>
+
+    <!-- Compact Student Table -->
+    <div class="overflow-x-auto border border-gray-200">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200">
+            <th class="text-left font-mono text-[10px] text-gray-500 uppercase tracking-widest px-4 py-3">Student</th>
+            <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest px-3 py-3 hidden sm:table-cell">XP</th>
+            <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest px-3 py-3">Progress</th>
+            <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest px-3 py-3 hidden md:table-cell">Accuracy</th>
+            <th class="text-right font-mono text-[10px] text-gray-500 uppercase tracking-widest px-4 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody id="studentList">
+          {% for item in student_list %}
+          <tr class="student-row border-b border-gray-100 hover:bg-gray-50 transition-colors"
+              data-name="{{ item.student.get_full_name|default:item.student.username|lower }}"
+              data-username="{{ item.student.username|lower }}">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#e0d8ff] flex items-center justify-center flex-shrink-0">
+                  <span class="font-mono text-xs font-bold text-[#4f14e0]">{{ item.student.get_full_name|default:item.student.username|first|upper }}</span>
+                </div>
+                <div>
+                  <span class="font-serif text-sm font-bold text-gray-900">{{ item.student.get_full_name|default:item.student.username }}</span>
+                  <span class="font-mono text-[10px] text-gray-400 block">@{{ item.student.username }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-3 py-3 text-center hidden sm:table-cell">
+              <span class="font-mono text-sm font-bold text-[#4f14e0]">{{ item.student.xp|default:"0" }}</span>
+            </td>
+            <td class="px-3 py-3">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}text-green-600{% elif item.completed_quizzes > 0 %}text-amber-600{% else %}text-gray-400{% endif %}">
+                  {{ item.completed_quizzes }}/{{ item.total_quizzes }}
+                </span>
+                <div class="flex-1 h-1.5 bg-gray-100 rounded-full max-w-[80px]">
+                  <div class="h-full rounded-full {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}bg-green-500{% elif item.completed_quizzes > 0 %}bg-amber-500{% else %}bg-gray-300{% endif %}" 
+                       style="width: {% widthratio item.completed_quizzes item.total_quizzes 100 %}%">
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-3 py-3 hidden md:table-cell">
+              {% if item.total_possible > 0 %}
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold {% widthratio item.total_score item.total_possible 100 as accuracy %}{% if accuracy >= 80 %}text-green-600{% elif accuracy >= 50 %}text-amber-600{% else %}text-red-600{% endif %}">{% widthratio item.total_score item.total_possible 100 %}%</span>
+                <div class="flex-1 h-1.5 bg-gray-100 rounded-full max-w-[80px]">
+                  <div class="h-full rounded-full bg-[#4f14e0]" style="width: {% widthratio item.total_score item.total_possible 100 %}%"></div>
+                </div>
+              </div>
+              {% else %}
+              <span class="font-mono text-xs text-gray-400">--</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <a href="{% url 'instructor_student_performance' slug=class.slug student_id=item.student.id %}"
+                 class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider font-bold">
+                VIEW &rarr;
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Live count -->
+    <div class="mt-4 font-mono text-[10px] text-gray-500" id="studentCount"></div>
+    {% else %}
+    <div class="text-center py-16 border border-dashed border-gray-300">
+      <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No students enrolled yet</p>
+    </div>
+    {% endif %}
+  </div> <!-- end panelStudents -->
 </main>
 
 <!-- Quiz Studio Modal (hidden by default) -->
@@ -272,6 +440,117 @@
 </div>
 
 <script>
+// Tab switching
+function switchTab(tab) {
+    const curTab = document.getElementById('panelCurriculum');
+    const stuTab = document.getElementById('panelStudents');
+    const curBtn = document.getElementById('tabCurriculum');
+    const stuBtn = document.getElementById('tabStudents');
+    if (tab === 'curriculum') {
+        curTab.classList.remove('hidden');
+        stuTab.classList.add('hidden');
+        curBtn.className = 'px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-[#4f14e0] border-[#4f14e0]';
+        stuBtn.className = 'px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-gray-400 border-transparent hover:text-gray-900';
+    } else {
+        curTab.classList.add('hidden');
+        stuTab.classList.remove('hidden');
+        curBtn.className = 'px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-gray-400 border-transparent hover:text-gray-900';
+        stuBtn.className = 'px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest transition-colors border-b-2 -mb-[2px] bg-white text-[#4f14e0] border-[#4f14e0]';
+    }
+}
+
+// Module search filter
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('moduleSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.module-card');
+            let visibleCount = 0;
+            cards.forEach(function(card) {
+                // Search the card's visible text content
+                const text = card.textContent.toLowerCase();
+                const match = !q || text.includes(q);
+                card.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            // Show/hide "no results" message
+            let noResults = document.getElementById('moduleNoResults');
+            if (visibleCount === 0 && q) {
+                if (!noResults) {
+                    noResults = document.createElement('div');
+                    noResults.id = 'moduleNoResults';
+                    noResults.className = 'text-center py-16 border border-dashed border-gray-300';
+                    noResults.innerHTML = '<p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No modules match "' + q + '"</p>';
+                    document.getElementById('moduleAccordion').after(noResults);
+                }
+                noResults.style.display = '';
+            } else if (noResults) {
+                noResults.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Module accordion - only one open at a time
+function toggleModule(moduleId) {
+    const body = document.getElementById('moduleBody_' + moduleId);
+    const arrow = document.getElementById('moduleArrow_' + moduleId);
+    
+    // Close all other modules
+    document.querySelectorAll('[id^="moduleBody_"]').forEach(function(el) {
+        if (el.id !== 'moduleBody_' + moduleId) {
+            el.classList.add('hidden');
+            const arrowEl = document.getElementById(el.id.replace('moduleBody_', 'moduleArrow_'));
+            if (arrowEl) arrowEl.textContent = '\u25B6';
+        }
+    });
+    
+    // Toggle this one
+    const isHidden = body.classList.contains('hidden');
+    body.classList.toggle('hidden');
+    arrow.textContent = isHidden ? '\u25BC' : '\u25B6';
+}
+
+// Toggle edit module form
+function toggleEditModule(moduleId) {
+    const form = document.getElementById('editModuleForm_' + moduleId);
+    if (form) form.classList.toggle('hidden');
+}
+
+// Toggle edit content form
+function toggleEditContent(contentId) {
+    const form = document.getElementById('editContentForm_' + contentId);
+    if (form) form.classList.toggle('hidden');
+}
+
+// Toggle edit quiz form
+function toggleEditQuiz(quizId) {
+    const form = document.getElementById('editQuizForm_' + quizId);
+    if (form) form.classList.toggle('hidden');
+}
+
+// Student search filter for table
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('studentSearch');
+    const countEl = document.getElementById('studentCount');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.student-row');
+            let visibleCount = 0;
+            rows.forEach(function(row) {
+                const name = row.dataset.name;
+                const username = row.dataset.username;
+                const match = !q || name.includes(q) || username.includes(q);
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            if (countEl) countEl.textContent = visibleCount + ' of ' + rows.length + ' students';
+        });
+    }
+});
+
 let questionCount = 0;
 
 function showQuizStudio(moduleId) {

@@ -84,7 +84,7 @@
                         <div class="mt-auto pt-3 flex items-center justify-between">
                             <span class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">{{ book.uploaded_by.username }}</span>
                             <div class="flex items-center gap-2">
-                                {% if user.is_authenticated and user.role == 'instructor' %}
+                                {% if user.is_authenticated and user.role == 'instructor' and book.uploaded_by_id == user.id %}
                                 <form method="POST" action="{% url 'library_delete' book.id %}" onsubmit="return confirm('Delete this book?')" class="inline">
                                     {% csrf_token %}
                                     <button type="submit" class="font-mono text-[9px] text-red-400 hover:text-red-600 uppercase tracking-wider transition-colors">
@@ -92,7 +92,7 @@
                                     </button>
                                 </form>
                                 {% endif %}
-                                <a href="{% url 'library_download' book.id %}" class="font-mono text-[10px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider">
+                                <a href="{% url 'library_download' book.id %}" data-loader="download" class="font-mono text-[10px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider relative">
                                     Download
                                 </a>
                             </div>

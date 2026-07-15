@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="min-h-screen flex items-center justify-center px-5 py-12">
+  <div class="w-full max-w-md">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <a href="{% url 'home' %}" class="font-serif text-4xl font-black tracking-tight text-black select-none">aris4.o</a>
+      <p class="font-mono text-[10px] text-gray-500 uppercase tracking-widest mt-3">Parent Registration</p>
+      <h1 class="font-serif text-3xl font-bold text-gray-900 mt-2">Join as a Parent</h1>
+      {% if max_reached %}
+      <!-- Max parents reached state -->
+      <div class="mt-8 bg-amber-50 border-l-4 border-amber-500 p-6 text-left">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-amber-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <p class="font-mono text-sm font-bold text-amber-800 uppercase">Limit Reached</p>
+            <p class="font-mono text-xs text-amber-700 mt-1">
+              {{ child_name }} already has the maximum of 2 parents connected.
+            </p>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <p class="font-mono text-xs text-gray-500 mt-2">
+        You've been invited to track the progress of
+        <span class="font-bold text-[#4f14e0]">{{ child_name }}</span>
+      </p>
+      {% endif %}
+    </div>
+
+    {% if not max_reached %}
+    <!-- Form -->
+    <form method="POST" class="space-y-5 bg-white border border-gray-200 p-8">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 font-mono text-xs text-red-700">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <div>
+        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+        <p class="font-mono text-[10px] text-red-600 mt-1">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+        <p class="font-mono text-[10px] text-red-600 mt-1">{{ form.email.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">First Name</label>
+          {{ form.first_name }}
+        </div>
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">Last Name</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div>
+        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+        <p class="font-mono text-[10px] text-red-600 mt-1">{{ form.password1.errors.0 }}</p>
+        {% endif %}
+        {% if form.password1.help_text %}
+        <p class="font-mono text-[10px] text-gray-400 mt-1">{{ form.password1.help_text|safe }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1.5">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+        <p class="font-mono text-[10px] text-red-600 mt-1">{{ form.password2.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="w-full bg-[#4f14e0] text-white py-4 font-mono text-xs font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors">
+        Create Parent Account
+      </button>
+    </form>
+
+    <p class="text-center mt-6 font-mono text-xs text-gray-500">
+      Already have an account?
+      <a href="{% url 'login' %}" class="text-[#4f14e0] hover:underline">Log in</a>
+    </p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

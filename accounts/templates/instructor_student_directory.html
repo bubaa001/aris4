@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+
+  <div class="mb-8">
+    <a href="{% url 'instructor_class' slug=class.slug %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK TO CLASS
+    </a>
+  </div>
+
+  <header class="mb-10 pb-6 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ class.code }}</span>
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase">
+          Student Directory
+        </h1>
+        <p class="font-mono text-xs text-gray-500 uppercase tracking-wider mt-2">
+          {{ filtered_count }}{% if filtered_count != total_count %} / {{ total_count }}{% endif %} student{{ filtered_count|pluralize }}
+        </p>
+      </div>
+
+      <!-- Sort Dropdown -->
+      <form method="GET" action="{% url 'instructor_student_directory' slug=class.slug %}" class="flex items-center gap-3">
+        <input type="hidden" name="q" value="{{ search_query }}">
+        <label class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Sort:</label>
+        <select name="sort" onchange="this.form.submit()" class="border border-gray-300 px-3 py-2 font-mono text-xs bg-white focus:outline-none focus:border-[#4f14e0]">
+          <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name A-Z</option>
+          <option value="completion" {% if sort_by == 'completion' %}selected{% endif %}>Completion</option>
+          <option value="score" {% if sort_by == 'score' %}selected{% endif %}>Avg Score</option>
+          <option value="xp" {% if sort_by == 'xp' %}selected{% endif %}>XP</option>
+        </select>
+      </form>
+    </div>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="mb-8">
+    <form method="GET" action="{% url 'instructor_student_directory' slug=class.slug %}" class="flex items-center gap-3">
+      <div class="relative flex-1">
+        <input type="text" name="q" value="{{ search_query }}"
+               placeholder="Search by name, username, or email..."
+               class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors pr-10">
+        {% if search_query %}
+        <a href="{% url 'instructor_student_directory' slug=class.slug %}" class="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-gray-400 hover:text-red-600">&times;</a>
+        {% endif %}
+      </div>
+      <button type="submit" class="bg-[#4f14e0] text-white px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors shrink-0">
+        SEARCH
+      </button>
+    </form>
+  </div>
+
+  {% if student_list %}
+  <!-- Student Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="border-b-2 border-gray-300">
+          <th class="text-left font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 pr-4">Student</th>
+          <th class="text-left font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 px-4 hidden sm:table-cell">XP</th>
+          <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 px-4">Quizzes</th>
+          <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 px-4">Score</th>
+          <th class="text-center font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 px-4 hidden md:table-cell">Avg</th>
+          <th class="text-right font-mono text-[10px] text-gray-500 uppercase tracking-widest pb-3 pl-4">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in student_list %}
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <td class="py-3 pr-4">
+            <div>
+              <span class="font-serif text-base font-bold text-gray-900">{{ item.student.get_full_name|default:item.student.username }}</span>
+              <span class="font-mono text-[10px] text-gray-400 block">@{{ item.student.username }}</span>
+            </div>
+          </td>
+          <td class="py-3 px-4 hidden sm:table-cell">
+            <span class="font-mono text-sm font-bold text-[#4f14e0]">{{ item.student.xp|default:"0" }}</span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="font-mono text-sm font-bold {% if item.completed_quizzes == item.total_quizzes and item.total_quizzes > 0 %}text-green-600{% elif item.completed_quizzes > 0 %}text-[#f59e0b]{% else %}text-gray-400{% endif %}">
+              {{ item.completed_quizzes }}/{{ item.total_quizzes }}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="font-mono text-sm font-bold text-gray-900">{{ item.total_score }}/{{ item.total_possible }}</span>
+          </td>
+          <td class="py-3 px-4 text-center hidden md:table-cell">
+            {% if item.total_possible > 0 %}
+            {% widthratio item.total_score item.total_possible 100 as avg_pct %}
+            <span class="font-mono text-sm font-bold {% if avg_pct|add:'0' >= 80 %}text-green-600{% elif avg_pct|add:'0' >= 50 %}text-[#f59e0b]{% else %}text-red-600{% endif %}">
+              {{ avg_pct }}%
+            </span>
+            {% else %}
+            <span class="font-mono text-xs text-gray-400">--</span>
+            {% endif %}
+          </td>
+          <td class="py-3 pl-4 text-right">
+            <a href="{% url 'instructor_student_performance' slug=class.slug student_id=item.student.id %}"
+               class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider font-bold">
+              VIEW &rarr;
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-20 border border-dashed border-gray-300">
+    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">
+      {% if search_query %}No students matching "{{ search_query }}"{% else %}No students enrolled{% endif %}
+    </p>
+    {% if search_query %}
+    <a href="{% url 'instructor_student_directory' slug=class.slug %}" class="inline-block mt-4 font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      CLEAR SEARCH
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</main>
+{% endblock %}

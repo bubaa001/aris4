@@ -31,6 +31,7 @@ MODEL_TO_TABLE: Dict[str, str] = {
     'LibraryBook':             'accounts_librarybook',
     'InstructorProfile':       'accounts_instructorprofile',
     'StudentQuizSubmission':   'accounts_studentquizsubmission',
+    'StudentProfile':          'accounts_studentprofile',
 }
 
 # Columns to strip from payloads before syncing (internal / auto-managed)

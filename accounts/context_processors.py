@@ -8,6 +8,7 @@ from .tiers import get_tier_info, build_xp_context, TIER_COLORS
 ROLE_BADGES = {
     'instructor': {'title': 'Instructor', 'color': 'bg-black text-white'},
     'admin':      {'title': 'Admin',      'color': 'bg-red-800 text-white'},
+    'parent':     {'title': 'Parent',     'color': 'bg-teal-700 text-white'},
 }
 
 

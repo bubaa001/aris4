@@ -10,7 +10,7 @@
             <p class="font-mono text-xs text-gray-500 mt-3 uppercase tracking-wider">aris4.0 // identity authentication</p>
         </div>
 
-        <form method="POST" class="space-y-7">
+        <form method="POST" class="space-y-7" id="register-form">
             {% csrf_token %}
             
             {% for field in form %}
@@ -20,7 +20,7 @@
                 </label>
                 
                 {% if field.name == 'role' %}
-                    <div class="flex gap-4 w-full pt-1">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full pt-1">
                         {% for choice in field.field.choices %}
                         <label class="flex-1 cursor-pointer">
                             <input type="radio" 
@@ -28,7 +28,7 @@
                                    value="{{ choice.0 }}"
                                    class="hidden peer"
                                    {% if field.value == choice.0 %}checked{% endif %}>
-                            <div class="border border-gray-300 p-4 font-serif text-lg font-black text-center bg-white text-black transition-all peer-checked:bg-[#4f14e0] peer-checked:text-white peer-checked:border-[#4f14e0] hover:border-[#4f14e0] cursor-pointer">
+                            <div class="border border-gray-300 p-4 font-serif text-base sm:text-lg font-black text-center bg-white text-black transition-all peer-checked:bg-[#4f14e0] peer-checked:text-white peer-checked:border-[#4f14e0] hover:border-[#4f14e0] cursor-pointer">
                                 {{ choice.1 }}
                             </div>
                         </label>
@@ -49,7 +49,7 @@
             {% endfor %}
             
             <div class="pt-4">
-                <button type="submit" class="w-full bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-[#4f14e0] hover:bg-black hover:border-black transition-all duration-300">
+                <button type="submit" id="reg-submit-btn" class="w-full bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-[#4f14e0] hover:bg-black hover:border-black transition-all duration-300">
                     Initialize Profile →
                 </button>
             </div>
@@ -62,4 +62,22 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', function(e) {
+    const fields = this.querySelectorAll('input[required]');
+    let empty = false;
+    fields.forEach(f => {
+        if (!f.value.trim() && f.type !== 'radio') empty = true;
+    });
+    if (empty) {
+        e.preventDefault();
+        return; // let Django show field errors
+    }
+    const btn = document.getElementById('reg-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+    btn.classList.add('opacity-70');
+});
+</script>
 {% endblock %}

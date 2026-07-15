@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['crusader-easing-overlying.ngrok-free.dev', '127.0.0.1', 'localhost']
 CSRF_TRUSTED_ORIGINS = ['https://crusader-easing-overlying.ngrok-free.dev']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition

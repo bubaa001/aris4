@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Quiz, Question, Choice, StudentQuizSubmission, AcademicClass, ClassContent
+from .models import User, Quiz, Question, Choice, StudentQuizSubmission, AcademicClass, ClassContent, ParentChildLink
 
 admin.site.register(User, UserAdmin)
 
@@ -52,3 +52,11 @@ class ChoiceAdmin(admin.ModelAdmin):
 @admin.register(StudentQuizSubmission)
 class StudentQuizSubmissionAdmin(admin.ModelAdmin):
     list_display = ('student', 'quiz', 'score', 'total', 'submitted_at')
+
+
+@admin.register(ParentChildLink)
+class ParentChildLinkAdmin(admin.ModelAdmin):
+    list_display = ('parent', 'child', 'link_code', 'linked_at', 'is_active')
+    list_filter = ('is_active', 'linked_at')
+    search_fields = ('parent__username', 'child__username', 'link_code')
+

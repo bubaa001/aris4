@@ -1,12 +1,12 @@
-import random #ili tupate random quiz choices
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.db import models
+from django.utils import timezone
 from .forms import RegisterForm, LoginForm
-from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile, StudentProfile
+from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile, StudentProfile, ParentChildLink, Challenge, ChallengeClass
 from sync_manager.triggers import trigger_sync_after_action
 from .tiers import get_tier_info, build_xp_context, TIER_COLORS
 
@@ -45,12 +45,21 @@ def get_leaderboard_data(request):
     """Build leaderboard context: top 5 students, current user rank, tier list."""
     students = User.objects.filter(role='student').order_by('-xp')
 
-    # Top 5 leaderboard
+    # Top 5 leaderboard with dense ranking
     top5 = []
-    for i, s in enumerate(students[:5], start=1):
+    last_xp = None
+    rank = 0
+    skipped = 0
+    for s in students:
+        if s.xp != last_xp:
+            rank += 1 + skipped
+            skipped = 0
+        else:
+            skipped += 1
+        last_xp = s.xp
         level, title, _, _ = get_tier_info(s.xp or 0)
         top5.append({
-            'rank': i,
+            'rank': rank,
             'student_id': s.id,
             'username': s.username,
             'xp': s.xp or 0,
@@ -58,21 +67,26 @@ def get_leaderboard_data(request):
             'title': title,
             'tier_color_class': TIER_COLORS.get(title, 'bg-gray-600 text-white'),
         })
+        if len(top5) >= 5:
+            break
 
-    # Current user's rank and info
+    # Current user's rank and info (dense rank: count students with MORE xp)
     current_user_rank = None
+    tied_count = 0
     xp_gap_to_top = None
     current_user_tier = None
     current_user_tier_color = 'bg-gray-600 text-white'
     if request.user.is_authenticated and request.user.role == 'student':
-        for i, s in enumerate(students, start=1):
-            if s.id == request.user.id:
-                current_user_rank = i
-                break
+        user_xp = request.user.xp or 0
+        # Dense rank: 1 + number of students with strictly more XP
+        higher_count = User.objects.filter(role='student', xp__gt=user_xp).count()
+        current_user_rank = higher_count + 1
+        # How many are tied at this XP?
+        tied_count = User.objects.filter(role='student', xp=user_xp).count() - 1  # minus self
         if top5:
             top_xp = top5[0]['xp']
-            xp_gap_to_top = max(0, top_xp - (request.user.xp or 0))
-        _, current_user_tier, _, _ = get_tier_info(request.user.xp or 0)
+            xp_gap_to_top = max(0, top_xp - user_xp)
+        _, current_user_tier, _, _ = get_tier_info(user_xp)
         current_user_tier_color = TIER_COLORS.get(current_user_tier, 'bg-gray-600 text-white')
 
     # All tiers definition
@@ -97,6 +111,7 @@ def get_leaderboard_data(request):
     return {
         'top5_leaderboard': top5,
         'current_user_rank': current_user_rank,
+        'tied_count': tied_count,
         'xp_gap_to_top': xp_gap_to_top,
         'current_user_tier': current_user_tier,
         'current_user_tier_color': current_user_tier_color,
@@ -125,6 +140,8 @@ def home_view(request):
         _, active_title, _, _ = get_tier_info(top_student_xp or 0)
         active_title_color = TIER_COLORS.get(active_title, 'bg-gray-600 text-white')
 
+    active_challenges = Challenge.objects.filter(is_active=True).prefetch_related('class_links')[:3]
+
     return render(request, 'home.html', {
         'student_count': student_count,
         'instructor_count': instructor_count,
@@ -133,6 +150,7 @@ def home_view(request):
         'top_student_xp': top_student_xp,
         'active_title': active_title,
         'active_title_color': active_title_color,
+        'active_challenges': active_challenges,
     })
 
 
@@ -141,16 +159,20 @@ def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            try:
-                user = form.save()
-                login(request, user)
-                trigger_sync_after_action()
-                if user.role == 'student':
-                    return redirect('select_level')
-                elif user.role == 'instructor':
-                    return redirect('pending_approval')
-            except Exception:
+            # Check for duplicate username before saving
+            if User.objects.filter(username=form.cleaned_data['username']).exists():
                 form.add_error('username', 'This username is already taken.')
+            else:
+                try:
+                    user = form.save()
+                    login(request, user)
+                    trigger_sync_after_action()
+                    if user.role == 'student':
+                        return redirect('select_level')
+                    elif user.role == 'instructor':
+                        return redirect('pending_approval')
+                except Exception:
+                    form.add_error('username', 'This username is already taken.')
     else:
         form = RegisterForm()
     return render(request, 'register.html', {'form': form})
@@ -167,6 +189,8 @@ def login_view(request):
                 return redirect('study_dashboard')
             elif user.role == 'instructor':
                 return redirect('instructor_dashboard' if user.is_approved else 'pending_approval')
+            elif user.role == 'parent':
+                return redirect('parent_dashboard')
             elif user.role == 'admin' or user.is_superuser:
                 return redirect('admin_dashboard')
     else:
@@ -285,6 +309,27 @@ def student_profile_view(request, username=None):
         student = request.user
         is_own = True
 
+    # Handle invite link generation
+    parent_link = None
+    active_links = ParentChildLink.objects.filter(child=student, parent__isnull=False, is_active=True)
+    max_parents_reached = active_links.count() >= 2
+    pending_link = ParentChildLink.objects.filter(child=student, parent__isnull=True).first()
+
+    if is_own and request.method == 'POST' and request.POST.get('action') == 'generate_invite':
+        if max_parents_reached:
+            from django.contrib import messages
+            messages.error(request, 'Maximum of 2 parents already connected.')
+        elif not pending_link:
+            parent_link = ParentChildLink.objects.create(child=student)
+            parent_link.save()  # ensures link_code is generated
+            pending_link = parent_link
+
+    # Regenerate link if requested
+    if is_own and request.method == 'POST' and request.POST.get('action') == 'regenerate_invite':
+        if pending_link:
+            pending_link.delete()
+        pending_link = ParentChildLink.objects.create(child=student)
+
     current_xp = student.xp or 0
     xp_ctx = build_xp_context(current_xp)
     rank_title = xp_ctx['tier_title']
@@ -326,6 +371,9 @@ def student_profile_view(request, username=None):
         'enrolled_classes': enrolled_classes,
         'enrolled_count': enrolled_classes.count(),
         'tiers': tiers,
+        'active_links': active_links,
+        'pending_link': pending_link,
+        'max_parents_reached': max_parents_reached,
     })
 
 
@@ -343,6 +391,7 @@ def edit_student_profile_view(request):
         profile.bio = request.POST.get('bio', '').strip()
         profile.inspire_message = request.POST.get('inspire_message', '').strip()
         profile.favorite_quote = request.POST.get('favorite_quote', '').strip()
+        profile.parent_names = [n.strip() for n in request.POST.getlist('parent_name') if n.strip()]
         profile.save()
         return redirect('student_profile')
 
@@ -444,6 +493,13 @@ def instructor_class_view(request, slug):
                 Module.objects.create(academic_class=academic_class, title=title, order=last_order + 1)
             return redirect('instructor_class', slug=slug)
 
+        if action == 'edit_module':
+            module_id = request.POST.get('module_id')
+            new_title = request.POST.get('module_title', '').strip()
+            if module_id and new_title:
+                Module.objects.filter(id=module_id, academic_class=academic_class).update(title=new_title)
+            return redirect('instructor_class', slug=slug)
+
         if action == 'delete_module':
             module_id = request.POST.get('module_id')
             if module_id:
@@ -462,6 +518,17 @@ def instructor_class_view(request, slug):
                 if module_id:
                     content.module_id = module_id
                     content.save(update_fields=['module_id'])
+            return redirect('instructor_class', slug=slug)
+
+        if action == 'edit_content':
+            content_id = request.POST.get('content_id')
+            new_title = request.POST.get('content_title', '').strip()
+            new_desc = request.POST.get('content_description', '').strip()
+            if content_id:
+                ClassContent.objects.filter(id=content_id, academic_class=academic_class).update(
+                    title=new_title,
+                    description=new_desc,
+                )
             return redirect('instructor_class', slug=slug)
 
         if action == 'delete_content':
@@ -505,6 +572,17 @@ def instructor_class_view(request, slug):
                             first_choice.save(update_fields=['is_correct'])
             return redirect('instructor_class', slug=slug)
 
+        if action == 'edit_quiz':
+            quiz_id = request.POST.get('quiz_id')
+            new_title = request.POST.get('quiz_title', '').strip()
+            new_desc = request.POST.get('quiz_description', '').strip()
+            if quiz_id:
+                Quiz.objects.filter(id=quiz_id, academic_class=academic_class).update(
+                    title=new_title,
+                    description=new_desc,
+                )
+            return redirect('instructor_class', slug=slug)
+
         if action == 'delete_quiz':
             quiz_id = request.POST.get('quiz_id')
             if quiz_id:
@@ -539,10 +617,87 @@ def instructor_class_view(request, slug):
 
     student_list = sorted(student_stats.values(), key=lambda s: (-s['completed_quizzes'], -s['total_score'] if s['total_possible'] > 0 else 0))
 
+    # Aggregate stats for summary cards
+    total_students = len(student_list)
+    total_completed_all = sum(s['completed_quizzes'] for s in student_list)
+    total_score_all = sum(s['total_score'] for s in student_list)
+    total_possible_all = sum(s['total_possible'] for s in student_list)
+    avg_completion_pct = int((total_completed_all / (total_students * len(all_quizzes))) * 100) if total_students > 0 and len(all_quizzes) > 0 else 0
+    class_avg_pct = int((total_score_all / total_possible_all) * 100) if total_possible_all > 0 else 0
+
     return render(request, 'instructor_class_detail.html', {
         'class': academic_class, 'modules': modules,
         'orphaned_contents': orphaned_contents, 'orphaned_quizzes': orphaned_quizzes,
         'student_list': student_list,
+        'total_students': total_students,
+        'avg_completion_pct': avg_completion_pct,
+        'class_avg_pct': class_avg_pct,
+    })
+
+
+@login_required
+def instructor_student_directory_view(request, slug):
+    """Dedicated searchable student directory for a class (handles 200+ students)."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+
+    academic_class = get_object_or_404(AcademicClass, slug=slug, instructor=request.user)
+    search_query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'name')
+
+    all_quizzes = list(academic_class.quizzes.all())
+    all_submissions = StudentQuizSubmission.objects.filter(quiz__in=all_quizzes).select_related('student')
+
+    student_stats = {}
+    for student in academic_class.students.all():
+        student_stats[student.id] = {
+            'student': student,
+            'total_quizzes': len(all_quizzes),
+            'completed_quizzes': 0,
+            'total_score': 0,
+            'total_possible': 0,
+        }
+    for sub in all_submissions:
+        if sub.student_id in student_stats:
+            stats = student_stats[sub.student_id]
+            stats['completed_quizzes'] += 1
+            stats['total_score'] += sub.score
+            stats['total_possible'] += sub.total
+
+    student_list = list(student_stats.values())
+
+    # Apply search filter
+    if search_query:
+        q = search_query.lower()
+        student_list = [
+            s for s in student_list
+            if q in s['student'].username.lower()
+            or q in (s['student'].get_full_name() or '').lower()
+            or q in (s['student'].email or '').lower()
+        ]
+
+    # Apply sorting
+    if sort_by == 'name':
+        student_list.sort(key=lambda s: (s['student'].get_full_name() or s['student'].username).lower())
+    elif sort_by == 'completion':
+        student_list.sort(key=lambda s: (-s['completed_quizzes'], -s['total_score']))
+    elif sort_by == 'score':
+        student_list.sort(key=lambda s: (
+            -(s['total_score'] / s['total_possible']) if s['total_possible'] > 0 else 0,
+        ))
+    elif sort_by == 'xp':
+        student_list.sort(key=lambda s: -(s['student'].xp or 0))
+
+    total_count = len(student_stats)
+    filtered_count = len(student_list)
+
+    return render(request, 'instructor_student_directory.html', {
+        'class': academic_class,
+        'student_list': student_list,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'total_count': total_count,
+        'filtered_count': filtered_count,
     })
 
 
@@ -573,17 +728,21 @@ def teacher_profile_view(request, username=None):
 
     active_cohorts = [
         {
-            'access_level': 'FULL ACCESS',
+            'code': cls.code,
             'name': cls.title,
-            'description': f"{cls.code} — {cls.schedule_string} | Meeting: {cls.meeting_link}",
+            'schedule': cls.schedule_string,
             'member_count': cls.students.count(),
+            'slug': cls.slug,
         }
         for cls in taught_classes
     ]
 
+    total_students = sum(c['member_count'] for c in active_cohorts)
+
     return render(request, 'teacher_profile.html', {
         'profile': profile, 'instructor_user': instructor,
         'active_cohorts': active_cohorts, 'is_own_profile': request.user == instructor,
+        'total_students': total_students,
     })
 
 
@@ -634,6 +793,150 @@ def edit_instructor_profile_view(request):
     return render(request, 'edit_instructor_profile.html', {'profile': profile})
 
 
+
+# VIEWS: Parent
+
+
+@login_required
+def parent_dashboard_view(request):
+    """Parent dashboard showing all linked children's overview."""
+    if request.user.role != 'parent':
+        return redirect('home')
+
+    links = ParentChildLink.objects.filter(parent=request.user, is_active=True).select_related('child')
+
+    children_data = []
+    for link in links:
+        child = link.child
+        enrolled_classes = AcademicClass.objects.filter(students=child)
+        submissions = StudentQuizSubmission.objects.filter(student=child)
+        total_score = sum(s.score for s in submissions)
+        total_possible = sum(s.total for s in submissions)
+        avg_pct = int((total_score / total_possible) * 100) if total_possible > 0 else 0
+
+        children_data.append({
+            'link': link,
+            'student': child,
+            'enrolled_count': enrolled_classes.count(),
+            'enrolled_classes': enrolled_classes,
+            'quiz_count': submissions.count(),
+            'total_score': total_score,
+            'total_possible': total_possible,
+            'avg_pct': avg_pct,
+        })
+
+    return render(request, 'parent_dashboard.html', {
+        'children_data': children_data,
+    })
+
+
+@login_required
+def parent_child_detail_view(request, student_id):
+    """Parent views a specific child's full academic overview."""
+    if request.user.role != 'parent':
+        return redirect('home')
+
+    link = get_object_or_404(ParentChildLink, parent=request.user, child_id=student_id, is_active=True)
+    child = link.child
+
+    enrolled_classes = AcademicClass.objects.filter(students=child)
+
+    classes_data = []
+    for cls in enrolled_classes:
+        quizzes = cls.quizzes.all()
+        submissions = StudentQuizSubmission.objects.filter(student=child, quiz__in=quizzes)
+        submission_map = {s.quiz_id: s for s in submissions}
+        quiz_data = []
+        for quiz in quizzes:
+            sub = submission_map.get(quiz.id)
+            quiz_data.append({
+                'quiz': quiz,
+                'submission': sub,
+                'has_submitted': sub is not None,
+            })
+        classes_data.append({
+            'class': cls,
+            'quiz_data': quiz_data,
+            'total_quizzes': quizzes.count(),
+            'completed_quizzes': submissions.count(),
+            'total_score': sum(s.score for s in submissions),
+            'total_possible': sum(s.total for s in submissions),
+        })
+
+    current_xp = child.xp or 0
+    xp_ctx = build_xp_context(current_xp)
+
+    return render(request, 'parent_child_detail.html', {
+        'link': link,
+        'child': child,
+        'classes_data': classes_data,
+        'xp_ctx': xp_ctx,
+        'tier_color_class': TIER_COLORS.get(xp_ctx['tier_title'], 'bg-gray-600 text-white'),
+    })
+
+
+@login_required
+def parent_child_quiz_result_view(request, student_id, quiz_id):
+    """Parent views a child's specific quiz result with question breakdown."""
+    if request.user.role != 'parent':
+        return redirect('home')
+
+    link = get_object_or_404(ParentChildLink, parent=request.user, child_id=student_id, is_active=True)
+    child = link.child
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    submission = get_object_or_404(StudentQuizSubmission, student=child, quiz=quiz)
+    questions = quiz.questions.prefetch_related('choices').all()
+
+    return render(request, 'parent_quiz_result.html', {
+        'child': child,
+        'quiz': quiz,
+        'submission': submission,
+        'results': build_question_results(submission, questions),
+    })
+
+
+# VIEWS: Parent Registration (no login required)
+
+
+def parent_register_view(request, link_code):
+    """Registration page for parents coming from an invite link."""
+    link = get_object_or_404(ParentChildLink, link_code=link_code, parent__isnull=True, is_active=True)
+
+    # Check max parents limit (2)
+    active_count = ParentChildLink.objects.filter(child=link.child, parent__isnull=False, is_active=True).count()
+    if active_count >= 2:
+        return render(request, 'parent_register.html', {
+            'form': None,
+            'child_name': link.child.get_full_name() or link.child.username,
+            'link_code': link_code,
+            'max_reached': True,
+        })
+
+    if request.method == 'POST':
+        from .forms import ParentRegisterForm
+        form = ParentRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = 'parent'
+            user.is_approved = True
+            user.save()
+            # Link the parent to the child
+            link.parent = user
+            link.linked_at = timezone.now()
+            link.save()
+            login(request, user)
+            return redirect('parent_dashboard')
+    else:
+        from .forms import ParentRegisterForm
+        form = ParentRegisterForm()
+
+    return render(request, 'parent_register.html', {
+        'form': form,
+        'child_name': link.child.get_full_name() or link.child.username,
+        'link_code': link_code,
+    })
+
+
 # VIEWS: Admin
 
 
@@ -642,9 +945,234 @@ def admin_dashboard_view(request):
     if not (request.user.is_superuser or request.user.role == 'admin'):
         return HttpResponseForbidden('Not authorized')
 
+    students = User.objects.filter(role='student')
+    total_xp = sum(s.xp or 0 for s in students)
+    top_student = students.order_by('-xp').first()
+
+    # Build class stats for per-group reset
+    all_classes = AcademicClass.objects.filter(students__isnull=False).distinct()
+    class_data = []
+    for cls in all_classes:
+        class_xp = sum(s.xp or 0 for s in cls.students.all())
+        class_data.append({
+            'id': cls.id,
+            'code': cls.code,
+            'title': cls.title,
+            'student_count': cls.students.count(),
+            'total_xp': class_xp,
+        })
+
     return render(request, 'admin_approval.html', {
         'pending_instructors': User.objects.filter(role='instructor', is_approved=False),
         'approved_instructors': User.objects.filter(role='instructor', is_approved=True),
+        'total_students': students.count(),
+        'total_xp': total_xp,
+        'top_student_name': top_student.get_full_name() or top_student.username if top_student else 'N/A',
+        'top_student_xp': top_student.xp if top_student else 0,
+        'class_data': class_data,
+        'all_classes': AcademicClass.objects.all(),
+        'all_challenges': Challenge.objects.all().prefetch_related('class_links'),
+    })
+
+
+@login_required
+def admin_reset_xp_view(request):
+    """Reset all student XP to 0 (season/event end)."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('POST required')
+
+    action = request.POST.get('action', '')
+    students = User.objects.filter(role='student')
+
+    if action == 'reset_all':
+        count = students.update(xp=0)
+        return JsonResponse({'status': 'ok', 'message': f'Reset {count} students XP to 0.', 'count': count})
+
+    if action == 'reset_class':
+        class_id = request.POST.get('class_id')
+        if class_id:
+            cls = get_object_or_404(AcademicClass, id=class_id)
+            count = cls.students.update(xp=0)
+            return JsonResponse({'status': 'ok', 'message': f'Reset {count} students in {cls.code} XP to 0.', 'count': count})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)
+
+
+@login_required
+def admin_challenge_create_view(request):
+    """Admin creates a new challenge event."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('POST required')
+
+    title = request.POST.get('title', '').strip()
+    if title:
+        from django.utils import timezone
+        challenge = Challenge.objects.create(
+            title=title,
+            description=request.POST.get('description', '').strip(),
+            rules=request.POST.get('rules', '').strip(),
+            created_by=request.user,
+            start_date=timezone.now(),
+            end_date=timezone.now() + timezone.timedelta(days=int(request.POST.get('days', 7))),
+            prize_pool_xp=int(request.POST.get('prize_xp', 0) or 0),
+        )
+        # Attach selected classes
+        class_ids = request.POST.getlist('class_ids')
+        for cid in class_ids:
+            cls = AcademicClass.objects.filter(id=cid).first()
+            if cls and not ChallengeClass.objects.filter(challenge=challenge, academic_class=cls).exists():
+                ChallengeClass.objects.create(challenge=challenge, academic_class=cls)
+    return redirect('admin_dashboard')
+
+
+@login_required
+def admin_challenge_toggle_view(request, challenge_id):
+    """Activate/deactivate a challenge."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('POST required')
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+    challenge.is_active = not challenge.is_active
+    challenge.save(update_fields=['is_active'])
+    return redirect('admin_dashboard')
+
+
+@login_required
+def admin_challenge_award_view(request, challenge_id):
+    """Award prizes: all participants +10 XP, top 3 split pool."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('POST required')
+
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+
+    # Get leaderboard data (reuse leaderboard logic)
+    student_ids = User.objects.filter(
+        enrolled_classes__in=challenge.classes.all(), role='student'
+    ).distinct().values_list('id', flat=True)
+
+    submissions = StudentQuizSubmission.objects.filter(
+        student_id__in=student_ids,
+        submitted_at__gte=challenge.start_date,
+        submitted_at__lte=challenge.end_date,
+    ).values('student_id').annotate(
+        total_score=models.Sum('score'),
+    ).order_by('-total_score')
+
+    # Build ranked list
+    ranked = [(User.objects.get(id=s['student_id']), s['total_score']) for s in submissions]
+
+    par_bonus = 10
+    pool = challenge.prize_pool_xp or 0
+    first_pct, second_pct, third_pct = 0.5, 0.3, 0.2
+
+    awarded = 0
+    # All participants get +10
+    for sid in student_ids:
+        student = User.objects.get(id=sid)
+        student.xp = (student.xp or 0) + par_bonus
+        student.save(update_fields=['xp'])
+        awarded += par_bonus
+
+    # Top 3 split pool
+    if pool > 0 and len(ranked) >= 1:
+        splits = [
+            (ranked[0][0], int(pool * first_pct)) if len(ranked) >= 1 else None,
+            (ranked[1][0], int(pool * second_pct)) if len(ranked) >= 2 else None,
+            (ranked[2][0], int(pool * third_pct)) if len(ranked) >= 3 else None,
+        ]
+        for s, bonus in [x for x in splits if x]:
+            s.xp = (s.xp or 0) + bonus
+            s.save(update_fields=['xp'])
+            awarded += bonus
+
+    challenge.is_active = False
+    challenge.save(update_fields=['is_active'])
+
+    return JsonResponse({
+        'status': 'ok',
+        'message': f'Awarded {awarded} XP across {len(student_ids)} participants',
+        'participants': len(student_ids),
+        'pool': pool,
+    })
+
+
+@login_required
+def admin_instructor_progress_view(request, instructor_id):
+    """Admin views a specific instructor's teaching progress."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+
+    instructor = get_object_or_404(User, id=instructor_id, role='instructor')
+    classes = AcademicClass.objects.filter(instructor=instructor)
+
+    class_stats = []
+    for cls in classes:
+        quizzes = cls.quizzes.count()
+        contents = cls.contents.count()
+        submissions = StudentQuizSubmission.objects.filter(quiz__academic_class=cls).count()
+        students = cls.students.count()
+        total_xp = sum(s.xp or 0 for s in cls.students.all())
+        class_stats.append({
+            'class': cls,
+            'quiz_count': quizzes,
+            'content_count': contents,
+            'submission_count': submissions,
+            'student_count': students,
+            'total_xp': total_xp,
+        })
+
+    return render(request, 'admin_instructor_progress.html', {
+        'instructor': instructor,
+        'class_stats': class_stats,
+        'total_classes': classes.count(),
+        'total_students': sum(c['student_count'] for c in class_stats),
+    })
+
+
+def challenge_leaderboard_view(request, challenge_id):
+    """Public leaderboard for a specific challenge."""
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+    # Get all students in challenge classes
+    student_ids = User.objects.filter(
+        enrolled_classes__in=challenge.classes.all(), role='student'
+    ).distinct().values_list('id', flat=True)
+
+    # Get quiz submissions during challenge period
+    submissions = StudentQuizSubmission.objects.filter(
+        student_id__in=student_ids,
+        submitted_at__gte=challenge.start_date,
+        submitted_at__lte=challenge.end_date,
+    ).values('student_id').annotate(
+        total_score=models.Sum('score'),
+        total_possible=models.Sum('total'),
+        quiz_count=models.Count('id'),
+    ).order_by('-total_score')
+
+    leaderboard = []
+    rank = 1
+    for entry in submissions[:50]:
+        student = User.objects.get(id=entry['student_id'])
+        pct = int((entry['total_score'] / entry['total_possible']) * 100) if entry['total_possible'] > 0 else 0
+        leaderboard.append({
+            'rank': rank,
+            'student': student,
+            'score': entry['total_score'],
+            'possible': entry['total_possible'],
+            'percentage': pct,
+            'quizzes': entry['quiz_count'],
+        })
+        rank += 1
+
+    return render(request, 'challenge_leaderboard.html', {
+        'challenge': challenge,
+        'leaderboard': leaderboard,
     })
 
 
@@ -750,10 +1278,10 @@ def library_download_view(request, book_id):
 
 @login_required
 def library_delete_view(request, book_id):
-    """Delete a library book (instructor only)."""
+    """Delete a library book (only the instructor who uploaded it)."""
     if request.user.role != 'instructor':
         return redirect('home')
-    book = get_object_or_404(LibraryBook, id=book_id)
+    book = get_object_or_404(LibraryBook, id=book_id, uploaded_by=request.user)
     if request.method == 'POST':
         book.file.delete(save=False)
         if book.thumbnail:
@@ -827,7 +1355,7 @@ def student_quiz_result_view(request, quiz_id):
 
 @login_required
 def instructor_quiz_submissions_view(request, quiz_id):
-    """Instructor views all student submissions for a quiz, including answers."""
+    """Instructor views all student submissions for a quiz (compact list)."""
     if request.user.role != 'instructor':
         return redirect('home')
 
@@ -836,21 +1364,54 @@ def instructor_quiz_submissions_view(request, quiz_id):
         return redirect('home')
 
     submissions = StudentQuizSubmission.objects.filter(quiz=quiz).select_related('student').order_by('-score')
-    questions = list(quiz.questions.prefetch_related('choices').all())
-
-    submission_data = [
-        {'student': sub.student, 'submission': sub, 'question_results': build_question_results(sub, questions)}
-        for sub in submissions
-    ]
-
     enrolled_students = quiz.academic_class.students.all() if quiz.academic_class else []
     submitted_ids = {s.student_id for s in submissions}
     pending_students = [s for s in enrolled_students if s.id not in submitted_ids]
 
+    total_score_sum = sum(s.score for s in submissions)
+    avg_score = round(total_score_sum / submissions.count(), 1) if submissions.count() > 0 else 0
+
     return render(request, 'instructor_quiz_submissions.html', {
-        'quiz': quiz, 'submission_data': submission_data, 'pending_students': pending_students,
-        'questions': questions, 'total_submissions': submissions.count(),
-        'total_enrolled': enrolled_students.count(),
+        'quiz': quiz, 'submissions': submissions, 'pending_students': pending_students,
+        'total_submissions': submissions.count(),
+        'total_enrolled': enrolled_students.count(), 'avg_score': avg_score,
+    })
+
+
+@login_required
+def instructor_quiz_submission_detail_view(request, quiz_id, student_id):
+    """Instructor views a single student's submission with full question breakdown."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    if quiz.academic_class and quiz.academic_class.instructor != request.user:
+        return redirect('home')
+
+    student = get_object_or_404(User, id=student_id, role='student')
+    submission = get_object_or_404(StudentQuizSubmission, quiz=quiz, student=student)
+    questions = list(quiz.questions.prefetch_related('choices').all())
+    question_results = build_question_results(submission, questions)
+
+    # Build navigation: sorted list of students who submitted
+    all_subs = StudentQuizSubmission.objects.filter(quiz=quiz).select_related('student').order_by('-score')
+    sub_list = list(all_subs)
+    prev_sub = None
+    next_sub = None
+    for i, s in enumerate(sub_list):
+        if s.student_id == student.id:
+            if i > 0:
+                prev_sub = sub_list[i - 1]
+            if i < len(sub_list) - 1:
+                next_sub = sub_list[i + 1]
+            break
+
+    return render(request, 'instructor_quiz_submission_detail.html', {
+        'quiz': quiz, 'student': student, 'submission': submission,
+        'question_results': question_results,
+        'prev_sub': prev_sub, 'next_sub': next_sub,
+        'submission_index': next((i for i, s in enumerate(sub_list) if s.student_id == student.id), 0) + 1,
+        'total_submissions': len(sub_list),
     })
 
 
@@ -881,9 +1442,37 @@ def instructor_student_performance_view(request, slug, student_id):
         for quiz in quizzes
     ]
 
+    # Build sorted student list for navigation
+    all_quizzes = list(academic_class.quizzes.all())
+    all_submissions = StudentQuizSubmission.objects.filter(quiz__in=all_quizzes).select_related('student')
+    nav_stats = {}
+    for s in academic_class.students.all():
+        nav_stats[s.id] = {'completed_quizzes': 0, 'total_score': 0}
+    for sub in all_submissions:
+        if sub.student_id in nav_stats:
+            nav_stats[sub.student_id]['completed_quizzes'] += 1
+            nav_stats[sub.student_id]['total_score'] += sub.score
+    sorted_students = sorted(
+        academic_class.students.all(),
+        key=lambda s: (s.get_full_name() or s.username).lower()
+    )
+
+    prev_student = None
+    next_student = None
+    for i, s in enumerate(sorted_students):
+        if s.id == student.id:
+            if i > 0:
+                prev_student = sorted_students[i - 1]
+            if i < len(sorted_students) - 1:
+                next_student = sorted_students[i + 1]
+            break
+
     return render(request, 'instructor_student_performance.html', {
         'class': academic_class, 'student': student, 'quiz_results': quiz_results,
         'total_quizzes': quizzes.count(), 'completed_quizzes': submissions.count(),
         'total_score': sum(s.score for s in submissions),
         'total_possible': sum(s.total for s in submissions),
+        'prev_student': prev_student,
+        'next_student': next_student,
+        'all_students': sorted_students,
     })

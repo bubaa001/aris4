@@ -48,6 +48,28 @@
                    placeholder="Your favorite quote...">
         </div>
 
+        <!-- Parent Names -->
+        <div>
+            <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Parent / Guardian Names</label>
+            <div id="parent-names-container">
+                {% if profile.parent_names %}
+                    {% for name in profile.parent_names %}
+                    <input type="text" name="parent_name" value="{{ name }}"
+                           class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors mb-2"
+                           placeholder="Parent full name...">
+                    {% endfor %}
+                {% else %}
+                    <input type="text" name="parent_name"
+                           class="w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors mb-2"
+                           placeholder="Parent full name...">
+                {% endif %}
+            </div>
+            <button type="button" onclick="addParentField()"
+                    class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-wider hover:underline mt-1">
+                + Add another parent
+            </button>
+        </div>
+
         <!-- Submit -->
         <button type="submit"
                 class="w-full bg-black text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-[#4f14e0] transition-colors">
@@ -56,4 +78,16 @@
     </form>
 
 </main>
+
+<script>
+function addParentField() {
+    const container = document.getElementById('parent-names-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'parent_name';
+    input.className = 'w-full border border-gray-300 px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:border-[#4f14e0] transition-colors mb-2';
+    input.placeholder = 'Parent full name...';
+    container.appendChild(input);
+}
+</script>
 {% endblock %}

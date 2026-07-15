@@ -6,12 +6,229 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>aris4.0</title>
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    
+    <!-- ===== ARIS ANIMATION SYSTEM ===== -->
+    <style>
+    /* ── Button Circle Spinner ── */
+    .btn-spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle; margin-left: 8px;
+      flex-shrink: 0;
+    }
+    .btn-spinner.dark {
+      border-color: rgba(79,20,224,.2);
+      border-top-color: #4f14e0;
+    }
+    button.loading { pointer-events: none; opacity: .75; }
+    button.loading .btn-text { opacity: .6; }
+
+    /* ── Smart Page Loader (only after 1.8s delay) ── */
+    #pageLoader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(252,251,250,.85); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .35s ease, visibility .35s ease;
+      opacity: 0; visibility: hidden; pointer-events: none;
+    }
+    #pageLoader.show { opacity: 1; visibility: visible; }
+    .loader-ring {
+      width: 44px; height: 44px;
+      border: 3px solid #e8e8e8;
+      border-top-color: #4f14e0; border-radius: 50%;
+      animation: spin .65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Content Fade In ── */
+    .page-content { animation: fadeSlideIn .35s ease-out; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Background Ambient Gradient ── */
+    .bg-ambient {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+    }
+    .bg-ambient::before {
+      content: ''; position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(79,20,224,.04) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: floatAmbient 20s ease-in-out infinite;
+      top: -10%; left: -5%;
+    }
+    .bg-ambient::after {
+      content: ''; position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(79,20,224,.03) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: floatAmbient 25s ease-in-out infinite reverse;
+      bottom: -10%; right: -5%;
+    }
+    @keyframes floatAmbient {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      25%  { transform: translate(80px,-40px) scale(1.15); }
+      50%  { transform: translate(-30px,60px) scale(.9); }
+      75%  { transform: translate(-60px,-30px) scale(1.1); }
+    }
+
+    /* ── Icon Animations ── */
+    .icon-pulse { animation: iconPulse 2s ease-in-out infinite; }
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%  { transform: scale(1.08); opacity: .8; }
+    }
+    .icon-bounce:hover svg { animation: iconBounce .4s ease; }
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+      60% { transform: translateY(-2px); }
+    }
+    .nav-tab svg { transition: transform .25s ease, stroke .25s ease; }
+    .nav-tab:hover svg { transform: scale(1.15); }
+    .nav-tab:active svg { transform: scale(.9); }
+
+    /* ── Button Press ── */
+    button:active, a.btn-ripple:active {
+      transform: scale(.97) !important;
+      transition: transform .1s ease !important;
+    }
+
+    /* ── Card Hover Lift ── */
+    .card-lift {
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+    .card-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.08);
+    }
+
+    /* ── Skeleton Screens ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8e8e8 25%, #f2f2f2 50%, #e8e8e8 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s ease-in-out infinite;
+      border-radius: 5px;
+      min-height: 16px;
+    }
+    .skeleton-text { height: 14px; margin-bottom: 8px; width: 80%; }
+    .skeleton-heading { height: 28px; margin-bottom: 12px; width: 50%; }
+    .skeleton-avatar { width: 56px; height: 56px; border-radius: 50%; }
+    .skeleton-card { height: 120px; border-radius: 8px; }
+    .skeleton-block { height: 60px; margin-bottom: 12px; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Download Progress Bar ── */
+    .download-bar-wrap {
+      width: 100%; height: 4px; background: #e8e8e8;
+      border-radius: 2px; overflow: hidden; margin-top: 12px;
+    }
+    .download-bar-fill {
+      height: 100%; background: #4f14e0; border-radius: 2px;
+      width: 0%; transition: width .4s ease;
+      animation: downloadProgress 2.2s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @keyframes downloadProgress {
+      0%   { width: 0%; }
+      30%  { width: 35%; }
+      60%  { width: 72%; }
+      85%  { width: 92%; }
+      95%  { width: 98%; }
+      100% { width: 100%; }
+    }
+    .download-status {
+      font-family: monospace; font-size: 10px; text-transform: uppercase;
+      letter-spacing: .1em; margin-top: 6px;
+    }
+
+    /* ── Delete / Danger Pulse ── */
+    .btn-deleting {
+      animation: dangerPulse .5s ease-in-out;
+      background: #ef4444 !important; color: #fff !important;
+      border-color: #ef4444 !important;
+      pointer-events: none;
+    }
+    @keyframes dangerPulse {
+      0%, 100% { transform: scale(1); }
+      30% { transform: scale(1.04); }
+      60% { transform: scale(.96); }
+    }
+
+    /* ── Success Checkmark (for saves, enroll, etc.) ── */
+    .btn-success {
+      background: #16a34a !important; color: #fff !important;
+      border-color: #16a34a !important;
+      pointer-events: none;
+      transition: all .3s ease;
+    }
+    .checkmark {
+      display: inline-block; margin-left: 6px;
+      animation: checkPop .4s ease;
+    }
+    @keyframes checkPop {
+      0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(0); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    /* ── Quiz Submit Progress Steps ── */
+    .quiz-progress-steps {
+      display: flex; gap: 6px; align-items: center;
+      margin-top: 12px; justify-content: center;
+    }
+    .quiz-step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #d1d5db; transition: background .3s ease, transform .3s ease;
+    }
+    .quiz-step-dot.done { background: #4f14e0; transform: scale(1.3); }
+
+    /* ── Mouse Glow Trail ── */
+    .mouse-glow {
+      position: fixed; pointer-events: none; z-index: 9998;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(79,20,224,.06) 0%, transparent 60%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: opacity .4s; opacity: 0;
+      will-change: left, top;
+    }
+
+    /* ── Ripple on click ── */
+    .ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(79,20,224,.15);
+      transform: scale(0);
+      animation: rippleAnim .6s ease-out;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    /* ── Smooth scroll ── */
+    html { scroll-behavior: smooth; }
+    </style>
+    {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-[#fcfbfa] min-h-screen flex flex-col" style="padding-top: 72px; padding-bottom: 88px;" onload="if(!document.querySelector('nav.fixed')){this.style.paddingTop='0';this.style.paddingBottom='0';}">
+<body class="bg-[#fcfbfa] min-h-screen flex flex-col">
+
+<!-- Smart Page Loader (hidden, only shows after 1.8s delay) -->
+<div id="pageLoader"><div class="loader-ring"></div></div>
+
+<!-- Ambient Background -->
+<div class="bg-ambient"></div>
+
+<!-- Mouse Glow -->
+<div class="mouse-glow" id="mouseGlow"></div>
 
 <!-- Navbar -->
 {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'home' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
-<nav class="w-full bg-[#fcfbfa] border-b-2 border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-6 py-4 fixed top-0 left-0 right-0 z-50">
+<nav class="w-full bg-[#fcfbfa] border-b-2 border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-6 py-3 fixed top-0 left-0 right-0 z-50">
   <div class="max-w-7xl mx-auto flex items-center justify-between">
     <!-- Left: Logo -->
     <a href="{% url 'home' %}" class="font-serif text-3xl font-black tracking-tight text-black select-none">aris4.o</a>
@@ -25,22 +242,20 @@
       {% if user.role == 'admin' or user.is_superuser %}
           <a href="{% url 'admin_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
         
-        <!-- if ni instructor   -->
           {% elif user.role == 'instructor' %}
           <a href="{% url 'instructor_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
-          <a href="{% url 'instructor_manage_classes' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_manage_classes' or current == 'instructor_class' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
+          <a href="{% url 'instructor_manage_classes' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_manage_classes' or current == 'instructor_class' or current == 'instructor_student_directory' or current == 'instructor_student_performance' or current == 'instructor_quiz_submissions' or current == 'instructor_quiz_submission_detail' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
           <a href="{% url 'teacher_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'teacher_profile' or current == 'teacher_profile_by_username' or current == 'edit_instructor_profile' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
 
-          
+          {% elif user.role == 'parent' %}
+          <a href="{% url 'parent_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'parent_dashboard' or current == 'parent_child_detail' %}text-teal-600 after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-teal-600 after:rounded-full{% else %}text-gray-400 hover:text-teal-600{% endif %}">My Children</a>
         
-        <!-- if ni student -->
           {% else %}
           <a href="{% url 'study_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'study_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
           <a href="{% url 'select_level' %}" class="relative px-4 py-2 transition-colors {% if current == 'select_level' or current == 'student_class' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
           <a href="{% url 'student_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'student_profile' or current == 'student_profile_by_username' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
         {% endif %}
       
-      <!-- if user haja login we need a login btn  -->
         {% else %}
         <a href="{% url 'login' %}" class="relative px-4 py-2 text-gray-400 hover:text-[#4f14e0] transition-colors">Dashboard</a>
       
@@ -72,16 +287,21 @@
     </div>
   </div>
 </nav>
+<div class="h-20"></div>
 {% endif %}
 
 <!-- Main Content -->
-<main class="flex-grow">
+<main class="flex-grow pb-20 md:pb-0 page-content">
     {% block content %}
     {% endblock %}
 </main>
 
+{% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'home' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
+<div class="h-24 md:hidden"></div>
+{% endif %}
+
 <!-- Mobile Bottom Bar -->
-{% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
+{% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'home' and request.resolver_match.url_name != 'password_reset' and request.resolver_match.url_name != 'password_reset_done' and request.resolver_match.url_name != 'password_reset_confirm' and request.resolver_match.url_name != 'password_reset_complete' %}
 {% with current=request.resolver_match.url_name %}
 <div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t-2 border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] md:hidden">
   <div class="grid grid-cols-4 h-20">
@@ -94,6 +314,10 @@
       <a href="{% url 'instructor_dashboard' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
                 {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
+    {% elif user.is_authenticated and user.role == 'parent' %}
+      <a href="{% url 'parent_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'parent_dashboard' or current == 'parent_child_detail' %}text-teal-600 after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-teal-600 after:rounded-full{% else %}text-gray-400 hover:text-teal-600{% endif %}">
     {% elif user.is_authenticated and user.role == 'student' %}
       <a href="{% url 'study_dashboard' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
@@ -110,7 +334,7 @@
       <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Home</span>
     </a>
 
-    <!-- Tab 2: Study / Classes -->
+    <!-- Tab 2: Study / Classes / Children -->
     {% if user.is_authenticated and user.role == 'student' %}
       <a href="{% url 'select_level' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
@@ -124,13 +348,36 @@
     {% elif user.is_authenticated and user.role == 'instructor' %}
       <a href="{% url 'instructor_manage_classes' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
-                {% if current == 'instructor_manage_classes' or current == 'instructor_class' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
+                {% if current == 'instructor_manage_classes' or current == 'instructor_class' or current == 'instructor_student_directory' or current == 'instructor_student_performance' or current == 'instructor_quiz_submissions' or current == 'instructor_quiz_submission_detail' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
         <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <rect width="20" height="5" x="2" y="3" rx="1"></rect>
           <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
           <path d="M10 12h4"></path>
         </svg>
         <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Classes</span>
+      </a>
+    {% elif user.is_authenticated and user.role == 'parent' %}
+      <a href="{% url 'parent_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'parent_child_detail' or current == 'parent_quiz_result' %}text-teal-600 after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-teal-600 after:rounded-full{% else %}text-gray-400 hover:text-teal-600{% endif %}">
+        <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Children</span>
+      </a>
+    {% elif user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
+        <svg class="w-6 h-6 stroke-[1.5]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="5" x="2" y="3" rx="1"></rect>
+          <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
+          <path d="M10 12h4"></path>
+        </svg>
+        <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Dashboard</span>
       </a>
     {% endif %}
 
@@ -146,7 +393,7 @@
       <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Archive</span>
     </a>
 
-    <!-- Tab 4: Profile -->
+    <!-- Tab 4: Profile / Logout -->
     {% if user.is_authenticated and user.role == 'student' %}
       <a href="{% url 'student_profile' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
@@ -155,6 +402,13 @@
       <a href="{% url 'teacher_profile' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
                 {% if current == 'teacher_profile' or current == 'teacher_profile_by_username' or current == 'edit_instructor_profile' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
+    {% elif user.is_authenticated and user.role == 'parent' %}
+      <a href="{% url 'logout' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group text-red-500 hover:text-red-700">
+    {% elif user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% else %}
       <a href="{% url 'login' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
@@ -164,12 +418,221 @@
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">Profile</span>
+      <span class="font-mono text-[10px] font-bold tracking-widest uppercase mt-1">{% if user.is_authenticated and user.role == 'parent' %}Logout{% else %}Profile{% endif %}</span>
     </a>
   </div>
 </div>
 {% endwith %}
 {% endif %}
+
+<!-- ===== ARIS SMART LOADING SCRIPTS ===== -->
+<script>
+(function() {
+  var loader = document.getElementById('pageLoader');
+  var glow = document.getElementById('mouseGlow');
+  var loaderTimer = null;
+
+  // ── 1. Smart page loader (only after 1.8s) ──
+  function showLoader() {
+    clearTimeout(loaderTimer);
+    loaderTimer = setTimeout(function() {
+      if (loader) loader.classList.add('show');
+    }, 1800);
+  }
+  function hideLoader() {
+    clearTimeout(loaderTimer);
+    if (loader) loader.classList.remove('show');
+  }
+  if (document.readyState === 'complete') { hideLoader(); }
+  else { window.addEventListener('load', function() { hideLoader(); }); }
+  window.addEventListener('pageshow', function(e) { if (e.persisted) hideLoader(); });
+
+  // ── 2. Button spinner helper ──
+  function addSpinner(el, isDark) {
+    if (el.querySelector('.btn-spinner')) return;
+    var nodes = el.childNodes;
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].nodeType === 3 && nodes[i].textContent.trim()) {
+        var span = document.createElement('span');
+        span.className = 'btn-text';
+        span.textContent = nodes[i].textContent;
+        nodes[i].replaceWith(span);
+      }
+    }
+    var sp = document.createElement('span');
+    sp.className = 'btn-spinner' + (isDark ? ' dark' : '');
+    el.appendChild(sp);
+    el.classList.add('loading');
+  }
+
+  // ── 3. Detect button context ──
+  function getBtnContext(el) {
+    var text = (el.textContent || '').toLowerCase();
+    var cls = (el.className || '').toLowerCase();
+    var href = (el.getAttribute('href') || el.closest('a')?.getAttribute('href') || '').toLowerCase();
+    var dataAction = el.getAttribute('data-loader') || el.closest('[data-loader]')?.getAttribute('data-loader') || '';
+
+    // Explicit data-loader attribute wins
+    if (dataAction === 'download' || href.includes('download') || text.includes('download'))
+      return 'download';
+    if (dataAction === 'delete' || text.includes('delete') || text.includes('remove') ||
+        cls.includes('red-') || cls.includes('danger'))
+      return 'delete';
+    if (dataAction === 'save' || text.includes('save') || text.includes('create') ||
+        text.includes('generate') || text.includes('enroll') || text.includes('submit'))
+      return 'save';
+    if (dataAction === 'quiz' || text.includes('submit answer') || text.includes('finish quiz'))
+      return 'quiz';
+    return 'default';
+  }
+
+  // ── 4. Show download progress bar ──
+  function showDownloadBar(el) {
+    var wrap = document.createElement('div');
+    wrap.className = 'download-bar-wrap';
+    wrap.innerHTML = '<div class="download-bar-fill"></div>';
+    var status = document.createElement('div');
+    status.className = 'download-status text-[#4f14e0]';
+    status.textContent = 'Preparing download...';
+    // Update status text as bar progresses
+    setTimeout(function() { status.textContent = 'Fetching file...'; }, 800);
+    setTimeout(function() { status.textContent = 'Almost ready...'; }, 1600);
+    setTimeout(function() {
+      status.textContent = 'Complete ✓';
+      status.style.color = '#16a34a';
+    }, 2100);
+    el.parentNode.appendChild(wrap);
+    el.parentNode.appendChild(status);
+    el.style.opacity = '.5';
+    el.style.pointerEvents = 'none';
+  }
+
+  // ── 5. Main click handler ──
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button, [type="submit"], a.btn-ripple');
+    var link = e.target.closest('a[href]');
+
+    // ---- Handle BUTTON clicks (forms, actions) ----
+    if (btn && (!link || link === btn)) {
+      if (btn.type === 'submit' || btn.tagName === 'BUTTON') {
+        var ctx = getBtnContext(btn);
+
+        if (ctx === 'delete') {
+          // Delete: danger pulse then submit
+          btn.classList.add('btn-deleting');
+          setTimeout(function() {
+            if (btn.closest('form')) btn.closest('form').submit();
+          }, 300);
+          e.preventDefault();
+          return;
+        }
+
+        if (ctx === 'save') {
+          // Save/create: spinner then checkmark
+          addSpinner(btn, false);
+          // The form will submit naturally
+          return;
+        }
+
+        if (ctx === 'download') {
+          // Download: progress bar
+          showDownloadBar(btn);
+          // Let the link/download proceed naturally
+          return;
+        }
+
+        // Default: just spinner
+        addSpinner(btn, false);
+      }
+      return;
+    }
+
+    // ---- Handle LINK clicks (navigation) ----
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') ||
+        href.startsWith('mailto:') || href.startsWith('tel:') ||
+        link.hasAttribute('download') || link.target === '_blank' ||
+        link.getAttribute('data-no-loader') === 'true' ||
+        link.closest('form')) return;
+
+    var linkCtx = getBtnContext(link);
+
+    if (linkCtx === 'download') {
+      // Download link: progress bar, don't block navigation
+      showDownloadBar(link);
+      showLoader();
+      return;
+    }
+
+    if (linkCtx === 'delete') {
+      // Delete link: danger pulse
+      link.classList.add('btn-deleting');
+      setTimeout(function() { window.location = href; }, 350);
+      e.preventDefault();
+      return;
+    }
+
+    // Normal navigation: smart loader
+    showLoader();
+  });
+
+  // ── 6. On form submit, add spinner to submit button ──
+  document.addEventListener('submit', function(e) {
+    var form = e.target;
+    var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+    if (submitBtn) {
+      var ctx = getBtnContext(submitBtn);
+      if (ctx === 'delete') {
+        submitBtn.classList.add('btn-deleting');
+      } else {
+        addSpinner(submitBtn, false);
+      }
+    }
+  }, true);
+
+  // ── 7. Mouse Glow Trail (desktop) ──
+  if (glow && window.innerWidth > 768) {
+    var ticking = false;
+    document.addEventListener('mousemove', function(e) {
+      if (!ticking) {
+        requestAnimationFrame(function() {
+          glow.style.left = e.clientX + 'px';
+          glow.style.top = e.clientY + 'px';
+          glow.style.opacity = '1';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+    document.addEventListener('mouseleave', function() { glow.style.opacity = '0'; });
+    document.addEventListener('mouseenter', function() { glow.style.opacity = '1'; });
+  }
+
+  // ── 8. Ripple Click Effect ──
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button, a.btn-ripple, [role="button"]');
+    if (!btn || btn.querySelector('.btn-spinner')) return;
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    var rect = btn.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+    var pos = window.getComputedStyle(btn).position;
+    if (pos === 'static') btn.style.position = 'relative';
+    btn.style.overflow = 'hidden';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', function() { ripple.remove(); });
+  });
+
+  // ── 9. Bottom Nav Tab icon bounce ──
+  document.querySelectorAll('.fixed.bottom-0 a').forEach(function(tab) {
+    tab.classList.add('icon-bounce');
+  });
+})();
+</script>
 
 </body>
 </html>

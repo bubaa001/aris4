@@ -1,7 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32 relative">
+    <!-- Skeleton loading overlay -->
+    <div class="absolute inset-0 px-5 md:px-16 py-12 z-0 skeleton-screen pointer-events-none" aria-hidden="true">
+        <div class="skeleton skeleton-heading"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mt-12">
+            <div class="md:col-span-4"><div class="skeleton skeleton-card"></div></div>
+            <div class="md:col-span-8">
+                <div class="skeleton skeleton-block"></div>
+                <div class="skeleton skeleton-block"></div>
+                <div class="skeleton skeleton-block"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Real content -->
+    <div class="relative z-10">
     <header class="mb-12">
         <div class="flex items-center justify-between">
             <div>
@@ -57,5 +72,6 @@
             {% endif %}
         </section>
     </div>
+    </div><!-- /real content -->
 </main>
 {% endblock %}

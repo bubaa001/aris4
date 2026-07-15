@@ -4,20 +4,69 @@
 <main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
 
   <!-- Back Navigation -->
-  <div class="mb-8">
+  <div class="mb-8 flex items-center justify-between">
     <a href="{% url 'instructor_class' slug=class.slug %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
       &larr; BACK TO CLASS
     </a>
+    <a href="{% url 'instructor_student_directory' slug=class.slug %}" class="font-mono text-[10px] text-gray-500 hover:text-[#4f14e0] uppercase tracking-wider transition-colors">
+      STUDENT DIRECTORY &rarr;
+    </a>
+  </div>
+
+  <!-- Student Navigation -->
+  <div class="mb-8 flex items-center gap-3">
+    {% if prev_student %}
+    <a href="{% url 'instructor_student_performance' slug=class.slug student_id=prev_student.id %}"
+       class="border border-gray-300 px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-[#4f14e0] hover:text-[#4f14e0] transition-colors">
+      &larr; PREV
+    </a>
+    {% else %}
+    <span class="border border-gray-100 px-4 py-2 font-mono text-[10px] text-gray-300 uppercase tracking-wider">&larr; PREV</span>
+    {% endif %}
+
+    <!-- Student dropdown jump -->
+    <form method="GET" action="" class="flex-1 flex items-center gap-2">
+      <label class="font-mono text-[10px] text-gray-500 uppercase tracking-wider whitespace-nowrap">Jump to:</label>
+      <select name="student_id" onchange="if(this.value) window.location.href='{% url 'instructor_student_performance' slug=class.slug student_id=0 %}'.replace('0', this.value)"
+              class="flex-1 border border-gray-300 px-3 py-2 font-mono text-xs bg-white focus:outline-none focus:border-[#4f14e0]">
+        <option value="">-- Select student --</option>
+        {% for s in all_students %}
+        <option value="{{ s.id }}" {% if s.id == student.id %}selected{% endif %}>{{ s.get_full_name|default:s.username }}</option>
+        {% endfor %}
+      </select>
+    </form>
+
+    {% if next_student %}
+    <a href="{% url 'instructor_student_performance' slug=class.slug student_id=next_student.id %}"
+       class="border border-gray-300 px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-[#4f14e0] hover:text-[#4f14e0] transition-colors">
+      NEXT &rarr;
+    </a>
+    {% else %}
+    <span class="border border-gray-100 px-4 py-2 font-mono text-[10px] text-gray-300 uppercase tracking-wider">NEXT &rarr;</span>
+    {% endif %}
   </div>
 
   <!-- Student Header -->
   <header class="mb-12 pb-6 border-b border-gray-300">
-    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ class.code }}</span>
-    <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
-      {{ student.get_full_name|default:student.username }}
-    </h1>
-    <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
-      {{ student.xp|default:"0" }} XP &middot; {{ completed_quizzes }}/{{ total_quizzes }} quizzes completed &middot; {{ total_score }}/{{ total_possible }} total score
+    <div class="flex items-start justify-between">
+      <div>
+        <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ class.code }}</span>
+        <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
+          {{ student.get_full_name|default:student.username }}
+        </h1>
+        <div class="font-mono text-xs text-gray-500 uppercase tracking-wider">
+          {{ student.xp|default:"0" }} XP &middot; {{ completed_quizzes }}/{{ total_quizzes }} quizzes completed &middot; {{ total_score }}/{{ total_possible }} total score
+        </div>
+      </div>
+      <!-- Cumulative score card -->
+      <div class="text-right shrink-0 ml-6">
+        <div class="bg-gray-900 text-white px-6 py-4">
+          <span class="font-mono text-[10px] opacity-70 uppercase tracking-wider block">Overall</span>
+          <span class="font-serif text-3xl md:text-4xl font-black">
+            {% if total_possible > 0 %}{% widthratio total_score total_possible 100 %}{% else %}0{% endif %}%
+          </span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -33,7 +82,7 @@
         </div>
         <div class="text-right">
           {% if item.has_submitted %}
-          <span class="font-mono text-lg font-bold {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+          <span class="font-mono text-lg font-bold {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-[#f59e0b]{% endif %}">
             {{ item.submission.score }}/{{ item.submission.total }}
           </span>
           <span class="font-mono text-[10px] text-gray-500 block uppercase tracking-wider">

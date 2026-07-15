@@ -1,7 +1,6 @@
 """
 Shared tier/XP helper functions used by views and context processors.
 """
-import math
 
 TIER_COLORS = {
     'Initiate':        'bg-gray-600 text-white',

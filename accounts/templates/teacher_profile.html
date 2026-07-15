@@ -16,18 +16,21 @@
       </div>
       
       <div class="md:col-span-6 order-1 md:order-2 pb-8 md:pb-12">
-        <span class="font-mono text-xs text-[#5308e7] uppercase tracking-widest mb-4 block">Instructor</span>
+        <span class="font-mono text-xs text-[#4f14e0] uppercase tracking-widest mb-4 block">Instructor</span>
         <h2 class="font-serif text-4xl md:text-5xl font-black tracking-tight leading-none text-gray-900 mb-6">
           {{ instructor_user.get_full_name|default:instructor_user.username }}
         </h2>
-        <div class="w-12 h-1 bg-[#5308e7] mb-6"></div>
+        <div class="w-12 h-1 bg-[#4f14e0] mb-6"></div>
         <p class="text-sm text-gray-600 max-w-md leading-relaxed">
           This instructor has not set up their profile yet.
         </p>
         {% if is_own_profile %}
         <div class="mt-6 flex items-center gap-4">
-          <a href="{% url 'edit_instructor_profile' %}" class="bg-[#5308e7] text-white px-8 py-3 font-mono text-xs uppercase tracking-widest hover:scale-105 transition-transform duration-300 inline-block">
+          <a href="{% url 'edit_instructor_profile' %}" class="bg-[#4f14e0] text-white px-8 py-3 font-mono text-xs uppercase tracking-widest hover:scale-105 transition-transform duration-300 inline-block">
             Create Your Profile
+          </a>
+          <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800 font-mono text-xs uppercase tracking-widest transition-colors">
+            Logout
           </a>
         </div>
         {% endif %}
@@ -36,9 +39,9 @@
   </section>
   {% else %}
   <!-- Profile exists -->
-  <section class="mb-16 pb-8 border-b border-gray-300">
+  <section class="mb-12 pb-8 border-b border-gray-300">
     <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
-      <div class="md:col-span-6 order-2 md:order-1">
+      <div class="md:col-span-5 order-2 md:order-1">
         <div class="border border-gray-300 p-1 bg-white">
           {% if profile.avatar %}
             <img alt="{{ instructor_user.username }} Portrait" class="w-full grayscale contrast-125 block" src="{{ profile.avatar.url }}"/>
@@ -50,21 +53,30 @@
         </div>
       </div>
       
-      <div class="md:col-span-6 order-1 md:order-2 pb-8 md:pb-12">
-        <span class="font-mono text-xs text-[#5308e7] uppercase tracking-widest mb-4 block">
+      <div class="md:col-span-7 order-1 md:order-2 pb-8 md:pb-12">
+        <span class="font-mono text-xs text-[#4f14e0] uppercase tracking-widest mb-4 block">
           {{ profile.title_role|default:"Lead Instructor" }}
         </span>
-        <h2 class="font-serif text-4xl md:text-5xl font-black tracking-tight leading-none text-gray-900 mb-6">
+        <h2 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 mb-4">
           {{ instructor_user.get_full_name|default:instructor_user.username }}
         </h2>
-        <div class="w-12 h-1 bg-[#5308e7] mb-6"></div>
-        <p class="text-sm text-gray-600 max-w-md leading-relaxed">
+        <div class="w-12 h-1 bg-[#4f14e0] mb-6"></div>
+        <p class="text-sm text-gray-600 max-w-lg leading-relaxed">
           {{ profile.bio|default:"No bio yet." }}
         </p>
+        {% if instructor_user.email %}
+        <div class="mt-4 flex items-center gap-2">
+          <span class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">Contact:</span>
+          <span class="font-mono text-xs text-gray-700">{{ instructor_user.email }}</span>
+        </div>
+        {% endif %}
         {% if is_own_profile %}
         <div class="mt-6 flex items-center gap-4">
-          <a href="{% url 'edit_instructor_profile' %}" class="border border-gray-300 px-6 py-2 font-mono text-xs hover:bg-gray-900 hover:text-white transition-colors uppercase tracking-widest">
+          <a href="{% url 'edit_instructor_profile' %}" class="border border-[#4f14e0] text-[#4f14e0] px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-[#4f14e0] hover:text-white transition-colors">
             Edit Profile
+          </a>
+          <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800 font-mono text-xs uppercase tracking-widest transition-colors">
+            Logout
           </a>
         </div>
         {% endif %}
@@ -72,17 +84,41 @@
     </div>
   </section>
 
+  <!-- Stats Bar -->
+  {% if active_cohorts %}
+  <section class="mb-14">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white border border-gray-200 p-4 md:p-6">
+        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Students Taught</span>
+        <p class="font-serif text-2xl md:text-3xl font-black text-gray-900 mt-1">{{ total_students }}</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-4 md:p-6">
+        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Active Classes</span>
+        <p class="font-serif text-2xl md:text-3xl font-black text-gray-900 mt-1">{{ active_cohorts|length }}</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-4 md:p-6">
+        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Established</span>
+        <p class="font-serif text-2xl md:text-3xl font-black text-gray-900 mt-1">{{ profile.established_year|default:"2024" }}</p>
+      </div>
+      <div class="bg-white border border-gray-200 p-4 md:p-6">
+        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Manuscripts</span>
+        <p class="font-serif text-2xl md:text-3xl font-black text-gray-900 mt-1">{{ profile.manuscripts|length|default:"0" }}</p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
   {% if profile.academic_focus %}
-  <section class="mb-20">
+  <section class="mb-16">
     <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-gray-300">
       <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Academic Focus</h3>
-      <span class="text-[#5308e7] font-bold font-mono text-xs">/01</span>
+      <span class="text-[#4f14e0] font-bold font-mono text-xs">/01</span>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
       <div class="md:col-span-7">
         {% for focus in profile.academic_focus %}
-        <div class="pb-8 border-b border-gray-200 hover:bg-gray-50 transition-colors -mx-5 md:-mx-0 px-5 md:px-0 {% if not forloop.first %}pt-8{% endif %}">
+        <div class="pb-8 border-b border-gray-200 hover:bg-gray-50 transition-colors {% if not forloop.first %}pt-8{% endif %}">
           <h4 class="font-serif text-2xl font-bold italic text-gray-900 mb-4">{{ focus.title }}</h4>
           <p class="text-sm text-gray-600">{{ focus.description }}</p>
         </div>
@@ -95,7 +131,7 @@
         <ul class="space-y-4">
           {% for method in profile.methodologies %}
           <li class="flex items-start gap-4">
-            <span class="font-mono text-xs text-[#cbbeff]">{{ forloop.counter|stringformat:"02d" }}</span>
+            <span class="font-mono text-xs text-[#D4AF83]">{{ forloop.counter|stringformat:"02d" }}</span>
             <span class="text-sm font-semibold italic">{{ method.name }}</span>
           </li>
           {% endfor %}
@@ -107,24 +143,23 @@
   {% endif %}
 
   {% if profile.manuscripts %}
-  <section class="mb-20">
-    <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-gray-300">
-      <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Published Manuscripts</h3>
-      <span class="text-[#5308e7] font-bold font-mono text-xs">/02</span>
+  <section class="mb-16">
+    <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+      <h3 class="font-mono text-xs uppercase tracking-widest text-gray-900 font-bold">Published Manuscripts</h3>
+      <span class="text-[#4f14e0] font-bold font-mono text-xs">/02</span>
     </div>
     
     <div class="divide-y divide-gray-200">
       {% for paper in profile.manuscripts %}
-      <div class="py-10 grid grid-cols-1 md:grid-cols-12 gap-4 group">
+      <div class="py-6 grid grid-cols-1 md:grid-cols-12 gap-4 group">
         <div class="md:col-span-1 hidden md:block">
-          <span class="font-mono text-xs opacity-40">{{ paper.publication_year }}</span>
+          <span class="font-mono text-xs text-gray-400">{{ paper.publication_year }}</span>
         </div>
         <div class="md:col-span-8">
-          <h5 class="font-serif text-xl font-bold text-gray-900 group-hover:italic transition-all">{{ paper.title }}</h5>
-          <p class="font-mono text-xs mt-2 text-gray-500 uppercase">{{ paper.publisher_tag }}</p>
-        </div>
-        <div class="md:col-span-3 flex justify-end items-center">
-          <button disabled class="border border-gray-200 opacity-40 px-6 py-2 font-mono text-xs cursor-not-allowed">UNAVAILABLE</button>
+          <h5 class="font-serif text-lg font-bold text-gray-900 group-hover:text-[#4f14e0] transition-colors">{{ paper.title }}</h5>
+          {% if paper.publisher_tag %}
+          <p class="font-mono text-[10px] mt-1 text-gray-500 uppercase tracking-wider">{{ paper.publisher_tag }}</p>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
@@ -134,26 +169,29 @@
   {% endif %}
 
   {% if active_cohorts %}
-  <section class="mb-20">
-    <div class="flex items-baseline justify-between mb-8 pb-2 border-b border-gray-300">
-      <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500">Active Cohorts</h3>
-      <span class="text-[#5308e7] font-bold font-mono text-xs">/03</span>
+  <section class="mb-16">
+    <div class="flex items-baseline justify-between mb-6 pb-2 border-b border-gray-300">
+      <h3 class="font-mono text-xs uppercase tracking-widest text-gray-900 font-bold">Active Cohorts</h3>
+      <span class="text-[#4f14e0] font-bold font-mono text-xs">/03</span>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       {% for cohort in active_cohorts %}
-      <div class="border border-gray-300 p-1">
-        <div class="{% if forloop.counter|divisibleby:2 %}bg-white{% else %}bg-gray-50{% endif %} p-8 border border-gray-300">
-          <span class="bg-[#5308e7] text-white font-mono text-[10px] px-2 py-1 mb-6 inline-block uppercase">
-            {{ cohort.access_level }}
-          </span>
-          <h6 class="font-serif text-xl font-bold mb-4">{{ cohort.name }}</h6>
-          <p class="text-sm text-gray-600">{{ cohort.description }}</p>
-          <div class="mt-12 flex items-center justify-between pt-6 border-t border-gray-200">
-            <span class="font-mono text-xs italic">{{ cohort.member_count }} Members</span>
-          </div>
+      <a href="{% if is_own_profile and cohort.slug %}{% url 'instructor_class' slug=cohort.slug %}{% else %}#{% endif %}"
+         class="border border-gray-200 bg-white p-4 md:p-6 transition-all group block
+                {% if is_own_profile %}hover:border-[#4f14e0] hover:shadow-sm cursor-pointer{% else %}opacity-80 cursor-default{% endif %}">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="bg-[#4f14e0] text-white font-mono text-[9px] px-2 py-0.5 uppercase tracking-widest">{{ cohort.code }}</span>
+          <span class="font-mono text-[10px] text-gray-400">{{ cohort.member_count }} student{{ cohort.member_count|pluralize }}</span>
         </div>
-      </div>
+        <h6 class="font-serif text-xl font-bold text-gray-900 {% if is_own_profile %}group-hover:text-[#4f14e0] transition-colors{% endif %}">{{ cohort.name }}</h6>
+        <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ cohort.schedule }}</p>
+        {% if is_own_profile %}
+        <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+          <span class="font-mono text-xs text-[#4f14e0] group-hover:translate-x-1 transition-transform">View Class &rarr;</span>
+        </div>
+        {% endif %}
+      </a>
       {% endfor %}
     </div>
   </section>
@@ -161,16 +199,17 @@
 
   {% if is_own_profile %}
   <section class="mb-24">
-    <div class="bg-gray-900 text-white p-12 text-center relative overflow-hidden">
-      <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
-      <h2 class="font-serif text-3xl md:text-4xl font-black italic relative z-10 mb-8">Ready to rethink the system?</h2>
+    <div class="bg-gray-900 text-white p-10 md:p-14 text-center relative overflow-hidden">
+      <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+      <h2 class="font-serif text-3xl md:text-4xl font-black relative z-10 mb-6">Ready to Shape the Next Generation?</h2>
+      <p class="font-mono text-xs text-gray-400 relative z-10 mb-8 uppercase tracking-widest">Your profile is visible to students and parents</p>
       
-      <a href="{% url 'instructor_dashboard' %}" class="relative z-10 bg-[#5308e7] text-white px-12 py-5 font-mono text-xs uppercase tracking-widest hover:scale-105 transition-transform duration-300 inline-block">
-        View My Dashboard
+      <a href="{% url 'instructor_dashboard' %}" class="relative z-10 bg-[#4f14e0] text-white px-10 py-4 font-mono text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-gray-900 transition-colors inline-block">
+        Go to Dashboard
       </a>
       
-      <div class="mt-8 relative z-10 opacity-60 font-mono text-xs uppercase">
-        Next Session Begins: OCTOBER 2026
+      <div class="mt-6 relative z-10 opacity-50 font-mono text-[10px] uppercase tracking-wider">
+        {{ profile.established_year|default:"2024" }} &mdash; Present
       </div>
     </div>
   </section>

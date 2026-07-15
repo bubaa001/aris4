@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[900px] mx-auto px-5 md:px-16 py-12 pb-32">
+
+  <div class="mb-8 flex items-center justify-between">
+    <a href="{% url 'instructor_quiz_submissions' quiz_id=quiz.id %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; ALL SUBMISSIONS
+    </a>
+    <span class="font-mono text-[10px] text-gray-500">{{ submission_index }} of {{ total_submissions }}</span>
+  </div>
+
+  <!-- Student Navigation -->
+  <div class="mb-8 flex items-center gap-3">
+    {% if prev_sub %}
+    <a href="{% url 'instructor_quiz_submission_detail' quiz_id=quiz.id student_id=prev_sub.student.id %}"
+       class="border border-gray-300 px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-[#4f14e0] hover:text-[#4f14e0] transition-colors">
+      &larr; PREV
+    </a>
+    {% else %}
+    <span class="border border-gray-100 px-4 py-2 font-mono text-[10px] text-gray-300 uppercase tracking-wider">&larr; PREV</span>
+    {% endif %}
+
+    <div class="flex-1 text-center">
+      <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">
+        Student {{ submission_index }} of {{ total_submissions }}
+      </span>
+    </div>
+
+    {% if next_sub %}
+    <a href="{% url 'instructor_quiz_submission_detail' quiz_id=quiz.id student_id=next_sub.student.id %}"
+       class="border border-gray-300 px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-[#4f14e0] hover:text-[#4f14e0] transition-colors">
+      NEXT &rarr;
+    </a>
+    {% else %}
+    <span class="border border-gray-100 px-4 py-2 font-mono text-[10px] text-gray-300 uppercase tracking-wider">NEXT &rarr;</span>
+    {% endif %}
+  </div>
+
+  <!-- Student Header -->
+  <header class="mb-10 pb-6 border-b border-gray-300">
+    <div class="flex items-start justify-between">
+      <div>
+        <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">{{ quiz.academic_class.code }} &middot; {{ quiz.title }}</span>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-[#e0d8ff] flex items-center justify-center">
+            <span class="font-serif text-xl font-bold text-[#4f14e0]">{{ student.get_full_name|default:student.username|first|upper }}</span>
+          </div>
+          <div>
+            <h1 class="font-serif text-3xl md:text-5xl font-black tracking-tight leading-none text-gray-900">
+              {{ student.get_full_name|default:student.username }}
+            </h1>
+            <p class="font-mono text-xs text-gray-500 mt-1">
+              @{{ student.username }} &middot; {{ student.xp }} XP &middot; {{ quiz.questions.count }} questions
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="text-right shrink-0 ml-6">
+        <div class="bg-gray-900 text-white px-6 py-4">
+          <span class="font-mono text-[10px] opacity-70 uppercase tracking-wider block">Score</span>
+          <span class="font-serif text-4xl font-black {% if submission.score == submission.total %}text-green-400{% else %}text-amber-400{% endif %}">
+            {{ submission.score }}/{{ submission.total }}
+          </span>
+          <span class="font-mono text-[10px] opacity-70 block mt-1">
+            {{ submission.submitted_at|date:"d.m.y H:i" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Question-by-question breakdown -->
+  <div class="space-y-8">
+    <h2 class="font-serif text-2xl font-bold italic text-gray-900 pb-2 border-b border-gray-300">Question Breakdown</h2>
+
+    {% for result in question_results %}
+    <div class="pb-6 border-b border-gray-200">
+      <div class="flex items-baseline gap-3 mb-4">
+        <span class="font-mono text-xs text-[#4f14e0] font-bold">{{ forloop.counter }}.</span>
+        <p class="font-serif text-lg font-bold text-gray-900">{{ result.question.text }}</p>
+        <span class="ml-auto shrink-0">
+          {% if result.is_correct %}
+          <span class="font-mono text-[10px] text-green-600 uppercase tracking-wider bg-green-100 px-3 py-1">CORRECT</span>
+          {% else %}
+          <span class="font-mono text-[10px] text-red-600 uppercase tracking-wider bg-red-100 px-3 py-1">INCORRECT</span>
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="space-y-2 pl-6">
+        {% for choice in result.question.choices.all %}
+        <div class="flex items-start gap-3 p-3
+          {% if choice.is_correct %}bg-green-50 border-l-4 border-green-500
+          {% elif result.selected_choice and choice.id == result.selected_choice.id and not choice.is_correct %}bg-red-50 border-l-4 border-red-500
+          {% else %}border-l-4 border-gray-100{% endif %}">
+          <span class="text-sm
+            {% if choice.is_correct %}text-green-700 font-bold
+            {% elif result.selected_choice and choice.id == result.selected_choice.id %}text-red-700 font-bold
+            {% else %}text-gray-500{% endif %}">
+            {{ choice.text }}
+            {% if choice.is_correct %}
+            <span class="font-mono text-[10px] text-green-600 ml-2">&check; CORRECT ANSWER</span>
+            {% endif %}
+            {% if result.selected_choice and choice.id == result.selected_choice.id and not choice.is_correct %}
+            <span class="font-mono text-[10px] text-red-600 ml-2">&times; STUDENT'S ANSWER</span>
+            {% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="mt-12 pt-8 border-t border-gray-300 flex items-center justify-between">
+    <a href="{% url 'instructor_quiz_submissions' quiz_id=quiz.id %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; ALL SUBMISSIONS
+    </a>
+    <a href="{% url 'instructor_student_performance' slug=quiz.academic_class.slug student_id=student.id %}"
+       class="bg-[#4f14e0] text-white px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors">
+      FULL PERFORMANCE &rarr;
+    </a>
+  </div>
+
+</main>
+{% endblock %}

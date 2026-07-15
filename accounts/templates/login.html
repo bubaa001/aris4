@@ -3,21 +3,21 @@
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-6 py-16">
     <div class="w-full max-w-lg">
-        <!-- Magazine Masthead -->
         <div class="border-t-4 border-black pt-6 mb-10">
             <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-3 block">Authentication</span>
             <h1 class="font-serif text-5xl md:text-6xl font-black tracking-tight text-black leading-none">Sign In</h1>
-            <p class="font-mono text-xs text-gray-500 mt-3 uppercase tracking-wider">aris4.0 // student access portal</p>
+            <p class="font-mono text-xs text-gray-500 mt-3 uppercase tracking-wider">aris4.0 // identity verification</p>
         </div>
 
-        <form method="POST" action="{% url 'login' %}" class="space-y-8">
+        <form method="POST" action="{% url 'login' %}" class="space-y-7" id="login-form">
             {% csrf_token %}
             
             {% if form.non_field_errors %}
-            <div class="border border-red-300 bg-red-50 p-4">
-                <p class="font-mono text-[10px] text-red-700 uppercase tracking-wider font-bold">
+            <div class="border-2 border-red-400 bg-red-50 p-4" id="form-errors">
+                <p class="font-mono text-xs text-red-700 uppercase tracking-wider font-bold flex items-center gap-2">
+                    <span>!</span>
                     {% for error in form.non_field_errors %}
-                        // {{ error }}
+                        {{ error }}
                     {% endfor %}
                 </p>
             </div>
@@ -29,10 +29,10 @@
                     {{ field.label }}
                 </label>
                 
-                <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 flex items-center [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2">
+                <div class="border-b-2 border-gray-300 group-focus-within:border-black transition-colors pb-1 flex items-center [&>input]:w-full [&>input]:bg-transparent [&>input]:text-xl [&>input]:font-serif [&>input]:font-bold [&>input]:text-black [&>input]:focus:outline-none [&>input]:py-2 [&>input]:border-0 [&>input]:px-0">
                     {{ field }}
                     {% if field.name == "password" %}
-                    <button type="button" onclick="togglePasswordVisibility()" class="shrink-0 ml-2 p-2 text-gray-400 hover:text-black transition-colors" title="Show/Hide Password">
+                    <button type="button" onclick="togglePasswordVisibility()" class="shrink-0 p-2 text-gray-400 hover:text-[#4f14e0] transition-colors">
                         <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
@@ -55,18 +55,18 @@
             {% endfor %}
             
             <div class="pt-4">
-                <button type="submit" class="w-full bg-black text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-black hover:bg-[#4f14e0] hover:border-[#4f14e0] transition-all duration-300">
-                    Authenticate Session
+                <button type="submit" id="submit-btn" class="w-full bg-[#4f14e0] text-white font-mono text-xs font-bold tracking-widest uppercase py-4 border border-[#4f14e0] hover:bg-black hover:border-black transition-all duration-300">
+                    Authenticate →
                 </button>
             </div>
         </form>
         
         <div class="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
             <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
-                New user? <a href="{% url 'register' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Register Account</a>
+                New user? <a href="{% url 'register' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Register</a>
             </p>
             <p class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
-                <a href="{% url 'password_reset' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Forgot Password?</a>
+                <a href="{% url 'password_reset' %}" class="text-black font-bold hover:text-[#4f14e0] transition-colors underline">Forgot password?</a>
             </p>
         </div>
     </div>
@@ -88,5 +88,30 @@ function togglePasswordVisibility() {
         eyeOffIcon.classList.add('hidden');
     }
 }
+
+document.getElementById('login-form').addEventListener('submit', function(e) {
+    const username = document.querySelector('input[name="username"]').value.trim();
+    const password = document.querySelector('input[name="password"]').value.trim();
+    
+    if (!username || !password) {
+        e.preventDefault();
+        const errDiv = document.getElementById('form-errors');
+        if (errDiv) {
+            errDiv.innerHTML = '<p class=\"font-mono text-xs text-red-700 uppercase tracking-wider font-bold flex items-center gap-2\"><span>!</span> Please enter both username and password.</p>';
+        } else {
+            const div = document.createElement('div');
+            div.className = 'border-2 border-red-400 bg-red-50 p-4';
+            div.id = 'form-errors';
+            div.innerHTML = '<p class=\"font-mono text-xs text-red-700 uppercase tracking-wider font-bold flex items-center gap-2\"><span>!</span> Please enter both username and password.</p>';
+            this.insertBefore(div, this.firstChild);
+        }
+        return;
+    }
+    
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+    btn.classList.add('opacity-70');
+});
 </script>
 {% endblock %}

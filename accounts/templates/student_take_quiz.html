@@ -4,8 +4,8 @@
 <main class="max-w-[800px] mx-auto px-5 md:px-16 py-12 pb-32">
   
   <div class="mb-8">
-    <a href="javascript:history.back()" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
-      &larr; BACK
+    <a href="{% url 'study_dashboard' %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
+      &larr; BACK TO DASHBOARD
     </a>
   </div>
 
@@ -31,11 +31,11 @@
           <p class="font-serif text-xl font-bold text-gray-900">{{ question.text }}</p>
         </div>
         
-        <div class="space-y-3 pl-6">
+        <div class="space-y-3 pl-0 md:pl-6">
           {% for choice in question.shuffled_choices %}
-          <label class="flex items-start gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-            <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" required class="mt-1 shrink-0">
-            <span class="text-sm text-gray-700">{{ choice.text }}</span>
+          <label class="flex items-start gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer min-h-[48px]">
+            <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" required class="mt-1 shrink-0 w-5 h-5 md:w-4 md:h-4">
+            <span class="text-sm text-gray-700 leading-relaxed">{{ choice.text }}</span>
           </label>
           {% endfor %}
         </div>

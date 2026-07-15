@@ -6,5 +6,6 @@
     "vbnetcompanion.languageClientServerArgs": [
         "--stdio"
     ],
-    "markdown.validate.enabled": true
+    "markdown.validate.enabled": true,
+    "deepseek-copilot.experimental.stabilizeToolList": true
 }

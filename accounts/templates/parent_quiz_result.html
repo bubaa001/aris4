@@ -2,19 +2,21 @@
 
 {% block content %}
 <main class="max-w-[800px] mx-auto px-5 md:px-16 py-12 pb-32">
-  
+
   <div class="mb-8">
-    <a href="{% url 'study_dashboard' %}" class="font-mono text-xs text-[#4f14e0] hover:underline uppercase tracking-wider">
-      &larr; BACK TO DASHBOARD
+    <a href="{% url 'parent_child_detail' student_id=child.id %}" class="font-mono text-xs text-teal-700 hover:underline uppercase tracking-wider">
+      &larr; BACK TO {{ child.get_full_name|default:child.username|upper }}
     </a>
   </div>
 
   <header class="mb-12 pb-8 border-b border-gray-300">
-    <span class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-widest block mb-2">QUIZ RESULT</span>
+    <span class="font-mono text-[10px] text-teal-700 uppercase tracking-widest block mb-2">
+      {{ child.get_full_name|default:child.username|upper }} &middot; QUIZ RESULT
+    </span>
     <h1 class="font-serif text-4xl md:text-5xl mb-4 font-black tracking-tight leading-none text-gray-900 uppercase">
       {{ quiz.title }}
     </h1>
-    
+
     <div class="mt-8 p-8 {% if submission.score == submission.total %}bg-green-50 border-l-4 border-green-500{% else %}bg-[#fffbeb] border-l-4 border-[#f59e0b]{% endif %}">
       <div class="text-center">
         <span class="font-serif text-6xl md:text-7xl font-black {% if submission.score == submission.total %}text-green-600{% else %}text-[#f59e0b]{% endif %}">
@@ -24,29 +26,28 @@
         <p class="font-mono text-xs text-gray-500 mt-2 uppercase tracking-wider">
           {% if submission.score == submission.total %}
             PERFECT SCORE!
+          {% elif submission.score >= submission.total|add:"-1" %}
+            EXCELLENT
           {% elif score_pct|add:"0" >= 50 %}
             GOOD EFFORT
           {% else %}
-            KEEP STUDYING
+            NEEDS IMPROVEMENT
           {% endif %}
         </p>
         <p class="font-mono text-xs text-gray-500 mt-1">
-          XP Earned: <span class="font-bold text-[#4f14e0]">+{{ submission.score|add:"0" }}0 XP</span>
-        </p>
-        <p class="font-mono text-[10px] text-gray-400 mt-1">
-          {{ submission.score }} correct × 50 XP
+          Submitted {{ submission.submitted_at|date:"d.m.y H:i" }}
         </p>
       </div>
     </div>
   </header>
 
   <div class="space-y-8">
-    <h2 class="font-serif text-2xl font-bold italic text-gray-900 pb-2 border-b border-gray-300">Breakdown</h2>
-    
+    <h2 class="font-serif text-2xl font-bold italic text-gray-900 pb-2 border-b border-gray-300">Question Breakdown</h2>
+
     {% for result in results %}
     <div class="pb-8 border-b border-gray-200">
       <div class="flex items-baseline gap-3 mb-6">
-        <span class="font-mono text-xs text-[#4f14e0] font-bold">{{ forloop.counter }}.</span>
+        <span class="font-mono text-xs text-teal-700 font-bold">{{ forloop.counter }}.</span>
         <p class="font-serif text-xl font-bold text-gray-900">{{ result.question.text }}</p>
         <span class="ml-auto shrink-0">
           {% if result.is_correct %}
@@ -56,14 +57,14 @@
           {% endif %}
         </span>
       </div>
-      
+
       <div class="space-y-2 pl-6">
         {% for choice in result.question.choices.all %}
-        <div class="flex items-start gap-3 p-3 
+        <div class="flex items-start gap-3 p-3
           {% if choice.is_correct %}bg-green-50 border-l-4 border-green-500
           {% elif result.selected_choice and choice.id == result.selected_choice.id and not choice.is_correct %}bg-red-50 border-l-4 border-red-500
           {% else %}border-l-4 border-gray-100{% endif %}">
-          <span class="text-sm 
+          <span class="text-sm
             {% if choice.is_correct %}text-green-700 font-bold
             {% elif result.selected_choice and choice.id == result.selected_choice.id %}text-red-700 font-bold
             {% else %}text-gray-500{% endif %}">
@@ -72,7 +73,7 @@
             <span class="font-mono text-[10px] text-green-600 ml-2">&check; CORRECT ANSWER</span>
             {% endif %}
             {% if result.selected_choice and choice.id == result.selected_choice.id and not choice.is_correct %}
-            <span class="font-mono text-[10px] text-red-600 ml-2">&times; YOUR ANSWER</span>
+            <span class="font-mono text-[10px] text-red-600 ml-2">&times; THEIR ANSWER</span>
             {% endif %}
           </span>
         </div>
@@ -83,8 +84,8 @@
   </div>
 
   <div class="mt-12 pt-8 border-t border-gray-300 text-center">
-    <a href="{% url 'study_dashboard' %}" class="inline-block bg-[#4f14e0] text-white px-10 py-4 font-mono text-sm font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors">
-      BACK TO DASHBOARD
+    <a href="{% url 'parent_child_detail' student_id=child.id %}" class="inline-block bg-teal-700 text-white px-10 py-4 font-mono text-sm font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors">
+      BACK TO {{ child.get_full_name|default:child.username|upper }}
     </a>
   </div>
 </main>

@@ -77,6 +77,10 @@ TRACKED_MODELS: dict = {
         'table': 'accounts_studentquizsubmission',
         'file_fields': [],
     },
+    'StudentProfile': {
+        'table': 'accounts_studentprofile',
+        'file_fields': ['avatar'],
+    },
 }
 
 
@@ -246,12 +250,14 @@ def register_signals():
         User, AcademicClass, Module, ClassContent,
         ArchiveCategory, ArchiveItem, Quiz, Question, Choice,
         LibraryBook, InstructorProfile, StudentQuizSubmission,
+        StudentProfile,
     )
 
     all_models = [
         User, AcademicClass, Module, ClassContent,
         ArchiveCategory, ArchiveItem, Quiz, Question, Choice,
         LibraryBook, InstructorProfile, StudentQuizSubmission,
+        StudentProfile,
     ]
 
     for model in all_models:

@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - docker.env
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
       - ./media:/app/media
@@ -14,7 +14,7 @@ services:
     build: .
     command: python manage.py qcluster
     env_file:
-      - .env
+      - docker.env
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
     depends_on:
@@ -22,10 +22,12 @@ services:
     restart: unless-stopped
 
   ngrok:
-    image: ngrok/ngrok:latest
-    command: http web:8000 --url=${NGROK_URL:-crusader-easing-overlying.ngrok-free.dev}
+    build: .
+    command: ngrok http web:8000 --log=stdout
     environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    profiles:
+      - online
     depends_on:
       - web
     restart: unless-stopped

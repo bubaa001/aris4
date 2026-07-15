@@ -145,10 +145,10 @@
                             </p>
                         </div>
                         {% endif %}
-                        {% if current_user_rank and current_user_rank > 5 %}
+                        {% if tied_count > 0 %}
                         <div class="pt-1">
-                            <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">
-                                {{ current_user_rank|add:"-1" }} scholars behind you
+                            <p class="font-mono text-[10px] text-[#4f14e0] uppercase tracking-wider font-bold">
+                                Tied with {{ tied_count }} other scholar{{ tied_count|pluralize }}
                             </p>
                         </div>
                         {% endif %}
@@ -195,7 +195,7 @@
                         <h3 class="font-serif text-xs font-bold leading-tight text-black group-hover:text-[#4f14e0] transition-colors">{{ book.title }}</h3>
                         <div class="mt-auto pt-2 flex items-center justify-between">
                             <span class="font-mono text-[8px] text-gray-400 uppercase tracking-wider">{{ book.uploaded_by.username }}</span>
-                            <a href="{% url 'library_download' book.id %}" class="font-mono text-[9px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider">Download</a>
+                            <a href="{% url 'library_download' book.id %}" data-loader="download" class="font-mono text-[9px] font-bold text-[#4f14e0] hover:underline uppercase tracking-wider">Download</a>
                         </div>
                     </div>
                 </div>

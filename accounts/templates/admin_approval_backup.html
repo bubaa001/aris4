@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-[1440px] mx-auto px-5 md:px-16 my-16">
+  
+  <div class="mb-16 border-b-2 border-[#1c1b1b] pb-6">
+    <span class="font-['Space_Mono'] text-xs font-normal text-[#5308e7] tracking-[0.2em] uppercase block mb-2">
+      // CORE CONTROL GATEWAY
+    </span>
+    <h1 class="font-['Playfair_Display'] text-4xl md:text-5xl font-black text-[#1c1b1b] uppercase tracking-tight">
+      Faculty Verification Console
+    </h1>
+  </div>
+
+  <div class="grid grid-cols-12 gap-10 items-start">
+    
+    <div class="col-span-12 md:col-span-8 space-y-12">
+      
+      <div>
+        <h2 class="font-['Space_Mono'] text-xs font-bold tracking-[0.1em] text-[#5308e7] uppercase mb-6 border-b border-[#eae7e7] pb-2">
+          PENDING APPROVAL QUEUE (<span id="pending-count">{{ pending_instructors|length }}</span>)
+        </h2>
+        
+        <div id="pending-container" class="border border-[#1c1b1b] bg-white divide-y divide-[#1c1b1b] rounded-none {% if not pending_instructors %}hidden{% endif %}">
+          {% for instructor in pending_instructors %}
+            <div id="user-row-{{ instructor.id }}" class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 class="font-['Playfair_Display'] text-xl font-bold text-[#1c1b1b]">{{ instructor.username }}</h3>
+                <p class="font-['Space_Mono'] text-xs text-[#484456] mt-1">EMAIL: {{ instructor.email }}</p>
+                <p class="font-['Space_Mono'] text-[10px] text-gray-400 mt-0.5">JOINED: {{ instructor.date_joined|date:"Y-m-d H:i" }}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="{% url 'approve_instructor' instructor.id %}" data-action="toggle-status" class="inline-block bg-[#5308e7] text-white font-['Space_Mono'] text-xs font-normal tracking-[0.1em] uppercase px-6 py-3 border border-[#1c1b1b] [box-shadow:3px_3px_0px_0px_#1c1b1b] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:[box-shadow:4px_4px_0px_0px_#1c1b1b] transition-all rounded-none">
+                  GRANT CLEARANCE &rarr;
+                </a>
+                <a href="{% url 'delete_instructor_request' instructor.id %}" data-action="delete-request" class="inline-block bg-white text-red-600 font-['Space_Mono'] text-[11px] font-bold tracking-wider uppercase px-4 py-3 border border-red-400 hover:bg-red-50 transition-colors">
+                  DELETE
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div id="pending-empty-state" class="border border-dashed border-[#1c1b1b] p-12 text-center bg-white rounded-none {% if pending_instructors %}hidden{% endif %}">
+          <p class="font-['Space_Mono'] text-xs text-[#484456] uppercase tracking-wider">
+            // NO SYSTEM IDENTITIES AWAITING VERIFICATION CURRENTLY
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="font-['Space_Mono'] text-xs font-bold tracking-[0.1em] text-[#1c1b1b] uppercase mb-6 border-b border-[#eae7e7] pb-2">
+          VERIFIED ACTIVE FACULTY (<span id="approved-count">{{ approved_instructors|length }}</span>)
+        </h2>
+        
+        <div id="approved-container" class="border border-[#1c1b1b] bg-white divide-y divide-[#1c1b1b] rounded-none {% if not approved_instructors %}hidden{% endif %}">
+          {% for instructor in approved_instructors %}
+            <div id="user-row-{{ instructor.id }}" class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <span class="w-2 h-2 bg-green-500 rounded-none"></span>
+                <span class="font-['Inter'] text-sm font-semibold text-[#1c1b1b]">{{ instructor.username }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <a href="{% url 'admin_instructor_progress' instructor.id %}" class="inline-block bg-white text-[#4f14e0] font-['Space_Mono'] text-[11px] font-bold tracking-wider uppercase px-4 py-2 border border-[#4f14e0] hover:bg-[#4f14e0] hover:text-white transition-colors">VIEW PROGRESS</a>
+                <a href="{% url 'disapprove_instructor' instructor.id %}" data-action="toggle-status" class="inline-block bg-white text-red-600 font-['Space_Mono'] text-[11px] font-bold tracking-wider uppercase px-4 py-2 border border-red-600 hover:bg-red-50 transition-colors rounded-none">
+                  REVOKE
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div id="approved-empty-state" class="border border-dashed border-[#eae7e7] p-6 text-center bg-white rounded-none {% if approved_instructors %}hidden{% endif %}">
+          <p class="font-['Space_Mono'] text-xs text-gray-400">// NO ACTIVE INSTRUCTORS ON RECORD</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-span-12 md:col-span-4">
+      <div class="border-2 border-[#1c1b1b] p-6 bg-[#f0eded] rounded-none [box-shadow:4px_4px_0px_0px_#5308e7]">
+        <h3 class="font-['Space_Mono'] text-xs font-bold tracking-wider text-[#1c1b1b] uppercase border-b border-[#1c1b1b] pb-2 mb-4">
+          GATE KEEPER TELEMETRY
+        </h3>
+        <p class="font-['Inter'] text-xs text-[#484456] leading-relaxed mb-4">
+          This secure portal authorizes verified accounts to instantiate courses and populate quiz execution parameters. Ensure identity check protocols align with UDSM academic registries before assigning live keys.
+        </p>
+        <span class="font-['Space_Mono'] text-[10px] block opacity-60 uppercase">// ARIS_OS INTEGRITY CHECK: PASS</span>
+      </div>
+    </div>
+
+    <!-- Challenge Creation -->
+    <div class="col-span-12">
+      <div class="border-t-4 border-[#4f14e0] pt-6 mb-6 mt-4">
+        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0]">Challenge Arena</span>
+        <h2 class="font-serif text-2xl font-black tracking-tight text-black mt-2">Host a New Challenge</h2>
+      </div>
+      <form method="POST" action="{% url 'admin_challenge_create' %}" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white border border-gray-200 p-6">
+        {% csrf_token %}
+        <div class="md:col-span-2">
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Challenge Title</label>
+          <input type="text" name="title" required placeholder="e.g. Math Olympiad S1" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Rules</label>
+          <textarea name="rules" rows="2" placeholder="e.g. 3 quizzes, top 5 win" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]"></textarea>
+        </div>
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Duration (days)</label>
+          <input type="number" name="days" value="7" min="1" max="90" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+        </div>
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-1">Prize Pool XP</label>
+          <input type="number" name="prize_xp" value="0" min="0" class="w-full border border-gray-300 px-4 py-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-mono text-[10px] uppercase tracking-widest text-gray-500 block mb-2">Invite Classes</label>
+          <div class="flex flex-wrap gap-2">
+            {% for cls in all_classes %}
+            <label class="flex items-center gap-2 border border-gray-200 px-3 py-2 cursor-pointer hover:border-[#4f14e0] text-sm">
+              <input type="checkbox" name="class_ids" value="{{ cls.id }}">
+              <span class="font-mono text-xs">{{ cls.code }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="md:col-span-2">
+          <button type="submit" class="w-full bg-[#4f14e0] text-white px-8 py-4 font-mono text-xs font-bold tracking-widest uppercase hover:bg-black transition-colors">
+            LAUNCH CHALLENGE
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Challenges -->
+    {% if all_challenges %}
+    <div class="col-span-12 mt-8">
+      <h3 class="font-mono text-xs uppercase tracking-widest text-gray-500 mb-4">Active Challenges</h3>
+      <div class="space-y-3">
+        {% for ch in all_challenges %}
+        <div class="border {% if ch.is_active %}border-green-300 bg-green-50{% else %}border-gray-200 bg-white{% endif %} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span class="font-mono text-[10px] {% if ch.is_active %}text-green-600{% else %}text-gray-400{% endif %} uppercase">{{ ch.status }} &middot; {{ ch.total_participants }} participants</span>
+            <h4 class="font-serif text-lg font-bold text-black">{{ ch.title }}</h4>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="{% url 'challenge_leaderboard' ch.id %}" class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider">LEADERBOARD</a>
+            <form method="POST" action="{% url 'admin_challenge_toggle' ch.id %}">
+              {% csrf_token %}
+              <button type="submit" class="font-mono text-[10px] {% if ch.is_active %}text-red-500 hover:text-red-700{% else %}text-green-600 hover:text-green-800{% endif %} uppercase tracking-wider">
+                {{ ch.is_active|yesno:"DEACTIVATE,ACTIVATE" }}
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Season Control -->
+    <div class="col-span-12" id="resetSection">
+      <div class="border-t-4 border-red-600 pt-6 mb-6 mt-12">
+        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-red-600">Season Control</span>
+        <h2 class="font-serif text-2xl font-black tracking-tight text-black mt-2">Event Reset Panel</h2>
+        <p class="font-mono text-[10px] text-gray-500 mt-2 uppercase tracking-wider">
+          End the current season — reset all XP to zero
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Stats Card -->
+        <div class="border border-gray-200 bg-white p-6">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Total Students</span>
+          <p class="font-serif text-4xl font-black text-black mt-2">{{ total_students }}</p>
+        </div>
+        <div class="border border-gray-200 bg-white p-6">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Total XP Distributed</span>
+          <p class="font-serif text-4xl font-black text-[#4f14e0] mt-2">{{ total_xp }}</p>
+        </div>
+        <div class="border border-gray-200 bg-white p-6">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Top Scorer</span>
+          <p class="font-serif text-lg font-bold text-black mt-2">{{ top_student_name }}</p>
+          <span class="font-mono text-xs text-[#4f14e0]">{{ top_student_xp }} XP</span>
+        </div>
+      </div>
+
+      <!-- Reset Actions -->
+      <div class="mt-8 border-2 border-red-200 bg-red-50 p-8">
+        <div class="flex items-center gap-4 mb-4">
+          <svg class="w-8 h-8 text-red-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <h3 class="font-serif text-xl font-bold text-red-800">Reset All XP</h3>
+            <p class="font-mono text-xs text-red-600 mt-1">This will set every student's XP to 0. This action cannot be undone.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-4 mt-6">
+          <button id="resetAllBtn" onclick="confirmReset('all')"
+                  class="bg-red-600 text-white px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">
+            RESET ALL STUDENT XP
+          </button>
+          <span id="resetStatus" class="font-mono text-xs hidden"></span>
+        </div>
+      </div>
+    </div>
+
+    {% if class_data %}
+    <div class="mt-12">
+      <div class="border-t-4 border-amber-500 pt-6 mb-6">
+        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-amber-600">Challenge Zones</span>
+        <h2 class="font-serif text-2xl font-black tracking-tight text-black mt-2">Per-Group XP Reset</h2>
+        <p class="font-mono text-[10px] text-gray-500 mt-2 uppercase tracking-wider">
+          End a challenge for a specific class — reset only their XP
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for cls in class_data %}
+        <div class="border-2 border-gray-200 bg-white p-6 flex flex-col">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+            <span class="font-mono text-xs text-[#4f14e0] uppercase tracking-widest font-bold">{{ cls.code }}</span>
+            <span class="font-mono text-[10px] text-gray-500 bg-gray-100 px-2 py-1">{{ cls.student_count }} student{{ cls.student_count|pluralize }}</span>
+          </div>
+          <h3 class="font-serif text-lg font-bold text-black leading-tight mb-3">{{ cls.title }}</h3>
+          <div class="flex items-baseline gap-2 mt-1 mb-6">
+            <span class="font-mono text-lg font-bold text-[#4f14e0]">{{ cls.total_xp }}</span>
+            <span class="font-mono text-[10px] text-gray-500 uppercase">XP in group</span>
+          </div>
+          <div class="mt-auto">
+            <button onclick="confirmClassReset({{ cls.id }}, '{{ cls.code|escapejs }}')"
+                    class="w-full border-2 border-amber-500 text-amber-600 px-4 py-3 font-mono text-xs font-bold uppercase tracking-widest hover:bg-amber-500 hover:text-white transition-colors">
+              RESET GROUP XP
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const getCookie = (name) => {
+      const cookieValue = document.cookie.split(';').find(cookie => cookie.trim().startsWith(name + '='));
+      if (cookieValue) {
+        return decodeURIComponent(cookieValue.trim().substring(name.length + 1));
+      }
+      const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+      return csrfInput ? csrfInput.value : null;
+    };
+
+    document.body.addEventListener('click', async (event) => {
+      const targetLink = event.target.closest('[data-action]');
+      if (!targetLink) return;
+
+      const action = targetLink.dataset.action;
+      const requestUrl = targetLink.href;
+
+      if (action === 'delete-request') {
+        if (!confirm('Delete this instructor request permanently?')) return;
+      }
+
+      event.preventDefault();
+      const csrftoken = getCookie('csrftoken');
+
+      if (!csrftoken) {
+        console.error('CSRF token not found');
+        return;
+      }
+
+      try {
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json',
+          },
+          credentials: 'same-origin',
+        });
+
+        if (response.ok) {
+          if (action === 'delete-request') {
+            const row = targetLink.closest('[id^="user-row-"]');
+            if (row) row.remove();
+            updatePendingCount();
+          } else {
+            window.location.reload();
+          }
+        } else {
+          console.error('Request failed:', response.status);
+        }
+      } catch (err) {
+        console.error('Request error:', err);
+      }
+    });
+
+    function updatePendingCount() {
+      const container = document.getElementById('pending-container');
+      const empty = document.getElementById('pending-empty-state');
+      const count = document.getElementById('pending-count');
+      const items = container ? container.querySelectorAll('[id^="user-row-"]').length : 0;
+      if (count) count.textContent = items;
+      if (items === 0) {
+        if (container) container.classList.add('hidden');
+        if (empty) empty.classList.remove('hidden');
+      }
+    }
+
+    // XP Reset functions
+    window.confirmReset = function(type) {
+      if (!confirm('ARE YOU SURE? This will permanently reset ALL student XP to zero. This action cannot be undone. Type "reset" to confirm:')) return;
+      const secondConfirm = prompt('Type "RESET" in uppercase to confirm:');
+      if (secondConfirm !== 'RESET') { alert('Reset cancelled.'); return; }
+      performReset(type);
+    };
+
+    window.confirmClassReset = function(classId, className) {
+      if (!confirm('Reset XP for ALL students in "' + className + '"? This cannot be undone.')) return;
+      const secondConfirm = prompt('Type the class code "' + className + '" to confirm:');
+      if (secondConfirm !== className) { alert('Reset cancelled.'); return; }
+      performClassReset(classId);
+    };
+
+    async function performReset(type) {
+      const btn = document.getElementById('resetAllBtn');
+      const status = document.getElementById('resetStatus');
+      if (btn) { btn.disabled = true; btn.textContent = 'RESETTING...'; }
+      if (status) { status.classList.remove('hidden'); status.textContent = 'Processing...'; status.className = 'font-mono text-xs text-amber-600'; }
+
+      const csrftoken = getCookie('csrftoken');
+      try {
+        const body = new FormData();
+        body.append('action', 'reset_all');
+        const resp = await fetch('{% url "admin_reset_xp" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+          body: body,
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+          if (status) { status.textContent = '✓ ' + data.message; status.className = 'font-mono text-xs text-green-600 font-bold'; }
+          if (btn) { btn.textContent = 'DONE — RELOADING...'; btn.className = 'bg-green-600 text-white px-8 py-4 font-mono text-xs font-bold uppercase tracking-widest transition-colors'; }
+          setTimeout(function() { window.location.reload(); }, 2000);
+        } else {
+          throw new Error(data.message || 'Failed');
+        }
+      } catch (err) {
+        if (status) { status.textContent = '✕ Error: ' + err.message; status.className = 'font-mono text-xs text-red-600'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'RESET ALL STUDENT XP'; }
+      }
+    }
+
+    async function performClassReset(classId) {
+      const csrftoken = getCookie('csrftoken');
+      // Find the button for visual feedback
+      const buttons = document.querySelectorAll('button');
+      let btn = null;
+      buttons.forEach(function(b) {
+        if (b.onclick && b.onclick.toString().includes('confirmClassReset(' + classId)) {
+          btn = b;
+        }
+      });
+      if (btn) { btn.disabled = true; btn.textContent = 'RESETTING...'; }
+
+      try {
+        const body = new FormData();
+        body.append('action', 'reset_class');
+        body.append('class_id', classId);
+        const resp = await fetch('{% url "admin_reset_xp" %}', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+          body: body,
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+          if (btn) { btn.textContent = '✓ DONE'; btn.className = 'w-full bg-green-600 text-white px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest'; }
+          setTimeout(function() { window.location.reload(); }, 1500);
+        } else {
+          throw new Error(data.message || 'Failed');
+        }
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.textContent = 'RESET GROUP XP'; }
+        alert('Error: ' + err.message);
+      }
+    }
+  });
+</script>
+{% endblock %}

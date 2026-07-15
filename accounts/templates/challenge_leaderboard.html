@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[900px] mx-auto px-5 md:px-16 py-12 pb-32">
+  <header class="mb-10 pb-6 border-b border-gray-300">
+    <span class="font-mono text-[10px] uppercase tracking-widest {% if challenge.status == 'active' %}text-green-600{% elif challenge.status == 'ended' %}text-gray-400{% else %}text-[#f59e0b]{% endif %} block mb-2">
+      {{ challenge.status|upper }}
+    </span>
+    <h1 class="font-serif text-4xl md:text-6xl font-black text-black uppercase">{{ challenge.title }}</h1>
+    {% if challenge.rules %}
+    <p class="font-mono text-xs text-gray-500 mt-2">{{ challenge.rules }}</p>
+    {% endif %}
+    <div class="flex flex-wrap gap-3 mt-3 font-mono text-[10px] text-gray-400 uppercase">
+      <span>{{ challenge.start_date|date:"d.m.y" }} – {{ challenge.end_date|date:"d.m.y" }}</span>
+      <span>&middot;</span>
+      <span>{{ challenge.total_participants }} participants</span>
+      {% if challenge.prize_pool_xp > 0 %}
+      <span>&middot;</span>
+      <span class="text-[#4f14e0] font-bold">🏆 {{ challenge.prize_pool_xp }} XP</span>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if leaderboard %}
+  <div class="space-y-2">
+    {% for entry in leaderboard %}
+    <div class="flex items-center gap-4 p-4 border border-gray-100 bg-white hover:bg-gray-50 transition-colors {% if forloop.first %}border-l-4 border-l-[#f59e0b] bg-[#fffdf5]{% elif forloop.counter == 2 %}border-l-4 border-l-gray-400{% elif forloop.counter == 3 %}border-l-4 border-l-amber-600{% endif %}">
+      <span class="font-serif text-2xl font-black w-10 text-center {% if forloop.first %}text-[#f59e0b]{% elif forloop.counter == 2 %}text-gray-400{% elif forloop.counter == 3 %}text-amber-600{% else %}text-gray-300{% endif %}">
+        #{{ entry.rank }}
+      </span>
+      <div class="flex-1 min-w-0">
+        <span class="font-serif text-base font-bold text-black">{{ entry.student.get_full_name|default:entry.student.username }}</span>
+        <span class="font-mono text-[10px] text-gray-400 block">@{{ entry.student.username }}</span>
+      </div>
+      <div class="text-right shrink-0">
+        <span class="font-mono text-sm font-bold text-[#4f14e0]">{{ entry.score }}/{{ entry.possible }}</span>
+        <span class="font-mono text-[10px] text-gray-400 block">{{ entry.percentage }}% &middot; {{ entry.quizzes }} quizzes</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20 border border-dashed border-gray-300">
+    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No submissions yet</p>
+    <p class="font-mono text-[10px] text-gray-400 mt-2">The leaderboard will update as students participate.</p>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

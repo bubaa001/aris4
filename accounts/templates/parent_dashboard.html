@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="max-w-[1200px] mx-auto px-5 md:px-16 py-12 pb-32">
+
+  <header class="mb-12 pb-6 border-b border-gray-300">
+    <span class="font-mono text-[10px] text-teal-600 uppercase tracking-widest block mb-2">PARENT PORTAL</span>
+    <h1 class="font-serif text-4xl md:text-6xl font-black tracking-tight leading-none text-gray-900 uppercase mb-4">
+      My Children
+    </h1>
+    <p class="font-mono text-xs text-gray-500 uppercase tracking-wider">
+      {{ children_data|length }} linked {{ children_data|length|pluralize:"child,children" }}
+    </p>
+  </header>
+
+  {% if children_data %}
+  <div class="space-y-10">
+    {% for item in children_data %}
+    <section class="border border-gray-200 bg-white hover:border-teal-500 transition-colors">
+      <!-- Child Header -->
+      <div class="p-6 md:p-8 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-serif text-2xl md:text-3xl font-bold text-gray-900">
+              {{ item.student.get_full_name|default:item.student.username }}
+            </h2>
+            <p class="font-mono text-[10px] text-gray-500 uppercase tracking-wider mt-1">
+              @{{ item.student.username }} &middot; {{ item.quiz_count }} quiz{{ item.quiz_count|pluralize }} completed
+            </p>
+          </div>
+          <a href="{% url 'parent_child_detail' student_id=item.student.id %}"
+             class="bg-teal-700 text-white px-5 py-3 font-mono text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shrink-0">
+            View Details &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-gray-200">
+        <div class="bg-white p-5">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Classes</span>
+          <p class="font-serif text-2xl font-bold text-gray-900 mt-1">{{ item.enrolled_count }}</p>
+        </div>
+        <div class="bg-white p-5">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Quizzes Done</span>
+          <p class="font-serif text-2xl font-bold text-gray-900 mt-1">{{ item.quiz_count }}</p>
+        </div>
+        <div class="bg-white p-5">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Total Score</span>
+          <p class="font-serif text-2xl font-bold text-gray-900 mt-1">{{ item.total_score }}/{{ item.total_possible }}</p>
+        </div>
+        <div class="bg-white p-5">
+          <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Average</span>
+          <p class="font-serif text-2xl font-bold {% if item.avg_pct >= 80 %}text-green-600{% elif item.avg_pct >= 50 %}text-[#f59e0b]{% else %}text-red-600{% endif %} mt-1">
+            {{ item.avg_pct }}%
+          </p>
+        </div>
+      </div>
+
+      <!-- Enrolled Classes Quick List -->
+      {% if item.enrolled_classes %}
+      <div class="px-6 md:px-8 py-4 bg-gray-50">
+        <span class="font-mono text-[10px] text-gray-500 uppercase tracking-wider">Enrolled in:</span>
+        <div class="flex flex-wrap gap-2 mt-2">
+          {% for cls in item.enrolled_classes %}
+          <span class="font-mono text-[10px] bg-white border border-gray-200 px-3 py-1.5 text-gray-700">
+            {{ cls.code }} &mdash; {{ cls.title }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-20 border border-dashed border-gray-300">
+    <p class="font-mono text-sm text-gray-500 uppercase tracking-wider">No children linked yet</p>
+    <p class="text-sm text-gray-400 mt-2">
+      Ask your child to generate an invite link from their profile page.
+    </p>
+  </div>
+  {% endif %}
+
+</main>
+{% endblock %}

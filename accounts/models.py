@@ -9,6 +9,7 @@ class User(AbstractUser):
         ('student', 'student'),
         ('instructor', 'instructor'),
         ('admin', 'admin'),
+        ('parent', 'parent'),
         ]
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
@@ -183,6 +184,7 @@ class StudentProfile(models.Model):
     bio = models.TextField(blank=True, null=True, help_text="Tell us about yourself")
     inspire_message = models.CharField(max_length=280, blank=True, null=True, help_text="A message to inspire others")
     favorite_quote = models.CharField(max_length=500, blank=True, null=True, help_text="Your favorite quote")
+    parent_names = models.JSONField(default=list, blank=True, help_text="List of connected parent/guardian names")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -191,7 +193,7 @@ class StudentProfile(models.Model):
         return f"{self.user.username}'s Student Profile"
 
     def has_profile(self):
-        return bool(self.avatar or self.bio or self.inspire_message or self.favorite_quote)
+        return bool(self.avatar or self.bio or self.inspire_message or self.favorite_quote or self.parent_names)
 
 
 class StudentQuizSubmission(models.Model):
@@ -207,3 +209,73 @@ class StudentQuizSubmission(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.quiz.title} ({self.score}/{self.total})"
+
+
+class ParentChildLink(models.Model):
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='parent_links')
+    child = models.ForeignKey(User, on_delete=models.CASCADE, related_name='child_links')
+    link_code = models.CharField(max_length=12, unique=True, blank=True)
+    relationship_label = models.CharField(max_length=50, blank=True, default='')
+    linked_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.link_code:
+            import secrets
+            import string
+            alphabet = string.ascii_uppercase + string.digits
+            self.link_code = 'PRNT-' + ''.join(secrets.choice(alphabet) for _ in range(6))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        child_name = self.child.username if self.child else '?'
+        parent_name = self.parent.username if self.parent else 'UNLINKED'
+        return f"{parent_name} \u2192 {child_name}"
+
+
+class Challenge(models.Model):
+    """Admin-hosted challenge/competition event."""
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    rules = models.TextField(blank=True, help_text='Challenge rules displayed to participants')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'is_superuser': True})
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    prize_pool_xp = models.IntegerField(default=0, help_text='Bonus XP awarded to winners')
+    classes = models.ManyToManyField('AcademicClass', through='ChallengeClass', related_name='challenges')
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def total_participants(self):
+        return User.objects.filter(
+            enrolled_classes__in=self.classes.all(), role='student'
+        ).distinct().count()
+
+    @property
+    def status(self):
+        from django.utils import timezone
+        now = timezone.now()
+        if now < self.start_date:
+            return 'upcoming'
+        elif now > self.end_date:
+            return 'ended'
+        return 'active'
+
+
+class ChallengeClass(models.Model):
+    """Links a class to a challenge."""
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='class_links')
+    academic_class = models.ForeignKey('AcademicClass', on_delete=models.CASCADE, related_name='challenge_links')
+
+    class Meta:
+        unique_together = ['challenge', 'academic_class']
+
+    def __str__(self):
+        return f"{self.challenge.title} — {self.academic_class.code}"

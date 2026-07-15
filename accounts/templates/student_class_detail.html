@@ -60,7 +60,7 @@
                   
                   {% if item.has_submitted %}
                     <div class="text-right shrink-0 ml-4">
-                      <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+                      <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-[#f59e0b]{% endif %}">
                         Score: {{ item.submission.score }}/{{ item.submission.total }}
                       </span>
                       <a href="{% url 'student_quiz_result' quiz_id=item.quiz.id %}" class="block font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider mt-1">VIEW RESULT</a>
@@ -117,7 +117,7 @@
                 
                 {% if item.has_submitted %}
                   <div class="text-right shrink-0 ml-4">
-                    <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-amber-600{% endif %}">
+                    <span class="font-mono text-xs {% if item.submission.score == item.submission.total %}text-green-600{% else %}text-[#f59e0b]{% endif %}">
                       Score: {{ item.submission.score }}/{{ item.submission.total }}
                     </span>
                     <a href="{% url 'student_quiz_result' quiz_id=item.quiz.id %}" class="block font-mono text-[10px] text-[#4f14e0] hover:underline uppercase tracking-wider mt-1">VIEW RESULT</a>
