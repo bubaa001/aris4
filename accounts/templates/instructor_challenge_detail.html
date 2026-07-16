@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <a href="{% url 'instructor_challenges' %}" class="font-mono text-xs text-[#4f14e0] hover:underline">← Back to Challenges</a>
+    <span class="font-mono text-xs text-[#4f14e0] tracking-widest uppercase border-l-4 border-[#4f14e0] pl-3 block mt-4">Challenge Arena</span>
+    <h1 class="font-serif text-4xl font-black text-[#1c1b1b] mt-3">{{ challenge.title }}</h1>
+    <p class="text-[#484456] mt-1">{{ challenge.description }}</p>
+    <div class="flex flex-wrap gap-4 mt-4 text-sm text-[#484456]">
+      <span class="font-mono text-xs bg-[#f5f3f0] px-3 py-1">
+        {{ challenge.start_date|date:"M d, Y" }} – {{ challenge.end_date|date:"M d, Y" }}
+      </span>
+      <span class="font-mono text-xs bg-[#f5f3f0] px-3 py-1">
+        Prize: {{ challenge.prize_pool_xp }} XP
+      </span>
+      <span class="font-mono text-xs bg-[#f5f3f0] px-3 py-1">
+        Status: {{ challenge.status|title }}
+      </span>
+    </div>
+    {% if challenge.rules %}
+      <div class="mt-4 bg-[#fffbeb] border-l-4 border-amber-400 p-4">
+        <p class="font-mono text-xs text-amber-800 uppercase tracking-wider font-bold mb-1">Rules</p>
+        <p class="text-sm text-amber-900">{{ challenge.rules }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left: Create Quiz Form -->
+    <div class="lg:col-span-1">
+      <div class="bg-white border-2 border-[#1c1b1b] p-5 sticky top-24">
+        <h2 class="font-serif text-lg font-bold text-[#1c1b1b] mb-4">Create Quiz</h2>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_quiz">
+          <div class="space-y-4">
+            <div>
+              <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">Quiz Title</label>
+              <input type="text" name="title" required placeholder="e.g. Challenge Round 1"
+                     class="w-full border-2 border-[#1c1b1b] p-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+            </div>
+            <div>
+              <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">Description</label>
+              <textarea name="description" rows="2" placeholder="Brief description..."
+                        class="w-full border-2 border-[#1c1b1b] p-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]"></textarea>
+            </div>
+            <div>
+              <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">For Class</label>
+              <select name="academic_class_id" required
+                      class="w-full border-2 border-[#1c1b1b] p-3 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+                {% for cls in my_classes %}
+                  <option value="{{ cls.id }}">{{ cls.code }} — {{ cls.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <button type="submit"
+                  class="w-full mt-4 bg-[#4f14e0] text-white font-mono text-xs font-bold uppercase tracking-widest py-3 border border-[#1c1b1b] [box-shadow:4px_4px_0px_0px_#1c1b1b] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:[box-shadow:6px_6px_0px_0px_#1c1b1b] transition-all">
+            Create Quiz
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Quiz List + Question Builder -->
+    <div class="lg:col-span-2 space-y-6">
+      {% if quiz_data %}
+        {% for item in quiz_data %}
+        <div class="bg-white border-2 border-[#1c1b1b] p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-serif text-lg font-bold text-[#1c1b1b]">{{ item.quiz.title }}</h3>
+              <p class="text-xs text-[#484456]">{{ item.quiz.academic_class.code }} · {{ item.question_count }} questions · {{ item.submission_count }} submissions</p>
+            </div>
+          </div>
+
+          <!-- Add Question Form -->
+          <details class="mt-3 group">
+            <summary class="font-mono text-xs text-[#4f14e0] cursor-pointer hover:underline uppercase tracking-wider">
+              + Add Question
+            </summary>
+            <form method="POST" class="mt-4 bg-[#f5f3f0] p-4 border border-gray-200">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_question">
+              <input type="hidden" name="quiz_id" value="{{ item.quiz.id }}">
+              <div class="space-y-3">
+                <div>
+                  <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">Question Text</label>
+                  <input type="text" name="question_text" required placeholder="Enter your question..."
+                         class="w-full border-2 border-[#1c1b1b] p-2 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+                </div>
+                <div>
+                  <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-2">Choices (check the correct one)</label>
+                  <div class="space-y-2">
+                    {% for i in "1234"|make_list %}
+                    <div class="flex items-center gap-2">
+                      <input type="radio" name="is_correct" value="{{ i }}" {% if forloop.first %}checked{% endif %}
+                             class="accent-[#4f14e0] w-4 h-4">
+                      <input type="text" name="choice_{{ i }}" required placeholder="Choice {{ i }}"
+                             class="flex-1 border-2 border-[#1c1b1b] p-2 font-mono text-sm focus:outline-none focus:border-[#4f14e0]">
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <button type="submit"
+                      class="mt-3 bg-[#1c1b1b] text-white font-mono text-[10px] font-bold uppercase tracking-wider px-4 py-2 hover:bg-[#4f14e0] transition-colors">
+                Save Question
+              </button>
+            </form>
+          </details>
+
+          <!-- Existing Questions -->
+          {% if item.quiz.questions.exists %}
+          <div class="mt-4 space-y-2">
+            {% for q in item.quiz.questions.all %}
+            <div class="bg-[#f5f3f0] p-3 border border-gray-200 flex items-start justify-between gap-3">
+              <div class="flex-1">
+                <p class="font-mono text-xs font-bold text-[#1c1b1b]">{{ forloop.counter }}. {{ q.text }}</p>
+                <div class="flex flex-wrap gap-2 mt-1">
+                  {% for c in q.choices.all %}
+                  <span class="font-mono text-[10px] px-2 py-0.5 {% if c.is_correct %}bg-green-100 text-green-800 border border-green-300{% else %}bg-white text-[#484456] border border-gray-200{% endif %}">
+                    {{ c.text }}{% if c.is_correct %} ✓{% endif %}
+                  </span>
+                  {% endfor %}
+                </div>
+              </div>
+              <form method="POST" action="{% url 'instructor_delete_question' q.id %}" class="shrink-0">
+                {% csrf_token %}
+                <button type="submit" class="font-mono text-[10px] text-red-500 hover:text-red-700 uppercase"
+                        onclick="return confirm('Delete this question?')">Delete</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-xs text-[#484456] mt-3 italic">No questions yet. Add one above.</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="bg-[#f5f3f0] border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <p class="font-mono text-sm text-[#484456] uppercase tracking-wider">No quizzes yet</p>
+          <p class="text-sm text-[#484456] mt-2">Create your first quiz for this challenge using the form.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

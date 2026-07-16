@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="mb-8">
+    <span class="font-mono text-xs text-[#4f14e0] tracking-widest uppercase border-l-4 border-[#4f14e0] pl-3">Compete</span>
+    <h1 class="font-serif text-4xl font-black text-[#1c1b1b] mt-3">Active Challenges</h1>
+    <p class="text-[#484456] mt-2">Join challenges and compete with your classmates.</p>
+  </div>
+
+  {% if challenge_data %}
+    <div class="space-y-4">
+      {% for item in challenge_data %}
+      <a href="{% url 'student_challenge_detail' item.challenge.id %}"
+         class="block bg-white border-2 border-[#1c1b1b] p-5 hover:[box-shadow:4px_4px_0px_0px_#4f14e0] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-150">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="font-serif text-xl font-bold text-[#1c1b1b]">{{ item.challenge.title }}</h2>
+            <p class="text-sm text-[#484456]">{{ item.challenge.description|truncatewords:25 }}</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+              <span class="font-mono text-[10px] bg-[#f5f3f0] text-[#484456] px-2 py-0.5">
+                {{ item.challenge.start_date|date:"M d" }} – {{ item.challenge.end_date|date:"M d" }}
+              </span>
+              <span class="font-mono text-[10px] bg-[#4f14e0] text-white px-2 py-0.5">
+                {{ item.challenge.prize_pool_xp }} XP Prize
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 shrink-0">
+            <div class="text-center">
+              <p class="font-mono text-2xl font-bold text-[#4f14e0]">{{ item.submitted_count }}/{{ item.total_quizzes }}</p>
+              <p class="font-mono text-[10px] text-[#484456] uppercase">Quizzes Done</p>
+            </div>
+            <span class="font-mono text-xs text-[#4f14e0] font-bold">ENTER →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="bg-[#f5f3f0] border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+      <p class="font-mono text-sm text-[#484456] uppercase tracking-wider">No active challenges</p>
+      <p class="text-sm text-[#484456] mt-2">Check back when your instructor creates quizzes for an upcoming challenge.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -5,8 +5,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.db import models
 from django.utils import timezone
+import random
 from .forms import RegisterForm, LoginForm
-from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile, StudentProfile, ParentChildLink, Challenge, ChallengeClass
+from .models import User, AcademicClass, Module, ClassContent, ArchiveCategory, ArchiveItem, Quiz, Question, Choice, StudentQuizSubmission, LibraryBook, InstructorProfile, StudentProfile, ParentChildLink, Challenge, ChallengeClass, Notification
 from sync_manager.triggers import trigger_sync_after_action
 from .tiers import get_tier_info, build_xp_context, TIER_COLORS
 
@@ -123,8 +124,21 @@ def get_leaderboard_data(request):
 
 # VIEWS: Core / Auth
 
-
 def home_view(request):
+    # Redirect authenticated users to their role-specific dashboard
+    if request.user.is_authenticated:
+        if request.user.role == 'student':
+            return redirect('study_dashboard')
+        elif request.user.role == 'instructor':
+            if request.user.is_approved:
+                return redirect('instructor_dashboard')
+            else:
+                return redirect('pending_approval')
+        elif request.user.role == 'parent':
+            return redirect('parent_dashboard')
+        elif request.user.role == 'admin' or request.user.is_superuser:
+            return redirect('admin_dashboard')
+
     student_count = User.objects.filter(role='student').count()
     instructor_count = User.objects.filter(role='instructor').count()
     class_count = AcademicClass.objects.count()
@@ -142,6 +156,44 @@ def home_view(request):
 
     active_challenges = Challenge.objects.filter(is_active=True).prefetch_related('class_links')[:3]
 
+    # ---------- Previous challenge winner ----------
+    prev_challenge_winner = None
+    last_ended_challenge = Challenge.objects.filter(is_active=False).order_by('-end_date').first()
+    if last_ended_challenge:
+        student_ids = User.objects.filter(
+            enrolled_classes__in=last_ended_challenge.classes.all(), role='student'
+        ).distinct().values_list('id', flat=True)
+
+        best_submission = (
+            StudentQuizSubmission.objects.filter(
+                student_id__in=student_ids,
+                submitted_at__gte=last_ended_challenge.start_date,
+                submitted_at__lte=last_ended_challenge.end_date,
+            )
+            .values('student_id')
+            .annotate(total=models.Sum('score'))
+            .order_by('-total')
+            .first()
+        )
+        if best_submission:
+            student = User.objects.get(id=best_submission['student_id'])
+            prev_challenge_winner = {
+                'name': student.username,
+                'xp': best_submission['total'] or 0,
+                'challenge_title': last_ended_challenge.title,
+                'challenge_id': last_ended_challenge.id,
+            }
+
+    # ---------- Real quiz data for home page ----------
+    latest_quiz = Quiz.objects.order_by('-created_at').first()
+    total_quizzes = Quiz.objects.count()
+    total_submissions = StudentQuizSubmission.objects.count()
+    if latest_quiz:
+        latest_quiz_submissions = StudentQuizSubmission.objects.filter(quiz=latest_quiz).count()
+    else:
+        latest_quiz_submissions = 0
+    # -----------------------------------------------
+
     return render(request, 'home.html', {
         'student_count': student_count,
         'instructor_count': instructor_count,
@@ -151,6 +203,11 @@ def home_view(request):
         'active_title': active_title,
         'active_title_color': active_title_color,
         'active_challenges': active_challenges,
+        'prev_challenge_winner': prev_challenge_winner,
+        'latest_quiz': latest_quiz,
+        'latest_quiz_submissions': latest_quiz_submissions,
+        'total_quizzes': total_quizzes,
+        'total_submissions': total_submissions,
     })
 
 
@@ -1026,6 +1083,29 @@ def admin_challenge_create_view(request):
             cls = AcademicClass.objects.filter(id=cid).first()
             if cls and not ChallengeClass.objects.filter(challenge=challenge, academic_class=cls).exists():
                 ChallengeClass.objects.create(challenge=challenge, academic_class=cls)
+
+        # Send email invites to instructors of selected classes
+        try:
+            from django.core.mail import send_mail
+            invited_instructors = set()
+            for cid in class_ids:
+                cls = AcademicClass.objects.filter(id=cid).select_related('instructor').first()
+                if cls and cls.instructor and cls.instructor.email:
+                    if cls.instructor.id not in invited_instructors:
+                        invited_instructors.add(cls.instructor.id)
+                        send_mail(
+                            f'Challenge Invite: {title} - aris4.0',
+                            f'Dear {cls.instructor.username},\n\n'
+                            f'You have been invited to set quizzes for the challenge "{title}".\n\n'
+                            f'Description: {request.POST.get("description", "").strip()}\n'
+                            f'Duration: {int(request.POST.get("days", 7))} days\n\n'
+                            f'Log in to your dashboard to participate.\n\n'
+                            f'https://crusader-easing-overlying.ngrok-free.dev/instructor-dashboard/\n\n'
+                            f'Best regards,\nThe aris4.0 Team',
+                            None, [cls.instructor.email], fail_silently=True
+                        )
+        except Exception:
+            pass  # Email failures shouldn't block challenge creation
     return redirect('admin_dashboard')
 
 
@@ -1039,6 +1119,18 @@ def admin_challenge_toggle_view(request, challenge_id):
     challenge = get_object_or_404(Challenge, id=challenge_id)
     challenge.is_active = not challenge.is_active
     challenge.save(update_fields=['is_active'])
+    return redirect('admin_dashboard')
+
+
+@login_required
+def admin_challenge_delete_view(request, challenge_id):
+    """Permanently delete a challenge and all its quizzes/questions."""
+    if not (request.user.is_superuser or request.user.role == 'admin'):
+        return HttpResponseForbidden('Not authorized')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('POST required')
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+    challenge.delete()
     return redirect('admin_dashboard')
 
 
@@ -1065,7 +1157,7 @@ def admin_challenge_award_view(request, challenge_id):
         total_score=models.Sum('score'),
     ).order_by('-total_score')
 
-    # Build ranked list
+    # Build ranked list (only students who actually submitted)
     ranked = [(User.objects.get(id=s['student_id']), s['total_score']) for s in submissions]
 
     par_bonus = 10
@@ -1073,9 +1165,8 @@ def admin_challenge_award_view(request, challenge_id):
     first_pct, second_pct, third_pct = 0.5, 0.3, 0.2
 
     awarded = 0
-    # All participants get +10
-    for sid in student_ids:
-        student = User.objects.get(id=sid)
+    # Only students who solved at least one quiz get +10 XP
+    for student, _ in ranked:
         student.xp = (student.xp or 0) + par_bonus
         student.save(update_fields=['xp'])
         awarded += par_bonus
@@ -1095,12 +1186,7 @@ def admin_challenge_award_view(request, challenge_id):
     challenge.is_active = False
     challenge.save(update_fields=['is_active'])
 
-    return JsonResponse({
-        'status': 'ok',
-        'message': f'Awarded {awarded} XP across {len(student_ids)} participants',
-        'participants': len(student_ids),
-        'pool': pool,
-    })
+    return redirect('admin_dashboard')
 
 
 @login_required
@@ -1172,6 +1258,214 @@ def challenge_leaderboard_view(request, challenge_id):
 
     return render(request, 'challenge_leaderboard.html', {
         'challenge': challenge,
+        'leaderboard': leaderboard,
+    })
+
+
+# ── INSTRUCTOR CHALLENGE VIEWS ──
+
+@login_required
+def instructor_challenges_view(request):
+    """Show all challenges linked to the instructor's classes."""
+    if request.user.role != 'instructor' or not request.user.is_approved:
+        return redirect('home')
+
+    my_classes = AcademicClass.objects.filter(instructor=request.user)
+    challenges = Challenge.objects.filter(
+        classes__in=my_classes, is_active=True
+    ).distinct().prefetch_related('classes', 'quizzes')
+
+    # Annotate each challenge with quiz count for this instructor
+    challenge_data = []
+    for ch in challenges:
+        my_quizzes = ch.quizzes.filter(creator=request.user)
+        challenge_data.append({
+            'challenge': ch,
+            'my_quiz_count': my_quizzes.count(),
+            'my_classes': my_classes.filter(challenges=ch),
+            'status': ch.status,
+        })
+
+    return render(request, 'instructor_challenges.html', {
+        'challenge_data': challenge_data,
+    })
+
+
+@login_required
+def instructor_challenge_detail_view(request, challenge_id):
+    """Instructor manages quizzes for a specific challenge."""
+    if request.user.role != 'instructor' or not request.user.is_approved:
+        return redirect('home')
+
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+    my_classes = AcademicClass.objects.filter(instructor=request.user, challenges=challenge)
+
+    if not my_classes.exists():
+        return HttpResponseForbidden('Your classes are not part of this challenge.')
+
+    my_quizzes = challenge.quizzes.filter(creator=request.user)
+
+    # Handle quiz creation
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'create_quiz':
+            title = request.POST.get('title', '').strip()
+            description = request.POST.get('description', '').strip()
+            class_id = request.POST.get('academic_class_id')
+            if title and class_id:
+                academic_class = get_object_or_404(AcademicClass, id=class_id, instructor=request.user)
+                quiz = Quiz.objects.create(
+                    title=title,
+                    description=description,
+                    creator=request.user,
+                    academic_class=academic_class,
+                    challenge=challenge,
+                )
+                return redirect('instructor_challenge_detail', challenge_id=challenge.id)
+        elif action == 'add_question':
+            quiz_id = request.POST.get('quiz_id')
+            quiz = get_object_or_404(Quiz, id=quiz_id, creator=request.user)
+            question_text = request.POST.get('question_text', '').strip()
+            if question_text:
+                order = quiz.questions.count() + 1
+                question = Question.objects.create(
+                    quiz=quiz,
+                    text=question_text,
+                    order=order,
+                )
+                # Create choices
+                for i in range(1, 5):
+                    choice_text = request.POST.get(f'choice_{i}', '').strip()
+                    if choice_text:
+                        Choice.objects.create(
+                            question=question,
+                            text=choice_text,
+                            is_correct=(request.POST.get(f'is_correct') == str(i)),
+                            order=i,
+                        )
+                return redirect('instructor_challenge_detail', challenge_id=challenge.id)
+
+    # Build quiz data with question counts
+    quiz_data = []
+    for quiz in my_quizzes:
+        quiz_data.append({
+            'quiz': quiz,
+            'question_count': quiz.questions.count(),
+            'submission_count': StudentQuizSubmission.objects.filter(quiz=quiz).count(),
+        })
+
+    return render(request, 'instructor_challenge_detail.html', {
+        'challenge': challenge,
+        'my_classes': my_classes,
+        'quiz_data': quiz_data,
+    })
+
+
+@login_required
+def instructor_delete_question_view(request, question_id):
+    """Delete a question from a challenge quiz."""
+    if request.user.role != 'instructor':
+        return redirect('home')
+    question = get_object_or_404(Question, id=question_id, quiz__creator=request.user)
+    challenge_id = question.quiz.challenge_id
+    question.delete()
+    if challenge_id:
+        return redirect('instructor_challenge_detail', challenge_id=challenge_id)
+    return redirect('instructor_dashboard')
+
+
+# ── STUDENT CHALLENGE VIEWS ──
+
+@login_required
+def student_challenges_view(request):
+    """Show active challenges for student's enrolled classes."""
+    if request.user.role != 'student':
+        return redirect('home')
+
+    my_classes = request.user.enrolled_classes.all()
+    now = timezone.now()
+    challenges = Challenge.objects.filter(
+        classes__in=my_classes, is_active=True, start_date__lte=now, end_date__gte=now
+    ).distinct().prefetch_related('quizzes')
+
+    challenge_data = []
+    for ch in challenges:
+        # Quizzes available for this challenge
+        ch_quizzes = ch.quizzes.all()
+        submitted_count = StudentQuizSubmission.objects.filter(
+            student=request.user, quiz__in=ch_quizzes
+        ).count()
+        challenge_data.append({
+            'challenge': ch,
+            'total_quizzes': ch_quizzes.count(),
+            'submitted_count': submitted_count,
+        })
+
+    return render(request, 'student_challenges.html', {
+        'challenge_data': challenge_data,
+    })
+
+
+@login_required
+def student_challenge_detail_view(request, challenge_id):
+    """Student views challenge info, takes quizzes, and sees leaderboard."""
+    if request.user.role != 'student':
+        return redirect('home')
+
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+    my_classes = request.user.enrolled_classes.filter(challenges=challenge)
+
+    if not my_classes.exists():
+        return HttpResponseForbidden('You are not part of this challenge.')
+
+    quizzes = challenge.quizzes.all()
+
+    # Build quiz status for this student
+    quiz_status = []
+    for quiz in quizzes:
+        submission = StudentQuizSubmission.objects.filter(
+            student=request.user, quiz=quiz
+        ).first()
+        quiz_status.append({
+            'quiz': quiz,
+            'submitted': submission is not None,
+            'score': submission.score if submission else None,
+            'total': submission.total if submission else None,
+        })
+
+    # Leaderboard
+    student_ids = User.objects.filter(
+        enrolled_classes__in=challenge.classes.all(), role='student'
+    ).distinct().values_list('id', flat=True)
+
+    submissions = StudentQuizSubmission.objects.filter(
+        student_id__in=student_ids,
+        quiz__in=quizzes,
+    ).values('student_id').annotate(
+        total_score=models.Sum('score'),
+        total_possible=models.Sum('total'),
+        quiz_count=models.Count('id'),
+    ).order_by('-total_score')
+
+    leaderboard = []
+    rank = 1
+    for entry in submissions[:20]:
+        student = User.objects.get(id=entry['student_id'])
+        pct = int((entry['total_score'] / entry['total_possible']) * 100) if entry['total_possible'] > 0 else 0
+        leaderboard.append({
+            'rank': rank,
+            'student': student,
+            'score': entry['total_score'],
+            'possible': entry['total_possible'],
+            'percentage': pct,
+            'quizzes': entry['quiz_count'],
+            'is_me': student.id == request.user.id,
+        })
+        rank += 1
+
+    return render(request, 'student_challenge_detail.html', {
+        'challenge': challenge,
+        'quiz_status': quiz_status,
         'leaderboard': leaderboard,
     })
 
@@ -1476,3 +1770,22 @@ def instructor_student_performance_view(request, slug, student_id):
         'next_student': next_student,
         'all_students': sorted_students,
     })
+
+
+# ================================================================
+# NOTIFICATIONS
+# ================================================================
+
+@login_required
+def notifications_view(request):
+    notifs = Notification.objects.filter(user=request.user)[:30]
+    unread = notifs.filter(is_read=False)
+    # Mark displayed as read
+    unread.update(is_read=True)
+    return render(request, 'notifications.html', {'notifications': notifs})
+
+
+# ================================================================
+# PARENT PORTAL  (existing views above)
+# ================================================================
+    return render(request, 'parent_link_child.html')

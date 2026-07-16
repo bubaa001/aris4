@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin-dashboard/reset-xp/', views.admin_reset_xp_view, name='admin_reset_xp'),
     path('admin-dashboard/challenge/create/', views.admin_challenge_create_view, name='admin_challenge_create'),
     path('admin-dashboard/challenge/<int:challenge_id>/toggle/', views.admin_challenge_toggle_view, name='admin_challenge_toggle'),
+    path('admin-dashboard/challenge/<int:challenge_id>/delete/', views.admin_challenge_delete_view, name='admin_challenge_delete'),
     path('admin-dashboard/challenge/<int:challenge_id>/award/', views.admin_challenge_award_view, name='admin_challenge_award'),
     path('admin-dashboard/instructor/<int:instructor_id>/', views.admin_instructor_progress_view, name='admin_instructor_progress'),
     path('challenge/<int:challenge_id>/leaderboard/', views.challenge_leaderboard_view, name='challenge_leaderboard'),
@@ -31,6 +32,13 @@ urlpatterns = [
     # Student Dashboard Routing Group
     path('study/', views.student_dashboard_view, name='study_dashboard'),
     path('study/class/<slug:slug>/', views.student_class_view, name='student_class'),
+    path('study/challenges/', views.student_challenges_view, name='student_challenges'),
+    path('study/challenges/<int:challenge_id>/', views.student_challenge_detail_view, name='student_challenge_detail'),
+    
+    # Instructor Challenge Management
+    path('instructor/challenges/', views.instructor_challenges_view, name='instructor_challenges'),
+    path('instructor/challenges/<int:challenge_id>/', views.instructor_challenge_detail_view, name='instructor_challenge_detail'),
+    path('instructor/question/<int:question_id>/delete/', views.instructor_delete_question_view, name='instructor_delete_question'),
     
     # Instructor Class Management
     path('instructor/class/<slug:slug>/', views.instructor_class_view, name='instructor_class'),
@@ -59,4 +67,6 @@ urlpatterns = [
     path('parent/dashboard/', views.parent_dashboard_view, name='parent_dashboard'),
     path('parent/child/<int:student_id>/', views.parent_child_detail_view, name='parent_child_detail'),
     path('parent/child/<int:student_id>/quiz/<int:quiz_id>/', views.parent_child_quiz_result_view, name='parent_child_quiz_result'),
+
+    # Notifications
 ]

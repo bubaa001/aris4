@@ -131,11 +131,18 @@
         <div class="flex items-center gap-3">
           <a href="{% url 'challenge_leaderboard' ch.id %}" class="font-mono text-[10px] text-[#4f14e0] hover:underline uppercase font-bold">Leaderboard</a>
           {% if ch.is_active and ch.prize_pool_xp > 0 %}
-          <button onclick="awardPrizes({{ ch.id }}, '{{ ch.title|escapejs }}', {{ ch.total_participants }}, {{ ch.prize_pool_xp }})" class="font-mono text-[10px] text-green-600 hover:underline uppercase font-bold bg-green-50 px-2 py-1 border border-green-200">Award Prizes</button>
+          <form method="POST" action="{% url 'admin_challenge_award' ch.id %}" onsubmit="event.preventDefault(); openModal('award', {id: {{ ch.id }}, title: '{{ ch.title|escapejs }}', participants: {{ ch.total_participants }}, pool: {{ ch.prize_pool_xp }}, form: this});">
+            {% csrf_token %}
+            <button type="submit" class="font-mono text-[10px] text-green-600 hover:underline uppercase font-bold bg-green-50 px-2 py-1 border border-green-200">Award Prizes</button>
+          </form>
           {% endif %}
           <form method="POST" action="{% url 'admin_challenge_toggle' ch.id %}">
             {% csrf_token %}
             <button type="submit" class="font-mono text-[10px] {% if ch.is_active %}text-red-500{% else %}text-green-600{% endif %} uppercase font-bold hover:underline">{{ ch.is_active|yesno:"End,Activate" }}</button>
+          </form>
+          <form method="POST" action="{% url 'admin_challenge_delete' ch.id %}" onsubmit="event.preventDefault(); openModal('delete', {id: {{ ch.id }}, title: '{{ ch.title|escapejs }}', form: this});">
+            {% csrf_token %}
+            <button type="submit" class="font-mono text-[10px] text-red-600 uppercase font-bold hover:underline">🗑 Delete</button>
           </form>
         </div>
       </div>
@@ -191,20 +198,205 @@
 
 </main>
 
+<!-- ===== MODAL OVERLAY ===== -->
+<div id="adminModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden" role="dialog" aria-modal="true">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div id="modalBox" class="relative bg-white border-2 border-[#1c1b1b] [box-shadow:8px_8px_0px_0px_#1c1b1b] w-full max-w-md mx-4 p-0 opacity-0 scale-95 transition-all duration-200">
+    <!-- Header -->
+    <div id="modalHeader" class="p-5 border-b-2 border-gray-200 flex items-center justify-between">
+      <h2 id="modalTitle" class="font-serif text-xl font-black text-[#1c1b1b]"></h2>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-[#1c1b1b] transition-colors">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Body -->
+    <div id="modalBody" class="p-5"></div>
+    <!-- Footer -->
+    <div id="modalFooter" class="p-5 border-t-2 border-gray-200 flex gap-3 justify-end"></div>
+  </div>
+</div>
+
 <script>
+  // ── Modal state ──
+  let modalState = { type: null, data: null };
+
+  function openModal(type, data) {
+    modalState = { type, data };
+    const m = document.getElementById('adminModal');
+    const box = document.getElementById('modalBox');
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const footer = document.getElementById('modalFooter');
+
+    m.classList.remove('hidden');
+    requestAnimationFrame(() => { box.classList.remove('opacity-0', 'scale-95'); box.classList.add('opacity-100', 'scale-100'); });
+
+    if (type === 'award') {
+      const p = Math.floor(data.pool * 0.5);
+      const s = Math.floor(data.pool * 0.3);
+      const t = Math.floor(data.pool * 0.2);
+      title.textContent = 'Award Prizes';
+      body.innerHTML = `
+        <p class="font-serif text-lg font-bold text-[#1c1b1b] mb-4">${data.title}</p>
+        <div class="space-y-3 mb-4">
+          <div class="bg-[#f5f3f0] border border-gray-200 p-3 flex items-center justify-between">
+            <span class="font-mono text-xs text-[#484456]">Students who solved quizzes</span>
+            <span class="font-mono text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5">+10 XP each</span>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 p-3">
+            <p class="font-mono text-[10px] text-amber-700 uppercase tracking-wider mb-2 font-bold">Prize Pool · ${data.pool} XP</p>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between"><span class="font-mono text-xs">🥇 1st Place</span><span class="font-mono text-xs font-bold text-amber-600">${p} XP</span></div>
+              <div class="flex items-center justify-between"><span class="font-mono text-xs">🥈 2nd Place</span><span class="font-mono text-xs font-bold text-gray-500">${s} XP</span></div>
+              <div class="flex items-center justify-between"><span class="font-mono text-xs">🥉 3rd Place</span><span class="font-mono text-xs font-bold text-amber-800">${t} XP</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="font-mono text-[10px] text-red-500 uppercase">⚠ This ends the challenge permanently.</p>
+        <div id="modalStatus" class="hidden mt-3"></div>
+      `;
+      footer.innerHTML = `
+        <button onclick="closeModal()" class="flex-1 border-2 border-gray-300 text-green-400-500 font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-green-600-50 transition-colors">Cancel</button>
+        <button id="modalConfirmBtn" onclick="confirmAward(${data.id})" class="flex-1 bg-green-500 text-white font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-green-600 transition-colors">Confirm & Award</button>
+      `;
+
+    } else if (type === 'delete') {
+      title.textContent = 'Delete Challenge';
+      body.innerHTML = `
+        <p class="font-mono text-sm text-[#484456] mb-4">Permanently delete <span class="font-bold text-red-600">${data.title}</span> and all its quizzes?</p>
+        <p class="font-mono text-[10px] text-red-500 uppercase">This cannot be undone.</p>
+        <div id="modalStatus" class="hidden mt-3"></div>
+      `;
+      footer.innerHTML = `
+        <button onclick="closeModal()" class="flex-1 border-2 border-gray-300 text-gray-500 font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-gray-50 transition-colors">Cancel</button>
+        <button id="modalConfirmBtn" onclick="confirmDelete(${data.id}, '${data.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 text-white font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-red-700 transition-colors">Delete</button>
+      `;
+
+    } else if (type === 'xpReset') {
+      title.textContent = 'Reset All XP';
+      body.innerHTML = `
+        <p class="font-mono text-sm text-[#484456] mb-4">Reset <span class="font-bold text-red-600">ALL student XP</span> to zero?</p>
+        <div class="mb-4">
+          <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">Type <b>RESET</b> to confirm</label>
+          <input id="modalResetInput" type="text" placeholder="RESET" class="w-full border-2 border-[#1c1b1b] p-3 font-mono text-sm focus:outline-none focus:border-red-600">
+        </div>
+        <p class="font-mono text-[10px] text-red-500 uppercase">This cannot be undone.</p>
+        <div id="modalStatus" class="hidden mt-3"></div>
+      `;
+      footer.innerHTML = `
+        <button onclick="closeModal()" class="flex-1 border-2 border-gray-300 text-gray-500 font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-gray-50 transition-colors">Cancel</button>
+        <button id="modalConfirmBtn" onclick="confirmXpReset()" disabled class="flex-1 bg-red-600 text-white font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Reset All XP</button>
+      `;
+      const inp = document.getElementById('modalResetInput');
+      const btn = document.getElementById('modalConfirmBtn');
+      inp.addEventListener('input', () => { btn.disabled = inp.value !== 'RESET'; });
+
+    } else if (type === 'classXpReset') {
+      title.textContent = 'Reset Class XP';
+      body.innerHTML = `
+        <p class="font-mono text-sm text-[#484456] mb-4">Reset XP for all students in <span class="font-bold text-red-600">${data.code}</span>?</p>
+        <div class="mb-4">
+          <label class="font-mono text-[10px] text-[#484456] uppercase tracking-wider block mb-1">Type <b>${data.code}</b> to confirm</label>
+          <input id="modalResetInput" type="text" placeholder="${data.code}" class="w-full border-2 border-[#1c1b1b] p-3 font-mono text-sm focus:outline-none focus:border-red-600">
+        </div>
+        <p class="font-mono text-[10px] text-red-500 uppercase">This cannot be undone.</p>
+        <div id="modalStatus" class="hidden mt-3"></div>
+      `;
+      footer.innerHTML = `
+        <button onclick="closeModal()" class="flex-1 border-2 border-gray-300 text-gray-500 font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-gray-50 transition-colors">Cancel</button>
+        <button id="modalConfirmBtn" onclick="confirmClassXpReset(${data.id})" disabled class="flex-1 bg-red-600 text-white font-mono text-xs font-bold uppercase tracking-wider py-3 hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">Reset</button>
+      `;
+      const inp2 = document.getElementById('modalResetInput');
+      const btn2 = document.getElementById('modalConfirmBtn');
+      inp2.addEventListener('input', () => { btn2.disabled = inp2.value !== data.code; });
+    }
+  }
+
+  function closeModal() {
+    const box = document.getElementById('modalBox');
+    box.classList.add('opacity-0', 'scale-95'); box.classList.remove('opacity-100', 'scale-100');
+    setTimeout(() => { document.getElementById('adminModal').classList.add('hidden'); }, 200);
+  }
+
+  function getToken() {
+    const csrf = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return csrf ? decodeURIComponent(csrf.split('=')[1]) : document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  }
+
+  function modalLoading(msg) {
+    const btn = document.getElementById('modalConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = msg; }
+  }
+
+  function modalStatus(msg, ok) {
+    const el = document.getElementById('modalStatus');
+    if (el) { el.classList.remove('hidden'); el.innerHTML = `<p class="font-mono text-xs ${ok?'text-green-700':'text-red-600'} font-bold">${msg}</p>`; }
+  }
+
+  // ── Award prizes ──
+  window.awardPrizes = (id, title, participants, pool) => openModal('award', {id, title, participants, pool});
+
+  async function confirmAward(id) {
+    modalLoading('Awarding...');
+    // Submit the real form for guaranteed CSRF + fallback
+    const form = modalState.data?.form;
+    if (form) {
+      form.submit();
+      return;
+    }
+    // Fallback fetch (shouldn't normally reach here)
+    try {
+      const r = await fetch('/admin-dashboard/challenge/' + id + '/award/', { method:'POST', headers:{'X-CSRFToken':getToken(),'Accept':'application/json'} });
+      const data = await r.json();
+      if (r.ok) { modalStatus('✅ ' + data.message, true); setTimeout(() => location.reload(), 2000); }
+      else { modalStatus('❌ Failed', false); }
+    } catch(e) { modalStatus('❌ Network error', false); }
+  }
+
+  // ── Delete challenge ──
+  async function confirmDelete(id, title) {
+    modalLoading('Deleting...');
+    try {
+      const r = await fetch('/admin-dashboard/challenge/' + id + '/delete/', { method:'POST', headers:{'X-CSRFToken':getToken()} });
+      if (r.ok) { modalStatus('✅ Deleted', true); setTimeout(() => location.reload(), 1000); }
+      else { modalStatus('❌ Failed', false); }
+    } catch(e) { modalStatus('❌ Network error', false); }
+  }
+
+  // ── XP Reset ──
+  window.confirmReset = () => openModal('xpReset', {});
+  window.confirmClassReset = (id, code) => openModal('classXpReset', {id, code});
+
+  async function confirmXpReset() {
+    modalLoading('Resetting...');
+    const token = getToken();
+    try {
+      const b = new FormData(); b.append('action','reset_all');
+      const r = await fetch('{% url "admin_reset_xp" %}', { method:'POST', headers:{'X-CSRFToken':token}, body:b });
+      if (r.ok) { modalStatus('✅ Done! Reloading...', true); setTimeout(()=>location.reload(),2000); }
+      else { modalStatus('❌ Failed', false); }
+    } catch(e) { modalStatus('❌ Network error', false); }
+  }
+
+  async function confirmClassXpReset(id) {
+    modalLoading('Resetting...');
+    const token = getToken();
+    try {
+      const b = new FormData(); b.append('action','reset_class'); b.append('class_id',id);
+      const r = await fetch('{% url "admin_reset_xp" %}', { method:'POST', headers:{'X-CSRFToken':token}, body:b });
+      if (r.ok) { modalStatus('✅ Done! Reloading...', true); setTimeout(()=>location.reload(),2000); }
+      else { modalStatus('❌ Failed', false); }
+    } catch(e) { modalStatus('❌ Network error', false); }
+  }
+
+  // ── Instructor approval AJAX ──
   document.addEventListener('DOMContentLoaded', () => {
-    const getCookie = (name) => {
-      const cv = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
-      if (cv) return decodeURIComponent(cv.trim().substring(name.length + 1));
-      const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
-      return csrf ? csrf.value : null;
-    };
     document.body.addEventListener('click', async (e) => {
       const link = e.target.closest('[data-action]');
       if (!link) return;
       if (link.dataset.action === 'delete-request' && !confirm('Delete this request?')) return;
       e.preventDefault();
-      const csrf = getCookie('csrftoken');
+      const csrf = getToken();
       if (!csrf) return;
       try {
         const r = await fetch(link.href, { method:'POST', headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}, credentials:'same-origin' });
@@ -222,48 +414,5 @@
       if (items===0 && c) c.innerHTML = '<p class="text-center py-10 font-mono text-xs text-gray-400 uppercase">No pending requests</p>';
     }
   });
-
-  function confirmReset() {
-    if (!confirm('Reset ALL student XP to zero? CANNOT BE UNDONE.')) return;
-    if (prompt('Type RESET to confirm:') !== 'RESET') return;
-    doReset();
-  }
-  function confirmClassReset(id, code) {
-    if (!confirm('Reset XP for all students in ' + code + '?')) return;
-    if (prompt('Type ' + code + ' to confirm:') !== code) return;
-    doClassReset(id);
-  }
-  async function doReset() {
-    const btn = document.getElementById('resetAllBtn'), st = document.getElementById('resetStatus');
-    if (btn) { btn.disabled = true; btn.textContent = 'Resetting...'; }
-    const csrf = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    const token = csrf ? decodeURIComponent(csrf.split('=')[1]) : '';
-    try {
-      const b = new FormData(); b.append('action','reset_all');
-      const r = await fetch('{% url "admin_reset_xp" %}', { method:'POST', headers:{'X-CSRFToken':token}, body:b });
-      if (r.ok) { if(st){ st.classList.remove('hidden'); st.textContent='Done! Reloading...'; st.className='font-mono text-xs ml-4 text-green-600 font-bold'; } setTimeout(()=>location.reload(),2000); }
-    } catch(e) { if(btn){ btn.disabled=false; btn.textContent='Reset All Student XP'; } }
-  }
-  async function doClassReset(id) {
-    const csrf = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    const token = csrf ? decodeURIComponent(csrf.split('=')[1]) : '';
-    try {
-      const b = new FormData(); b.append('action','reset_class'); b.append('class_id',id);
-      const r = await fetch('{% url "admin_reset_xp" %}', { method:'POST', headers:{'X-CSRFToken':token}, body:b });
-      if (r.ok) setTimeout(()=>location.reload(),1500);
-    } catch(e) { alert('Error resetting class'); }
-  }
-
-  window.awardPrizes = async function(id, title, participants, pool) {
-    if (!confirm('Award prizes for "' + title + '"?\n\n' + participants + ' participants get +10 XP each\nPrize pool ' + pool + ' XP split:\n  1st: ' + Math.floor(pool*0.5) + ' XP\n  2nd: ' + Math.floor(pool*0.3) + ' XP\n  3rd: ' + Math.floor(pool*0.2) + ' XP\n\nThis also ends the challenge.')) return;
-    const csrf = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
-    const token = csrf ? decodeURIComponent(csrf.split('=')[1]) : '';
-    try {
-      const r = await fetch('/admin-dashboard/challenge/' + id + '/award/', { method:'POST', headers:{'X-CSRFToken':token} });
-      const data = await r.json();
-      if (r.ok) { alert(data.message); location.reload(); }
-      else alert('Failed: ' + (data.message || 'error'));
-    } catch(e) { alert('Error awarding prizes'); }
-  };
 </script>
 {% endblock %}

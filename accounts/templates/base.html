@@ -25,23 +25,6 @@
     button.loading { pointer-events: none; opacity: .75; }
     button.loading .btn-text { opacity: .6; }
 
-    /* ── Smart Page Loader (only after 1.8s delay) ── */
-    #pageLoader {
-      position: fixed; inset: 0; z-index: 9999;
-      background: rgba(252,251,250,.85); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      transition: opacity .35s ease, visibility .35s ease;
-      opacity: 0; visibility: hidden; pointer-events: none;
-    }
-    #pageLoader.show { opacity: 1; visibility: visible; }
-    .loader-ring {
-      width: 44px; height: 44px;
-      border: 3px solid #e8e8e8;
-      border-top-color: #4f14e0; border-radius: 50%;
-      animation: spin .65s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     /* ── Content Fade In ── */
     .page-content { animation: fadeSlideIn .35s ease-out; }
     @keyframes fadeSlideIn {
@@ -107,23 +90,6 @@
       box-shadow: 0 12px 40px rgba(0,0,0,.08);
     }
 
-    /* ── Skeleton Screens ── */
-    .skeleton {
-      background: linear-gradient(90deg, #e8e8e8 25%, #f2f2f2 50%, #e8e8e8 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.6s ease-in-out infinite;
-      border-radius: 5px;
-      min-height: 16px;
-    }
-    .skeleton-text { height: 14px; margin-bottom: 8px; width: 80%; }
-    .skeleton-heading { height: 28px; margin-bottom: 12px; width: 50%; }
-    .skeleton-avatar { width: 56px; height: 56px; border-radius: 50%; }
-    .skeleton-card { height: 120px; border-radius: 8px; }
-    .skeleton-block { height: 60px; margin-bottom: 12px; }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
 
     /* ── Download Progress Bar ── */
     .download-bar-wrap {
@@ -217,9 +183,6 @@
 </head>
 <body class="bg-[#fcfbfa] min-h-screen flex flex-col">
 
-<!-- Smart Page Loader (hidden, only shows after 1.8s delay) -->
-<div id="pageLoader"><div class="loader-ring"></div></div>
-
 <!-- Ambient Background -->
 <div class="bg-ambient"></div>
 
@@ -238,21 +201,22 @@
       {% with current=request.resolver_match.url_name %}
       {% if user.is_authenticated %}
         
-      <!-- superuser -->
-      {% if user.role == 'admin' or user.is_superuser %}
-          <a href="{% url 'admin_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
-        
-          {% elif user.role == 'instructor' %}
+      <!-- instructor -->
+      {% if user.role == 'instructor' %}
           <a href="{% url 'instructor_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
           <a href="{% url 'instructor_manage_classes' %}" class="relative px-4 py-2 transition-colors {% if current == 'instructor_manage_classes' or current == 'instructor_class' or current == 'instructor_student_directory' or current == 'instructor_student_performance' or current == 'instructor_quiz_submissions' or current == 'instructor_quiz_submission_detail' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
           <a href="{% url 'teacher_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'teacher_profile' or current == 'teacher_profile_by_username' or current == 'edit_instructor_profile' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
 
           {% elif user.role == 'parent' %}
           <a href="{% url 'parent_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'parent_dashboard' or current == 'parent_child_detail' %}text-teal-600 after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-teal-600 after:rounded-full{% else %}text-gray-400 hover:text-teal-600{% endif %}">My Children</a>
+
+          {% elif user.role == 'admin' or user.is_superuser %}
+          <a href="{% url 'admin_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
         
           {% else %}
           <a href="{% url 'study_dashboard' %}" class="relative px-4 py-2 transition-colors {% if current == 'study_dashboard' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Dashboard</a>
           <a href="{% url 'select_level' %}" class="relative px-4 py-2 transition-colors {% if current == 'select_level' or current == 'student_class' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Classes</a>
+          <a href="{% url 'student_challenges' %}" class="relative px-4 py-2 transition-colors {% if current == 'student_challenges' or current == 'student_challenge_detail' %}text-amber-600 after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-amber-500 after:rounded-full{% else %}text-gray-400 hover:text-amber-600{% endif %}">Challenges</a>
           <a href="{% url 'student_profile' %}" class="relative px-4 py-2 transition-colors {% if current == 'student_profile' or current == 'student_profile_by_username' %}text-[#4f14e0] after:absolute after:bottom-[-1rem] after:left-2 after:right-2 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">Profile</a>
         {% endif %}
       
@@ -306,11 +270,7 @@
 <div class="fixed bottom-0 left-0 right-0 z-50 bg-[#fcfbfa] border-t-2 border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] md:hidden">
   <div class="grid grid-cols-4 h-20">
     <!-- Tab 1: Home / Dashboard -->
-    {% if user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'admin_dashboard' %}"
-         class="relative flex flex-col items-center justify-center transition-colors group
-                {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
-    {% elif user.is_authenticated and user.role == 'instructor' %}
+    {% if user.is_authenticated and user.role == 'instructor' %}
       <a href="{% url 'instructor_dashboard' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
                 {% if current == 'instructor_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
@@ -318,6 +278,10 @@
       <a href="{% url 'parent_dashboard' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
                 {% if current == 'parent_dashboard' or current == 'parent_child_detail' %}text-teal-600 after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-teal-600 after:rounded-full{% else %}text-gray-400 hover:text-teal-600{% endif %}">
+    {% elif user.is_authenticated and user.role == 'admin' or user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'admin_dashboard' %}"
+         class="relative flex flex-col items-center justify-center transition-colors group
+                {% if current == 'admin_dashboard' %}text-[#4f14e0] after:absolute after:top-0 after:left-1/4 after:right-1/4 after:h-[3px] after:bg-[#4f14e0] after:rounded-full{% else %}text-gray-400 hover:text-[#4f14e0]{% endif %}">
     {% elif user.is_authenticated and user.role == 'student' %}
       <a href="{% url 'study_dashboard' %}"
          class="relative flex flex-col items-center justify-center transition-colors group
@@ -425,29 +389,12 @@
 {% endwith %}
 {% endif %}
 
-<!-- ===== ARIS SMART LOADING SCRIPTS ===== -->
+<!-- ===== ARIS SCRIPTS ===== -->
 <script>
 (function() {
-  var loader = document.getElementById('pageLoader');
   var glow = document.getElementById('mouseGlow');
-  var loaderTimer = null;
 
-  // ── 1. Smart page loader (only after 1.8s) ──
-  function showLoader() {
-    clearTimeout(loaderTimer);
-    loaderTimer = setTimeout(function() {
-      if (loader) loader.classList.add('show');
-    }, 1800);
-  }
-  function hideLoader() {
-    clearTimeout(loaderTimer);
-    if (loader) loader.classList.remove('show');
-  }
-  if (document.readyState === 'complete') { hideLoader(); }
-  else { window.addEventListener('load', function() { hideLoader(); }); }
-  window.addEventListener('pageshow', function(e) { if (e.persisted) hideLoader(); });
-
-  // ── 2. Button spinner helper ──
+  // ── 1. Button spinner helper ──
   function addSpinner(el, isDark) {
     if (el.querySelector('.btn-spinner')) return;
     var nodes = el.childNodes;

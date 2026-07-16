@@ -12,25 +12,25 @@
                     <div class="flex-shrink-0">
                         {% if student_profile and student_profile.avatar %}
                         <img src="{{ student_profile.avatar.url }}" alt="{{ student.full_name }}"
-                             class="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover border-2 border-[#4f14e0] shadow-md">
+                             class="w-16 h-16 md:w-28 md:h-28 rounded-full object-cover border-2 border-[#4f14e0] shadow-md">
                         {% else %}
-                        <div class="w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#e0d8ff] flex items-center justify-center border-2 border-[#4f14e0]">
-                            <span class="font-serif text-2xl md:text-3xl font-black text-[#4f14e0]">{{ student.full_name|slice:":1"|upper }}</span>
+                        <div class="w-16 h-16 md:w-28 md:h-28 rounded-full bg-[#e0d8ff] flex items-center justify-center border-2 border-[#4f14e0]">
+                            <span class="font-serif text-xl md:text-3xl font-black text-[#4f14e0]">{{ student.full_name|slice:":1"|upper }}</span>
                         </div>
                         {% endif %}
                     </div>
                     <div>
-                        <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4f14e0] mb-3 block">
+                        <span class="font-mono text-[9px] uppercase tracking-[0.3em] text-[#4f14e0] mb-2 block">
                             {% if is_own_profile %}Your Profile{% else %}Scholar Profile{% endif %}
                         </span>
-                        <h1 class="font-serif text-5xl md:text-7xl font-black tracking-tight text-black leading-none">
+                        <h1 class="font-serif text-3xl md:text-7xl font-black tracking-tight text-black leading-none">
                             {{ student.full_name|default:"Scholar" }}
                         </h1>
-                        <div class="flex items-center gap-3 mt-4">
-                            <span class="font-mono text-xs font-bold text-[#4f14e0] bg-[#e0d8ff] px-3 py-1 uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mt-3 flex-wrap">
+                            <span class="font-mono text-[10px] font-bold text-[#4f14e0] bg-[#e0d8ff] px-2 py-0.5 uppercase tracking-wider">
                                 {{ student.rank_title|default:"SCHOLAR" }}
                             </span>
-                            <span class="font-mono text-[10px] text-gray-400 uppercase tracking-wider">
+                            <span class="font-mono text-[9px] text-gray-400 uppercase tracking-wider">
                                 Lv.{{ student.level|default:"1" }} · {{ student.xp|default:"0" }} XP
                             </span>
                         </div>
@@ -76,7 +76,7 @@
                     <p class="font-mono text-[9px] text-gray-400 uppercase tracking-wider mb-1">Connected Parents</p>
                     <div class="flex flex-wrap gap-2">
                         {% for name in student_profile.parent_names %}
-                        <span class="font-mono text-[10px] bg-[#e0d8ff] text-[#4f14e0] px-3 py-1 uppercase tracking-wider font-bold border border-[#4f14e0]/20">
+                        <span class="font-mono text-[9px] bg-[#e0d8ff] text-[#4f14e0] px-2 py-0.5 uppercase tracking-wider font-bold">
                             {{ name }}
                         </span>
                         {% endfor %}
@@ -140,7 +140,7 @@
                 <div class="bg-green-50 border-l-4 border-green-500 p-6">
                     <div class="flex items-center gap-3">
                         <!-- Bonded parent SVG icon -->
-                        <svg class="w-5 h-5 text-green-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-green-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -186,7 +186,7 @@
                 {% elif max_parents_reached %}
                 <div class="bg-amber-50 border-l-4 border-amber-500 p-5">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 text-amber-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-amber-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="8" x2="12" y2="12"></line>
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>

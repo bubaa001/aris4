@@ -107,6 +107,7 @@ class Quiz(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'instructor'}, related_name='created_quizzes')
     academic_class = models.ForeignKey(AcademicClass, on_delete=models.CASCADE, related_name='quizzes', null=True, blank=True)
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='quizzes', null=True, blank=True)
+    challenge = models.ForeignKey('Challenge', on_delete=models.CASCADE, related_name='quizzes', null=True, blank=True, help_text='Link to a challenge event (for competition quizzes)')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -194,6 +195,20 @@ class StudentProfile(models.Model):
 
     def has_profile(self):
         return bool(self.avatar or self.bio or self.inspire_message or self.favorite_quote or self.parent_names)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=500)
+    link = models.CharField(max_length=300, blank=True, default='')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{'read' if self.is_read else 'new'}] {self.user.username}: {self.message[:60]}"
 
 
 class StudentQuizSubmission(models.Model):

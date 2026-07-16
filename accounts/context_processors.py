@@ -45,3 +45,11 @@ def user_tier_context(request):
                 'tier_color_class': badge['color'],
             }
     return ctx
+
+
+def unread_notifications(request):
+    """Inject unread notification count for the navbar badge."""
+    if request.user.is_authenticated:
+        from accounts.models import Notification
+        return {'unread_count': Notification.objects.filter(user=request.user, is_read=False).count()}
+    return {'unread_count': 0}
